@@ -1,0 +1,10 @@
+ 00017E98   3   2     F0  Buffer:    14 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 2D 00 01 01 05 00 6E F7
+ 0001859C   3   2     F0  Buffer:    14 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 20 00 01 01 05 1F 7C F7
+ 000185D0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 7E 00 01 21 18 F7
+ 00018EE8   3   2     F0  Buffer:    14 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 2D 00 01 01 05 00 6E F7
+ 00019030   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+

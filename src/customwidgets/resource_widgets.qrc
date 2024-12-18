@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="gnx1">
+    <file>blkfac-amp.png</file>
+  </qresource>
+</RCC>

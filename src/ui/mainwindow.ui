@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1400</width>
+    <height>809</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>300</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>GNXEdit MIDI Device Controller</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight,  QScrollArea, QTreeView {
+   font-family: 'Arial';
+   font-size: 12px; 
+   color: white; 
+	background-color: black;
+}
+
+QGroupBox#groupBoxAmpRed, 
+QGroupBox#groupBoxCabRed {
+	color: red;
+	font-weight: bold;
+}
+QGroupBox#groupBoxAmpGreen, 
+QGroupBox#groupBoxCabGreen {
+	color: green;
+	font-weight: bold;
+}
+QGroupBox#groupBoxWarp {
+	color: orange;
+	font-weight: bold;
+}
+QGroupBox#groupBoxEffects {
+	color: cyan;
+	font-weight: bold;
+}
+QMenu {
+	background-color:  palegoldenrod;
+}
+QMenu::item {
+	color: black;
+}
+QGroupBox#groupBoxAmpRed QMenu::item:selected,
+QGroupBox#groupBoxCabRed QMenu::item:selected {
+	background-color: red;
+	color: white;
+}
+
+QGroupBox#groupBoxAmpGreen QMenu::item:selected,
+QGroupBox#groupBoxCabGreen QMenu::item:selected {
+	background-color: green;
+	color: white;
+}
+QComboBox {
+   padding: 4px; 
+   margin: 0px; 
+}
+
+QComboBox#exp1selector, 
+QComboBox#exp2selector,
+QComboBox#exp3selector,
+QComboBox#lfo1selector,
+QComboBox#lfo2selector {
+   color: white; 
+   background-color: transparent;
+   selection-background-color: transparent;
+}
+
+QComboBox#exp1selector QAbstractItemView, 
+QComboBox#exp2selector QAbstractItemView, 
+QComboBox#exp3selector QAbstractItemView, 
+QComboBox#lfo1selector QAbstractItemView,
+QComboBox#lfo2selector QAbstractItemView {
+    color: white;
+    background-color: black;
+}
+
+QComboBox#exp1selector QAbstractItemView QScrollBar:vertical, 
+QComboBox#lfo1selector QAbstractItemView QScrollBar:vertical {
+   background-color: #2A5300;
+   color: black;     
+}
+QComboBox#exp3selector QAbstractItemView QScrollBar:vertical, 
+QComboBox#lfo2selector QAbstractItemView QScrollBar:vertical {
+   background-color: #7E0000;
+   color: black;     
+}
+QComboBox#exp2selector QAbstractItemView QScrollBar:vertical {
+   background-color: #853500;
+   color: black;     
+}
+
+QMenuBar#mainMenuBar {
+   font-family: 'Arial';
+   font-size: 14px; 
+   color: white; 
+	background-color: black;
+	color: white;
+	padding: 0px;
+    margin: 10px;
+}
+QMenuBar#mainMenuBar::item:selected {
+   background-color: palegoldenrod;
+   color: black;
+}
+ 
+QLabel[cssClass='blue'] {
+   padding: -1px, 0, 0, 0; 
+   margin: 0; 
+   color: lightblue;
+   font-size: 12px;
+}
+QLabel[cssClass='orange'] {
+   padding: -1px, 0, 0, 0; 
+   margin: 0; 
+   color: khaki;
+   font-size: 12px;
+}
+QLabel[cssClass='green'] {
+   padding: -1px, 0, 0, 0; 
+   margin: 0; 
+   color: white;
+   font-size: 12px;
+}
+QLabel[cssClass='red'] {
+   padding: -1px, 0, 0, 0; 
+   margin: 0; 
+   color: lightpink;
+   font-size: 12px;
+}
+
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_6">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>800</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="baseSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="QScrollArea" name="scrollAreaLeft">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>600</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollPaneLeft">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>343</width>
+          <height>798</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTreeView" name="treeView">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>5</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="baseSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QScrollArea" name="scrollAreaRight">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>1050</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollPaneRight">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>1038</width>
+          <height>2710</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QGroupBox" name="groupBoxAmpGreen">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="title">
+            <string>Green Amplifier</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="AmpFace" name="ampGreen">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="ampStyle" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_3" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="groupBoxCabGreen">
+              <property name="title">
+               <string>Green Cabinet</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="CabFace" name="cabGreen">
+                 <property name="minimumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="cabStyle" stdset="0">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBoxWarp">
+              <property name="title">
+               <string>Warp</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <widget class="WarpFace" name="warpFace">
+                 <property name="minimumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBoxCabRed">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>Red Cabinet</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <widget class="CabFace" name="cabRed">
+                 <property name="minimumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>280</width>
+                   <height>280</height>
+                  </size>
+                 </property>
+                 <property name="cabStyle" stdset="0">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxAmpRed">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="title">
+            <string>Red Amplifier</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <widget class="AmpFace" name="ampRed">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="ampStyle" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBoxEffects">
+           <property name="title">
+            <string>Effects Rack</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="PickupFace" name="pickupFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="WahFace" name="wahFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="CompressorFace" name="compressorFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="WhammyFace" name="whammyFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="whammyType" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="GateFace" name="gateFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>140</height>
+               </size>
+              </property>
+              <property name="gateType" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ModFace" name="modFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="modType" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="DelayFace" name="delayFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ReverbFace" name="reverbFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="ExpFace" name="expFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="expType" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="LFOFace" name="lfoFace">
+              <property name="minimumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1000</width>
+                <height>240</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="mainMenuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1400</width>
+     <height>42</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>26</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <family>Arial</family>
+     <pointsize>-1</pointsize>
+    </font>
+   </property>
+   <widget class="QMenu" name="menuMIDI">
+    <property name="title">
+     <string>MIDI</string>
+    </property>
+    <addaction name="actionMIDIInterface"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAboutCPGEN"/>
+    <addaction name="actionHelp"/>
+   </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuDevice">
+    <property name="title">
+     <string>Device</string>
+    </property>
+    <addaction name="actionResync"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuMIDI"/>
+   <addaction name="menuDevice"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <action name="actionResync">
+   <property name="text">
+    <string>Resync</string>
+   </property>
+   <property name="toolTip">
+    <string>Add device to CPGEN</string>
+   </property>
+  </action>
+  <action name="actionRemoveDevice">
+   <property name="text">
+    <string>Remove Device</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove device from CPGEN</string>
+   </property>
+  </action>
+  <action name="actionAboutCPGEN">
+   <property name="text">
+    <string>About CPGEN</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+   <property name="toolTip">
+    <string>CPGEN Help</string>
+   </property>
+  </action>
+  <action name="actionMIDIInterface">
+   <property name="text">
+    <string>MIDI Interface</string>
+   </property>
+   <property name="toolTip">
+    <string>MIDI interface settings</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::QuitRole</enum>
+   </property>
+  </action>
+  <action name="actionAnother_Option">
+   <property name="text">
+    <string>Another Option</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AmpFace</class>
+   <extends>QWidget</extends>
+   <header>ampface</header>
+  </customwidget>
+  <customwidget>
+   <class>CabFace</class>
+   <extends>QWidget</extends>
+   <header>cabface</header>
+  </customwidget>
+  <customwidget>
+   <class>WarpFace</class>
+   <extends>QWidget</extends>
+   <header>warpface</header>
+  </customwidget>
+  <customwidget>
+   <class>PickupFace</class>
+   <extends>QWidget</extends>
+   <header>pickupface</header>
+  </customwidget>
+  <customwidget>
+   <class>WahFace</class>
+   <extends>QWidget</extends>
+   <header>wahface</header>
+  </customwidget>
+  <customwidget>
+   <class>CompressorFace</class>
+   <extends>QWidget</extends>
+   <header>compressorface</header>
+  </customwidget>
+  <customwidget>
+   <class>WhammyFace</class>
+   <extends>QWidget</extends>
+   <header>whammyface</header>
+  </customwidget>
+  <customwidget>
+   <class>GateFace</class>
+   <extends>QWidget</extends>
+   <header>gateface</header>
+  </customwidget>
+  <customwidget>
+   <class>ModFace</class>
+   <extends>QWidget</extends>
+   <header>modface</header>
+  </customwidget>
+  <customwidget>
+   <class>DelayFace</class>
+   <extends>QWidget</extends>
+   <header>delayface</header>
+  </customwidget>
+  <customwidget>
+   <class>ReverbFace</class>
+   <extends>QWidget</extends>
+   <header>reverbface</header>
+  </customwidget>
+  <customwidget>
+   <class>ExpFace</class>
+   <extends>QWidget</extends>
+   <header>expface</header>
+  </customwidget>
+  <customwidget>
+   <class>LFOFace</class>
+   <extends>QWidget</extends>
+   <header>lfoface</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

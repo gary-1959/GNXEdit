@@ -1,0 +1,466 @@
+ ===> MIDI-OX Version: 7.0.2.372
+ ===> Log Opened: Tue 22-Oct-2024 16:40:24 ===>
+ TIMESTAMP IN PORT STATUS DATA1 DATA2 CHAN NOTE EVENT               
+ 0004AB74   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AB89   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ABA0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ABB6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ABCB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ABE1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ABF8   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC0C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC22   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC39   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC4F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC68   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC7E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AC93   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ACAA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ACC2   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ACDB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ACF0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD05   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD1D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD36   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD4C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD64   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD7B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AD96   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ADAD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ADC6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ADDD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004ADF6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE0C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE24   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE3F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE55   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE6D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE83   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AE9D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AEB6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AECD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AEE6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AEFD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF17   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF2C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF43   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF5E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF7C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AF97   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AFB1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AFC9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AFE1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004AFF7   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B00F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B025   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B03D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B055   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B06B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B082   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B099   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B0AE   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B0C7   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B0DC   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B0F5   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B10F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B12B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B142   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B15A   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B170   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B186   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B19C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B1B3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B1C9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B1E0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B1F6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B20A   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B221   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B239   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B24F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B267   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B27F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B295   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B2AE   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B2C4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B2DC   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B2F0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B306   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B31D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B33D   3   2     F0  Buffer:    14 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 2D 00 01 01 00 00 6B F7
+ 0004B450   3   2     F0  Buffer:    14 Bytes   System Exclusive      
+ SYSX: F0 00 00 10 00 56 2D 00 01 01 03 00 68 F7
+ 0004B552   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B569   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B580   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B597   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B5AC   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B5C0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B5D6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B5ED   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B602   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B61B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B630   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B644   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B65B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B672   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B689   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B6A2   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B6BA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B6D3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B6E9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B6FF   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B714   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B72B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B741   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B759   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B76F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B783   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B79B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B7B0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B7C4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B7DA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B7F1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B807   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B81D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B834   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B84A   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B862   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B877   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B88D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B8A6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B8BD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B8D3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B8EB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B902   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B91C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B930   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B946   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B95D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B972   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B987   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B99D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B9B4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B9CB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B9E3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004B9F7   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA0D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA24   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA39   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA4D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA63   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA7B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BA8F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BAA6   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BABD   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BAD3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BAEB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB01   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB15   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB2E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB43   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB59   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BB84   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BBA9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BBC2   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BBD8   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BBEE   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC08   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC1E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC34   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC4D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC63   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC7D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BC93   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BCA8   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BCC1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BCD9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BCF4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD08   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD22   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD42   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD59   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD6F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BD89   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BDA4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BDC3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BDDB   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BDF3   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE0D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE24   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE3C   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE55   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE6D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE85   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BE9E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BEB8   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BED1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BEEA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF01   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF1B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF34   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF4E   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF68   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF80   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BF9B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BFB1   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BFD2   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004BFEA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C003   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C018   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C031   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C047   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C05B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C074   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C08A   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C0A0   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C0B9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C0CF   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C0E9   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C0FF   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C115   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C12B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C141   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C155   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C16D   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C184   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C19B   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C1B5   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C1CA   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C1E4   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C1F8   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C20F   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C235   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C25A   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C270   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ 0004C288   3   2     F0  Buffer:    12 Bytes   System Exclusive      
+ 
+ <=== MIDI-OX Log Closed: Tue 22-Oct-2024 16:40:30 <===
