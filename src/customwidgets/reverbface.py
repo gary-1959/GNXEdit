@@ -1,6 +1,6 @@
 # reverbface.py
 #
-# CPGen Reverb widget for Digitech GNX1
+# GNX Edit Reverb widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

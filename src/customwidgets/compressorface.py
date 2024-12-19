@@ -1,6 +1,6 @@
 # compressorface.py
 #
-# CPGen Compressor widget for Digitech GNX1
+# GNX Edit Compressor widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

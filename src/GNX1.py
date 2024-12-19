@@ -1,6 +1,6 @@
 # GNX1.py
 #
-# CPGen MIDI Handler for Digitech GNX1
+# GNX Edit MIDI Handler for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #
@@ -21,9 +21,10 @@ from threading import Timer
 import time
 import os
 import settings
+from exceptions import GNXError
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QTabWidget, QWidget
+from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox
 from PySide6.QtCore import QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
 
 from customwidgets.styledial import StyleDial
@@ -44,8 +45,10 @@ from customwidgets.factory import factory_expression_assignments
 
 from customwidgets.utils import get_expression_assignment_index
 from customwidgets.utils import getnum, skip_bytes, compile_number, pack_data, build_sysex, compare_array
+                          
+class GNX1(QObject):
 
-class GNX1:
+    gnxAlert = Signal(GNXError)
 
     midi_watchdog = None
     midi_watchdog_time = 1  # time between watchdog timeouts
@@ -132,7 +135,7 @@ class GNX1:
                 match k:
                     case "type":
                         if arg not in factory_pickup_names.keys():
-                            raise Exception(f"Error in Pickup type ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Pickup type not recognised ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setPickup(type = arg)
 
@@ -182,32 +185,32 @@ class GNX1:
                 match k:
                     case "type":
                         if arg not in factory_wah_types.keys():
-                            raise Exception(f"Error in Wah type ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Wah type ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWah(type = arg)
 
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Wah on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Wah on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWah(on = arg)
 
                     case "min":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Wah minimum value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Wah minimum value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_min.setValue(arg)
 
                     case "max":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Wah maximum value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Wah maximum value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             setattr(self, k, arg)
                             self.ui_device.pot_max.setValue(arg)
 
                     case "pedal":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Pedal maximum value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Pedal maximum value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_pedal.setValue(arg)
 
@@ -280,32 +283,32 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Compressor on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Compressor on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setCompressor(on = arg)
                             
                     case "attack":
                         if arg not in factory_compressor_attack.keys():
-                            raise Exception(f"Error in Compressor Attack value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Compressor Attack value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setCompressor(attack = arg)
 
                     case "ratio":
                         if arg not in factory_compressor_ratio.keys():
-                            raise Exception(f"Error in Compressor Ratio value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Compressor Ratio value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_ratio.setValue(arg)
                             self.ui_device.updateLabel1()
 
                     case "threshold":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Compressor Threshold value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Compressor Threshold value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_threshold.setValue(arg)
 
                     case "gain":
                         if arg < 0 or arg > 20:
-                            raise Exception(f"Error in Compressor Gain value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Compressor Gain value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_gain.setValue(arg)
 
@@ -436,41 +439,41 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Whammy/IPS on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy/IPS on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWhammy(on = arg)
 
                     case "type":
                         if arg < 0 or arg > 3:
-                            raise Exception(f"Error in Whammy Type value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy Type value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.type = arg
                             self.ui_device.setWhammy(type = arg)
 
                     case "param_1":
                         if arg < 0 or arg > maxlimits[self.type]["param_1"]:
-                            raise Exception(f"Error in Whammy Param 1 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy Param 1 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_1.setValue(arg)
                             self.ui_device.updateLabel1()
 
                     case "param_2":
                         if arg < 0 or arg > maxlimits[self.type]["param_2"]:
-                            raise Exception(f"Error in Whammy Param 2 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy Param 2 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_2.setValue(arg)
                             self.ui_device.updateLabel2()
 
                     case "param_3":
                         if arg < 0 or arg > maxlimits[self.type]["param_3"]:
-                            raise Exception(f"Error in Whammy Param 3 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy Param 3 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_3.setValue(arg)
                             self.ui_device.updateLabel3()
 
                     case "param_4":
                         if arg < 0 or arg > maxlimits[self.type]["param_4"]:
-                            raise Exception(f"Error in Whammy Param 4 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Whammy Param 4 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_4.setValue(arg)
 
@@ -514,7 +517,7 @@ class GNX1:
                     print("PITCH: {0}, Shift {1}, Level {2}".format(
                         factory_onoff[on], param_1, param_2))
                 case _:
-                    raise Exception(f"Unrecognised Whammy/IPS type {type}")
+                    raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised Whammy/IPS type {type}", buttons = QMessageBox.Ok)
                 
             return n
         
@@ -561,31 +564,31 @@ class GNX1:
                 match k:
                     case "type":
                         if arg < 0 or arg > 0:
-                            raise Exception(f"Error in Type Parameter ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp Type ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWarpFactor(type = arg)
 
                     case "amp_select":
                         if arg < 0 or arg > 2:
-                            raise Exception(f"Error in Amp Select type ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp Select type ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWarpFactor(amp_select = arg)
 
                     case "amp_warp":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp Warp ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp Warp ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWarpFactor(amp_warp = arg)
 
                     case "cab_warp":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Cab Warp ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Cab Warp ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setWarpFactor(cab_warp = arg)         
 
                     case "warpD":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Warp Param D type ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Warp Param D ({arg})", buttons = QMessageBox.Ok)
                         else:  
                             self.ui_device.setWarpFactor(warpD = arg)
 
@@ -671,61 +674,61 @@ class GNX1:
 
                     case "type":
                         if arg not in self.ui_device.AMP_STYLES.keys():
-                            raise Exception(f"Unrecognised amp type {arg}")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised amp type {arg}", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setAmpStyle(arg)
 
                     case "gain":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp gain value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp gain value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_gain.setValue(arg)
                         
                     case "bass_freq":
                         if arg < 0 or arg > 250:
-                            raise Exception(f"Error in Amp bass frequency value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp bass frequency value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_bass_freq.setValue(arg)
 
                     case "bass_level":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp bass level value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp bass level value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_bass_level.setValue(arg)
 
                     case "mid_freq":
                         if arg < 0 or arg > 4700:
-                            raise Exception(f"Error in Amp mid frequency value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp mid frequency value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_mid_freq.setValue(arg)
-                            self.ui_device.pot_mid_freq.setToolTip(str(500 + arg) + "Hz")
 
                     case "mid_level":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp mid level value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp mid level value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_mid_level.setValue(arg)
 
                     case "treble_freq":
                         if arg < 0 or arg > 7500:
-                            raise Exception(f"Error in Amp treble frequency value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp treble frequency value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_treble_freq.setValue(arg)
 
                     case "treble_level":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp treble level value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp treble level value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_treble_level.setValue(arg)
 
                     case "level":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Amp level value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Amp level value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_level.setValue(arg)
 
                     case "_":
-                        raise Exception(f"Unrecognised amp parameter ({arg})")
+                        raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised amp parameter ({arg})", buttons = QMessageBox.Ok)
+
 
         # extract values from GNX1 data string and return next position
         def get_values(self, n, unpacked):
@@ -845,13 +848,13 @@ class GNX1:
                 match k:
                     case "type":
                         if arg not in self.ui_device.CAB_STYLES.keys():
-                            raise Exception(f"Unrecognised cab type {arg}")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised cab type {arg}", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setCabStyle(arg)
 
                     case "tuning":
                         if arg < 0 or arg > 48:
-                            raise Exception(f"Error in Cabinet tuning value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Cabinet tuning value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_tuning.setValue(arg)
 
@@ -958,32 +961,32 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Gate on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Gate on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setGate(on = arg)
 
                     case "type":
                         if arg < 0 or arg > 1:
-                            raise Exception(f"Error in Gate Type value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Gate Type value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.type = arg
                             self.ui_device.setGate(type = arg)
 
                     case "param_1":
                         if arg < 0 or arg > 40:
-                            raise Exception(f"Error in Gate Threshold value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Gate Threshold value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_1.setValue(arg)
 
                     case "param_2":
                         if arg < 0 or arg > 9:
-                            raise Exception(f"Error in Gate Attack value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Gate Attack value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_2.setValue(arg)
 
                     case "param_3":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Gate Sensitivity value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Gate Sensitivity value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_3.setValue(arg)
 
@@ -1011,7 +1014,7 @@ class GNX1:
                         factory_onoff[on], param_1, param_2, param_3))
                     
                 case _:
-                    raise Exception(f"Unrecognised Gate type {type}")
+                    raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised Gate type {type}", buttons = QMessageBox.Ok)
 
             return n
         
@@ -1115,50 +1118,50 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Mod on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setMod(on = arg)
 
                     case "type":
                         if arg < 0 or arg > 14:
-                            raise Exception(f"Error in Mod Type value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Type value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.type = arg
                             self.ui_device.setMod(type = arg)
 
                     case "param_1":
                         if arg < 0 or arg > maxlimits[self.type]["param_1"]:
-                            raise Exception(f"Error in Mod Param 1 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 1 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_1.setValue(arg)
 
                     case "param_2":
                         if arg < 0 or arg > maxlimits[self.type]["param_2"]:
-                            raise Exception(f"Error in Mod Param 2 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 2 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_2.setValue(arg)
 
                     case "param_3":
                         if arg < 0 or arg > maxlimits[self.type]["param_3"]:
-                            raise Exception(f"Error in Mod Param 3 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 3 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_3.setValue(arg)
 
                     case "param_4":
                         if arg < 0 or arg > maxlimits[self.type]["param_4"]:
-                            raise Exception(f"Error in Mod Param 4 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 4 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_4.setValue(arg)
 
                     case "param_5":
                         if arg < 0 or arg > maxlimits[self.type]["param_5"]:
-                            raise Exception(f"Error in Mod Param 5 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 5 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_5.setValue(arg)
 
                     case "param_6":
                         if arg < 0 or arg > maxlimits[self.type]["param_6"]:
-                            raise Exception(f"Error in Mod Param 6 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Mod Param 6 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_6.setValue(arg)
 
@@ -1253,50 +1256,50 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Delay on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setDelay(on = arg)
 
                     case "type":
                         if arg < 0 or arg > 3:
-                            raise Exception(f"Error in Delay Type value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Type value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.type = arg
                             self.ui_device.setDelay(type = arg)
 
                     case "param_1":
                         if arg < 0 or arg > 2000:
-                            raise Exception(f"Error in Delay Param 1 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 1 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_1.setValue(arg)
 
                     case "param_2":
                         if arg < 0 or arg > 100:
-                            raise Exception(f"Error in Delay Param 2 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 2 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_2.setValue(arg)
 
                     case "param_3":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Delay Param 3 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 3 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_3.setValue(arg)
 
                     case "param_4":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Delay Param 4 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 4 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_4.setValue(arg)
 
                     case "param_5":
                         if arg < 0 or arg > 198:
-                            raise Exception(f"Error in Delay Param 5 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 5 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_5.setValue(arg)
 
                     case "param_6":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Delay Param 6 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Delay Param 6 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_6.setValue(arg)
 
@@ -1383,44 +1386,44 @@ class GNX1:
                 match k:
                     case "on":
                         if arg not in factory_onoff.keys():
-                            raise Exception(f"Error in Reverb on/off ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb on/off ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.setReverb(on = arg)
 
                     case "type":
                         if arg < 0 or arg > 9:
-                            raise Exception(f"Error in Reverb Type value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Type value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.type = arg
                             self.ui_device.setReverb(type = arg)
 
                     case "param_1":
                         if arg < 0 or arg > 15:
-                            raise Exception(f"Error in Reverb Param 1 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Param 1 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_1.setValue(arg)
 
                     case "param_2":
                         if arg < 0 or arg > 98:
-                            raise Exception(f"Error in Reverb Param 2 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Param 2 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_2.setValue(arg)
 
                     case "param_3":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Reverb Param 3 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Param 3 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_3.setValue(arg)
 
                     case "param_4":
                         if arg < 0 or arg > 198:
-                            raise Exception(f"Error in Reverb Param 4 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Param 4 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_4.setValue(arg)
 
                     case "param_5":
                         if arg < 0 or arg > 99:
-                            raise Exception(f"Error in Reverb Param 5 value ({arg})")
+                            raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Reverb Param 5 value ({arg})", buttons = QMessageBox.Ok)
                         else:
                             self.ui_device.pot_5.setValue(arg)
 
@@ -1480,7 +1483,7 @@ class GNX1:
                             parameter = arg[x]["parameter"] if section != 0xFF else 0xFF # make parameter 0xFF id section is 0xFF
                             a = get_expression_assignment_index(section, parameter)
                             if a == None:
-                                raise Exception(f"Error in Expression {x} Pedal Assign (Section {section:02X} Parameter {parameter:02X})")
+                                raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Expression {x} Pedal Assign (Section {section:02X} Parameter {parameter:02X})", buttons = QMessageBox.Ok)
                             else:
                                 self.ui_device.setAssignment(x, a)
 
@@ -1536,14 +1539,14 @@ class GNX1:
             a = {}
             for index, lfo in lfos.items():
                 if lfo["speed"] < 0 or lfo["speed"] > 185:
-                    raise Exception(f"Error in LFO Speed ({lfo["speed"]})")
+                    raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in LFO Speed ({lfo["speed"]})", buttons = QMessageBox.Ok)
 
                 if lfo["waveform"] < 0 or lfo["waveform"] > 2:
-                    raise Exception(f"Error in LFO Waveform ({lfo["waveform"]})")
+                    raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in LFO Waveform ({lfo["waveform"]})", buttons = QMessageBox.Ok)
 
                 a[index] = get_expression_assignment_index(lfo["section"], lfo["parameter"] if lfo["section"] != 0xFF else 0xFF) # make parameter 0xFF id section is 0xFF
                 if a[index] == None:
-                    raise Exception(f"Error in LFO Assign Section (Section {lfo["section"]:02X}, Parameter {lfo["parameter"]:02X})")
+                    raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in LFO Assign Section (Section {lfo["section"]:02X}, Parameter {lfo["parameter"]:02X})", buttons = QMessageBox.Ok)
             
             for index in lfos.keys():
                 lfos[index]["assignment"] = a[index]
@@ -1592,13 +1595,14 @@ class GNX1:
     # MAIN CLASS CODE
    
     def __init__(self, ui = None, midicontrol = None):
+        super().__init__()
 
         self.midicontrol = midicontrol
         self.ui = ui
         if self.midicontrol == None:
-            raise Exception("No MIDI controller specified for GNX1")
+            raise GNXError(icon = QMessageBox.Critical, title = "System Error", text = "No MIDI controller specified for GNX1", buttons = QMessageBox.Ok)
         if self.ui == None:
-            raise Exception("No window specified for GNX1")
+            raise GNXError(icon = QMessageBox.Critical, title = "System Error", text = "No window specified for GNX1", buttons = QMessageBox.Ok)
         
         self.midicontrol.register_input_target(self.dispatcher)
         self.midicontrol.register_ports_open(self.ports_open)
@@ -1656,10 +1660,20 @@ class GNX1:
         self.ui.ampGreen.setAmpStyle(0)
         self.ui.ampRed.setAmpStyle(0)
 
+    def midi_resync(self):
+        self.setDeviceConnected(False)
+        self.resyncing = True
+        self.enquire_device()
+
+    deviceConnectedChanged = Signal(bool)
+    def setDeviceConnected(self, connected):
+        self.device_connected = connected
+        self.deviceConnectedChanged.emit(connected)
+
     def midi_watchdog_bite(self):
         if self.midi_watchdog_bite_count > self.midi_watchdog_bite_count_limit:
             print("WATCHDOG HAS BITTEN")
-            self.device_connected = False
+            self.setDeviceConnected(False)
             self.resyncing = True
             self.enquire_device()
             self.midi_watchdog_bite_count = 0
@@ -1669,7 +1683,6 @@ class GNX1:
             self.midi_watchdog_bite_count += 1
             self.midi_watchdog.start()
             self.send_keep_alive()
-
 
     def send_parameter_change(self, section = None, parameter = None, value = None):
         if section == None or parameter == None or value == None:
@@ -1685,13 +1698,20 @@ class GNX1:
         self.midicontrol.send_message(msg)
         pass
 
+    patchNameChanged = Signal(str, int, int)
+    def setPatchName(self, name):
+        self.current_patch_name = name if name == None else self.current_patch_name
+        self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+    midiChannelChanged = Signal(int)
     def set_midi_channel(self, channel):
         settings.GNXEDIT_CONFIG["midi"]["channel"] = channel
         settings.save_settings()
+        self.midiChannelChanged.emit(channel + 1)
         print(f"GNX1 MIDI Channel: {channel:02X}")
 
     def ports_open(self):
-        self.device_connected = False
+        self.setDeviceConnected(False)
         self.resyncing = True
         self.enquire_device()
         self.midi_watchdog = self.watchdog(timeout = self.midi_watchdog_time, userHandler = self.midi_watchdog_bite)
@@ -1700,12 +1720,19 @@ class GNX1:
     def ports_closed(self):
         if self.midi_watchdog != None:
             self.midi_watchdog.stop()
-        self.device_connected = False
-        self.device_connected = False
+        self.setDeviceConnected(False)
         self.resyncing = False
+
+    # syncing: 
+    # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12) -> decode13 -> 
+    # request_ampcab_names(0x07) -> decode08 -> request_current_patch_name(0x20) -> decode 0x21-> acknowledge_patch_name(0x7E) -> patch data follows
 
     def enquire_device(self):
         self.midicontrol.send_message([0xF0, 0x00, 0x00, 0x10, 0x7E, 0x7F, 0x01, 0x00, 0x01, 0x00, 0x00, 0x11, 0xF7])
+
+    def request_status(self):
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x05, 0x00, 0x01])
+        self.midicontrol.send_message(msg)
 
     def request_patch_names(self):
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, 0x01, 0x00])
@@ -1812,7 +1839,10 @@ class GNX1:
                             match msg[6]:
                                 case 0x02:                  # CODE 02: Device Response
                                     self.decode02(msg)
-
+                                
+                                case 0x06:                  # CODE 06: Status Response
+                                    self.decode06(msg)
+                                
                                 case 0x08:                  # CODE 08: Amp/Cab Names
                                     self.decode08(msg)
 
@@ -1859,8 +1889,13 @@ class GNX1:
                     else:
                         x  = compare_array(msg[1:4], self.mnfr_id)
                         pass
+
+        except GNXError as e:
+            self.gnxAlert.emit(e)
+
         except Exception as e:
-            print(f"Unrecognised message {msg}")
+            e = GNXError(icon = QMessageBox.Warning, title = "GNX Message Error", text = f"Unrecognised message {msg}", buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
 
         return False
 
@@ -1940,10 +1975,26 @@ class GNX1:
         if not self.device_connected:
             if settings.GNXEDIT_CONFIG["midi"]["lockchannel"] == None:
                 self.set_midi_channel(msg[9])
-                self.device_connected = True
+                self.setDeviceConnected(True)
 
                 # resync
-                self.request_patch_names()
+                self.request_status()
+
+    # CODE 06: Device Status
+    def decode06(self, msg):
+        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+            return
+        
+        pint = msg[7:-2]
+        unpacked = self.unpack(pint[:-1])
+
+        self.current_patch_bank = unpacked[10]
+        self.current_patch_number = unpacked[11]
+
+        self.setPatchName(None)
+
+        if self.resyncing:
+            self.request_patch_names()
 
     # CODE 08: Amp/Cab Names
     def decode08(self, msg):
@@ -2010,7 +2061,7 @@ class GNX1:
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
-        self.current_patch_name = "".join(map(chr, unpacked[3:])).split('\x00')[0]       # "".join(map(chr, unpacked[3: 9]))
+        self.setPatchName("".join(map(chr, unpacked[3:])).split('\x00')[0])       # "".join(map(chr, unpacked[3: 9]))
 
         if self.resyncing:
             self.acknowledge_current_patch_name()
@@ -2209,8 +2260,8 @@ class GNX1:
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
-        bank = unpacked[2]
-        patch = unpacked[3]
+        self.current_patch_bank = unpacked[2]
+        self.current_patch_number = unpacked[3]
 
         name = ""
         n = 4
@@ -2218,9 +2269,10 @@ class GNX1:
             name += chr(unpacked[n])
             n += 1
 
-        print(f"PATCH SAVED: Bank {bank} Patch {patch} Name {name}")
+        print(f"PATCH SAVED: Bank {self.current_patch_bank} Patch {self.current_patch_number} Name {name}")
 
-        self.user_patch_names[patch] = name
+        self.user_patch_names[self.current_patch_number] = name
+        self.setPatchName(name)
         pass
 
     # CODE 7E: e.g: current patch number has not changed

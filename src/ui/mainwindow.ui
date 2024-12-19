@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1400</width>
-    <height>809</height>
+    <height>866</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>GNXEdit MIDI Device Controller</string>
+   <string>GNX Edit MIDI Device Controller</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight,  QScrollArea, QTreeView {
@@ -139,11 +139,20 @@ QLabel[cssClass='red'] {
    color: lightpink;
    font-size: 12px;
 }
+QStatusBar {
+	padding: 8px, 0;
+	background-color: lightgray;
+	color: black;
+}
 
-}</string>
+QStatusBar QLabel {
+	border: 1px solid gray;
+}
+
+</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_6">
+   <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
      <number>0</number>
     </property>
@@ -708,7 +717,7 @@ QLabel[cssClass='red'] {
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionAboutCPGEN"/>
+    <addaction name="actionAbout"/>
     <addaction name="actionHelp"/>
    </widget>
    <widget class="QMenu" name="menuFile">
@@ -728,7 +737,7 @@ QLabel[cssClass='red'] {
    <addaction name="menuDevice"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
     <string>toolBar</string>
@@ -756,7 +765,7 @@ QLabel[cssClass='red'] {
     <string>Remove device from CPGEN</string>
    </property>
   </action>
-  <action name="actionAboutCPGEN">
+  <action name="actionAbout">
    <property name="text">
     <string>About CPGEN</string>
    </property>

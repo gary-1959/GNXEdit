@@ -1,6 +1,6 @@
 # styledial.py
 #
-# CPGen Pot widget for Digitech GNX1
+# GNX Edit Pot widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

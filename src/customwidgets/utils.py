@@ -1,6 +1,6 @@
 # utils.py
 #
-# CPGen general utilities for Digitech GNX1
+# GNX Edit general utilities for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

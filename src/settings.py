@@ -1,6 +1,6 @@
 # settings.py
 #
-# CPGen settings file
+# GNX Edit settings file
 #
 # Copyright 2024 gary-1959
 #

@@ -1,6 +1,6 @@
 # MIDIControl.py
 #
-# CPGen MIDI Handler
+# GNX Edit MIDI Handler
 #
 # Copyright 2024 gary-1959
 #
@@ -22,7 +22,7 @@ import settings
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox
-from PySide6.QtCore import QFile, QIODevice, Qt   
+from PySide6.QtCore import QFile, QIODevice, Qt, Signal, QObject
 
 class MIDIControl:
 

@@ -1,6 +1,6 @@
 # MIDIDevice.py
 #
-# CPGen MIDI Device Base Class
+# GNX Edit MIDI Device Base Class
 #
 # Copyright 2024 gary-1959
 #

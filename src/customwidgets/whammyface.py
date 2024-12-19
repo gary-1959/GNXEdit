@@ -1,6 +1,6 @@
 # whammyface.py
 #
-# CPGen Whammy/IPS widget for Digitech GNX1
+# GNX Edit Whammy/IPS widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

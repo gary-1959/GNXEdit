@@ -1,6 +1,6 @@
 # menu.py
 #
-# CPGen menu handler
+# GNX Edit menu handler
 #
 # Copyright 2024 gary-1959
 #
@@ -25,25 +25,25 @@ from PySide6.QtCore import QFile, QIODevice, Qt
 
 class MenuHandler():
 
-    def __init__(self, window, midicontrol):
+    def __init__(self, window = None, midicontrol = None, gnx = None):
         self.window = window
         self.midicontrol = midicontrol
 
-        menubar = window.findChild(QMenuBar, "mainMenuBar")
+        self.menubar = window.findChild(QMenuBar, "mainMenuBar")
 
         # FILE menu       
-        file_menu = menubar.findChild(QMenu, "menuFile")
+        file_menu = self.menubar.findChild(QMenu, "menuFile")
         for a in file_menu.actions():
             n = a.objectName()
             match n:
                 case "actionQuit":
-                    a.triggered.connect(window.close)
+                    a.triggered.connect(self.window.close)
                 case _:
                     print(f"Unrecognised menu option {n}")
             pass
 
         # MIDI menu       
-        midi_menu = menubar.findChild(QMenu, "menuMIDI")
+        midi_menu = self.menubar.findChild(QMenu, "menuMIDI")
         for a in midi_menu.actions():
             n = a.objectName()
             match n:
@@ -53,6 +53,25 @@ class MenuHandler():
                     print(f"Unrecognised menu option {n}")
             pass
 
+        if gnx != None:
+            self.setGNX()
+
+    # to set gnx after init
+    def setGNX(self, gnx):
+        self.gnx = gnx
+        self.setDeviceMenu()
+        
+        # Device menu    
+    def setDeviceMenu(self):   
+        device_menu = self.menubar.findChild(QMenu, "menuDevice")
+        for a in device_menu.actions():
+            n = a.objectName()
+            match n:
+                case "actionResync":
+                    a.triggered.connect(self.gnx.midi_resync)
+                case _:
+                    print(f"Unrecognised menu option {n}")
+            pass
 
     
 

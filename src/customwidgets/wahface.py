@@ -1,6 +1,6 @@
 # wahface.py
 #
-# CPGen Wah widget for Digitech GNX1
+# GNX Edit Wah widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #
