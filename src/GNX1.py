@@ -49,6 +49,7 @@ from customwidgets.utils import getnum, skip_bytes, compile_number, pack_data, b
 class GNX1(QObject):
 
     gnxAlert = Signal(GNXError)
+    gnxPatchNamesUpdated = Signal(int, list)
 
     midi_watchdog = None
     midi_watchdog_time = 1  # time between watchdog timeouts
@@ -1598,6 +1599,7 @@ class GNX1(QObject):
         super().__init__()
 
         self.midicontrol = midicontrol
+        self.requested_patch_bank = 0
         self.ui = ui
         if self.midicontrol == None:
             raise GNXError(icon = QMessageBox.Critical, title = "System Error", text = "No MIDI controller specified for GNX1", buttons = QMessageBox.Ok)
@@ -1724,7 +1726,7 @@ class GNX1(QObject):
         self.resyncing = False
 
     # syncing: 
-    # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12) -> decode13 -> 
+    # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12, 0) -> decode13 -> request_patch_names(0x12, 1) -> decode13 -> 
     # request_ampcab_names(0x07) -> decode08 -> request_current_patch_name(0x20) -> decode 0x21-> acknowledge_patch_name(0x7E) -> patch data follows
 
     def enquire_device(self):
@@ -1734,8 +1736,9 @@ class GNX1(QObject):
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x05, 0x00, 0x01])
         self.midicontrol.send_message(msg)
 
-    def request_patch_names(self):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, 0x01, 0x00])
+    def request_patch_names(self, bank):        # 0: factory, 1: user
+        self.requested_patch_bank = bank
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, bank, 0x00])
         self.midicontrol.send_message(msg)
 
     def request_ampcab_names(self, subcode):
@@ -1994,7 +1997,8 @@ class GNX1(QObject):
         self.setPatchName(None)
 
         if self.resyncing:
-            self.request_patch_names()
+            self.requested_patch_bank = 0
+            self.request_patch_names(self.requested_patch_bank)     # factory patch names
 
     # CODE 08: Amp/Cab Names
     def decode08(self, msg):
@@ -2048,10 +2052,17 @@ class GNX1(QObject):
         
         pint = msg[7:-2]
         unpacked = self.unpack(pint[:-1])       # chop off final 00 to avoid extra array element
+
         self.user_patch_names = "".join(map(chr, unpacked[2:])).split('\x00')
 
+        self.gnxPatchNamesUpdated.emit(self.requested_patch_bank, self.user_patch_names)
+
         if self.resyncing:
-            self.request_ampcab_names(0x01)
+            if self.requested_patch_bank == 0:
+                self.requested_patch_bank = 1
+                self.request_patch_names(self.requested_patch_bank)     # user
+            else:
+                self.request_ampcab_names(0x01)
         
     # CODE 21: Current Patch Name
     def decode21(self, msg):

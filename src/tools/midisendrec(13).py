@@ -49,10 +49,10 @@ def printpacked_lin(packed, compareto, comment):
     global lastbytes, logfile
 
     if comment == None:
-        comment = "No comment"
+        comment = "No commentgate"
 
     # show patch parameters only
-    #if packed[6] != 0x24:   # code 24 only
+    #if packed[6] != 0x28:   # code 28 only
     #    return
     
     unpacked = []
@@ -142,9 +142,10 @@ ms = []
 #ms.append("F0 00 00 10 00 56 07 00 01 00 40 F7")            # 07:00 Amp and Cabinet Names
 #ms.append("F0 00 00 10 00 56 07 00 01 01 41 F7")           # 07:01 Bad?
 #ms.append("F0 00 00 10 00 56 07 00 01 02 42 F7")           # 07:02 Bad?
-ms.append("F0 00 00 10 00 56 12 00 01 01 00 54 F7")        # user patch names
-##ms.append("F0 00 00 10 00 56 20 00 01 02 00 1F 7A F7")     # response 21 gets patch name and params (amp?, cab?)
-##ms.append("F0 00 00 10 00 56 7E 00 01 21 18 F7")           # acknowledge              q
+ms.append("F0 00 00 10 00 56 12 00 01 00 00 55 F7")         # factory patch names
+ms.append("F0 00 00 10 00 56 12 00 01 01 00 54 F7")         # user patch names
+#ms.append("F0 00 00 10 00 56 20 00 01 02 00 1F 7A F7")     # response 21 gets patch name and params (amp?, cab?)
+#ms.append("F0 00 00 10 00 56 7E 00 01 21 18 F7")           # acknowledge              
 #ms.append("F0 00 00 10 00 56 2E 00 01 02 00 02 01 00 00 68 F7") # DIRECT amp model
 #ms.append("F0 00 00 10 00 56 2D 00 01 01 00 00 6B F7")
 #ms.append("F0 00 00 10 00 56 20 00 01 03 00 1F 7B F7")
@@ -161,7 +162,7 @@ ms.append("F0 00 00 10 00 56 12 00 01 01 00 54 F7")        # user patch names
 
 logfile = input("Logfile name: ").lower()
 if len(logfile) == 0:
-    logfile = None
+    logfile = "test.csv"
 
 while True:
 

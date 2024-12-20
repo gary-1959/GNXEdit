@@ -29,6 +29,7 @@ class StatusControl(QObject):
         super().__init__()
 
         self.window = window
+        self.gnx = gnx
 
         self.status_bar = self.window.findChild(QStatusBar, "statusBar")
         self.midi_channel_label = QLabel("MIDI Channel: --", self.status_bar)
@@ -46,7 +47,7 @@ class StatusControl(QObject):
         self.gnx_connected_label.setToolTip("Current patch")
         self.status_bar.addPermanentWidget(self.patch_label)
 
-        if gnx != None:
+        if self.gnx != None:
             self.setGNX(gnx)
 
     # to set gnx after init

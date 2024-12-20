@@ -13,6 +13,7 @@ import settings
 from exceptions import GNXError
 from menu import MenuHandler
 from statusbar import StatusControl
+from treeview import TreeHandler
 
 from GNX1 import GNX1
 
@@ -41,11 +42,15 @@ if __name__ == "__main__":
         ui_file.close()
         statusHandler = StatusControl(window)
         midicontrol = MIDIControl(window)
-        menuHandler = MenuHandler(window, midicontrol, gnx = None)
+        menuHandler = MenuHandler(window = window, midicontrol = midicontrol, gnx = None)
+        treeHandler = TreeHandler(window = window, gnx = None)
         gnx = GNX1(ui = window, midicontrol = midicontrol)
         gnx.gnxAlert.connect(showAlert)
+
+
         statusHandler.setGNX(gnx)
         menuHandler.setGNX(gnx)
+        treeHandler.setGNX(gnx)
 
         if not window:
             print(loader.errorString())
