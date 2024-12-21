@@ -5,7 +5,7 @@ PACKED = 1
 LINCOMP = 2
 LINPACKED = 3
 RAW = 4
-print_mode = RAW
+print_mode = PACKED
 
 lastbytes = None
 

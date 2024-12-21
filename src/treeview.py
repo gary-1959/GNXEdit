@@ -34,11 +34,11 @@ class TreeHandler(QObject):
 
         self.window = window
         self.gnx = gnx
+        self.patch_name_changed_by_tree = False
 
         self.tree = self.window.findChild(QTreeView, "treeView")
         self.tree.setHeaderHidden(True)
         self.model = QStandardItemModel()
-        self.selection = QItemSelectionModel(self.model)
         self.rootNode = self.model.invisibleRootItem()
 
         self.gnxHeader = QStandardItem("GNX1")
@@ -53,6 +53,8 @@ class TreeHandler(QObject):
         self.rootNode.appendRow(self.libHeader)
 
         self.tree.setModel(self.model)
+        self.selection = self.tree.selectionModel()
+        self.selection.selectionChanged.connect(self.selectionChangedEvent)
         self.tree.expandAll()
 
         if self.gnx != None:
@@ -63,11 +65,26 @@ class TreeHandler(QObject):
         self.gnx = gnx
         gnx.deviceConnectedChanged.connect(self.setConnected)
         gnx.gnxPatchNamesUpdated.connect(self.patchNamesUpdated)
-        gnx.patchNameChanged.connect(self.setCurrentPatch)
+        gnx.patchNameChanged.connect(self.setCurrentPatchName)
 
     @Slot()
-    def setCurrentPatch(self, name, bank, patch, parent = QModelIndex()):
+    def selectionChangedEvent(self):
+        for x in self.selection.selectedIndexes():
+            data = x.data(Qt.UserRole)
+            if data != None:
+                bank = data["bank"]
+                patch = data["patch"]
+                print(f"Selected Bank: {bank}, Patch: {patch}")
+                self.patch_name_changed_by_tree = True
+                self.gnx.send_patch_change(bank, patch)
+                self.patch_name_changed_by_tree = False
+                pass
+        pass
 
+    @Slot()
+    def setCurrentPatchXXX(self, name, bank, patch, parent = QModelIndex(), exit = False):
+        if exit:
+            return
         rows = self.model.rowCount(parent)
         for r in range(rows):
             index = self.model.index(r, 0, parent)
@@ -75,10 +92,33 @@ class TreeHandler(QObject):
             data = index.data(Qt.UserRole)
             if data != None:
                 if data["bank"] == bank and data["patch"] == patch:
-                    print(f"Bank: {bank}, Patch: {patch}")
-                    self.selection.select(index, QItemSelectionModel.Select)
+                    print(f"Received Bank: {bank}, Patch: {patch}")
+                    #self.selection.blockSignals(True)
+                    self.tree.setCurrentIndex(index)
+                    #self.selection.blockSignals(False)
+                    exit = True
+                    
             if self.model.hasChildren(index):
-                self.setCurrentPatch(name, bank, patch, index)
+                self.setCurrentPatch(name, bank, patch, index, exit)
+
+    
+    @Slot()
+    def setCurrentPatchName(self, name, bank, patch, parent = QModelIndex(), exit = False):
+        if exit:
+            return
+        rows = self.model.rowCount(parent)
+        for r in range(rows):
+            index = self.model.index(r, 0, parent)
+            #data = self.model.data(index)
+            data = index.data(Qt.UserRole)
+            if data != None:
+                if data["bank"] == bank and data["patch"] == patch:
+                    print(f"Received Name: {bank}, Patch: {patch}, Name {name}")
+                    index.model().setData(index, name, Qt.DisplayRole )
+                    exit = True
+                    
+            if self.model.hasChildren(index):
+                self.setCurrentPatchName(name, bank, patch, index, exit)
 
     @Slot()
     def setConnected(self, connected):
@@ -86,6 +126,8 @@ class TreeHandler(QObject):
 
     @Slot()
     def patchNamesUpdated(self, bank, names):
+        if self.patch_name_changed_by_tree:
+            return
         if bank == 0:
             h = self.factoryHeader
         else:
@@ -95,8 +137,9 @@ class TreeHandler(QObject):
         
         k = 0
         for n in names:
-            k += 1
-            w = QStandardItem(f"{k:02.0f}:{n}")
+            w = QStandardItem(f"{(k + 1):02.0f}:{n}")
             w.setData({"bank": bank, "patch": k}, Qt.UserRole)
             h.appendRow(w)
-            
+            k += 1            
+
+        

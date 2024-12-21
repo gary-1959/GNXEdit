@@ -156,8 +156,12 @@ QTreeView {
 }
 
 QTreeView::item:selected {
-   color: blue;
-   border: 1px solid blue;
+   border-image: none;
+   background-image: none;
+   border: none;
+   border: 1px solid red;
+   background-color: red;
+   color: white;
 }
 
 QTreeView::branch:has-siblings:!adjoins-item {

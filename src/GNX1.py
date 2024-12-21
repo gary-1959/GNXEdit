@@ -1702,8 +1702,10 @@ class GNX1(QObject):
 
     patchNameChanged = Signal(str, int, int)
     def setPatchName(self, name):
-        self.current_patch_name = name if name == None else self.current_patch_name
-        self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+        if name != None:
+            if self.current_patch_name != name:
+                self.current_patch_name = name
+                self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
 
     midiChannelChanged = Signal(int)
     def set_midi_channel(self, channel):
@@ -1755,6 +1757,10 @@ class GNX1(QObject):
 
     def acknowledge_current_patch_name(self):
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x7E, 0x00, 0x01, 0x21])
+        self.midicontrol.send_message(msg)
+
+    def send_patch_change(self, bank, patch):
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
         self.midicontrol.send_message(msg)
 
     def sendcode26message(self):
@@ -2302,6 +2308,12 @@ class GNX1(QObject):
             # parameter change acknowledged
             print("Parameter change acknowledged", msg)
             pass
+
+        elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
+            # patch change acknowledged - get patch dump
+            self.resyncing = True
+            self.request_current_patch_name()
+
         elif compare_array(unpacked, [0x01, 0x26, 0x00]):
             # parameter change acknowledged
             print("Expression parameter change acknowledged", msg)
