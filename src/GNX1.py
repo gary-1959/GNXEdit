@@ -146,7 +146,7 @@ class GNX1(QObject):
             n, type = getnum(n, unpacked)
             self.set_values(type = type)
             
-            print(f"Pickup: Type: {type}")
+            #print(f"Pickup: Type: {type}")
             return n
         
         # individual parameter change from GNX1
@@ -226,7 +226,7 @@ class GNX1(QObject):
 
             self.set_values(type = type, on = on, min = min, max = max, pedal = pedal)
             
-            print("WAH: {0}, Type: {1}, Min: {2}, Max: {3}, Pedal:{4}".format(factory_onoff[on], factory_wah_types[type], min, max, pedal))
+            #print("WAH: {0}, Type: {1}, Min: {2}, Max: {3}, Pedal:{4}".format(factory_onoff[on], factory_wah_types[type], min, max, pedal))
             return n
 
         # individual parameter change from GNX1
@@ -325,9 +325,9 @@ class GNX1(QObject):
 
             self.set_values(on = on, attack = attack, ratio = ratio, threshold = threshold, gain = gain)
             
-            print("COMPRESSOR: {0}, Attack: {1}, Ratio: {2}, Threshold: {3}, Gain:{4}".format(
-                  factory_onoff[on], factory_compressor_attack[attack], factory_compressor_ratio[ratio],
-                    threshold, gain))
+            #print("COMPRESSOR: {0}, Attack: {1}, Ratio: {2}, Threshold: {3}, Gain:{4}".format(
+            #      factory_onoff[on], factory_compressor_attack[attack], factory_compressor_ratio[ratio],
+            #        threshold, gain))
             
             return n
         
@@ -491,8 +491,8 @@ class GNX1(QObject):
                     n, param_2 = getnum(n, unpacked)
                     n, param_3 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3)
-                    print("WHAMMY: {0}, Shift {1}, Pedal {2}, Mix {3}".format(
-                        factory_onoff[on], factory_whammy_shift[param_1], param_2, param_3))
+                    #print("WHAMMY: {0}, Shift {1}, Pedal {2}, Mix {3}".format(
+                    #    factory_onoff[on], factory_whammy_shift[param_1], param_2, param_3))
 
                 case 1: # IPS
                     n, param_1 = getnum(n, unpacked)
@@ -500,23 +500,23 @@ class GNX1(QObject):
                     n, param_3 = getnum(n, unpacked)
                     n, param_4 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3, param_4 = param_4)
-                    print("IPS: {0}, Shift {1}, Scale {2}, Key {3}, Level {4}".format(
-                        factory_onoff[on], factory_ips_shift[param_1], factory_ips_scale[param_2],
-                          factory_ips_key[param_3], param_4))
+                    #print("IPS: {0}, Shift {1}, Scale {2}, Key {3}, Level {4}".format(
+                    #    factory_onoff[on], factory_ips_shift[param_1], factory_ips_scale[param_2],
+                    #      factory_ips_key[param_3], param_4))
 
                 case 2: # detune
                     n, param_1 = getnum(n, unpacked)
                     n, param_2 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2)
-                    print("DETUNE: {0}, Shift {1}, Level {2}".format(
-                        factory_onoff[on], param_1, param_2))
+                    #print("DETUNE: {0}, Shift {1}, Level {2}".format(
+                    #    factory_onoff[on], param_1, param_2))
 
                 case 3: # pitch
                     n, param_1 = getnum(n, unpacked)
                     n, param_2 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2)
-                    print("PITCH: {0}, Shift {1}, Level {2}".format(
-                        factory_onoff[on], param_1, param_2))
+                    #print("PITCH: {0}, Shift {1}, Level {2}".format(
+                    #    factory_onoff[on], param_1, param_2))
                 case _:
                     raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised Whammy/IPS type {type}", buttons = QMessageBox.Ok)
                 
@@ -604,7 +604,7 @@ class GNX1(QObject):
             
             self.set_values(type = type, amp_select = amp_select, amp_warp = amp_warp, cab_warp = cab_warp, warpD = warpD)
             
-            print(f"WARP: Amp Select: {amp_select}, Amp Warp: {amp_warp}, Cab Warp: {cab_warp}, D: {warpD}")
+            #print(f"WARP: Amp Select: {amp_select}, Amp Warp: {amp_warp}, Cab Warp: {cab_warp}, D: {warpD}")
             return n
         
         # individual parameter change from GNX1
@@ -657,7 +657,7 @@ class GNX1(QObject):
 
                 match k:
                     case "name":
-                        print("Set amp style by name deprecated")
+                        #print("Set amp style by name deprecated")
                         pass    # deprecated
                         '''
                         if isinstance(arg, int):
@@ -748,8 +748,8 @@ class GNX1(QObject):
             self.set_values(type = type, gain = gain, bass_freq = bass_freq, bass_level = bass_level, mid_freq = mid_freq, mid_level = mid_level,
                             treble_freq = treble_freq, treble_level = treble_level, level = level )
             
-            print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
-                type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
+            #print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
+            #    type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
             return n
 
         # extract amp values from data string
@@ -867,7 +867,7 @@ class GNX1(QObject):
 
             self.set_values(type = type, tuning = tuning)
             
-            print("CAB: Type: {0}, Tuning: {1}".format(type, tuning))
+            #print("CAB: Type: {0}, Tuning: {1}".format(type, tuning))
             return n
 
         # get values from code 2A response
@@ -1003,16 +1003,16 @@ class GNX1(QObject):
                     n, param_1 = getnum(n, unpacked)
                     n, param_2 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2)
-                    print("GATE: {0}, Threshold {1}, Attack {2}".format(
-                        factory_onoff[on], param_1, param_1))
+                    #print("GATE: {0}, Threshold {1}, Attack {2}".format(
+                    #    factory_onoff[on], param_1, param_1))
 
                 case 1: # pluck
                     n, param_1 = getnum(n, unpacked)
                     n, param_2 = getnum(n, unpacked)
                     n, param_3 = getnum(n, unpacked)
                     self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3)
-                    print("GATE: {0}, Threshold {1}, Attack {2}, Sensitivity {3}".format(
-                        factory_onoff[on], param_1, param_2, param_3))
+                    #print("GATE: {0}, Threshold {1}, Attack {2}, Sensitivity {3}".format(
+                    #    factory_onoff[on], param_1, param_2, param_3))
                     
                 case _:
                     raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised Gate type {type}", buttons = QMessageBox.Ok)
@@ -1187,8 +1187,8 @@ class GNX1(QObject):
                 n, param_6 = getnum(n, unpacked)
                 
             self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3, param4 = param_4, param_5 = param_5, param_6 = param_6)
-            print("MOD: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}, Param 6 {6}".format(
-                        factory_onoff[on], param_1, param_2, param_3, param_4, param_5, param_6))
+            #print("MOD: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}, Param 6 {6}".format(
+            #            factory_onoff[on], param_1, param_2, param_3, param_4, param_5, param_6))
                
             return n
         
@@ -1321,8 +1321,8 @@ class GNX1(QObject):
             n, param_6 = getnum(n, unpacked)
                 
             self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3, param4 = param_4, param_5 = param_5, param_6 = param_6)
-            print("DELAY: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}, Param 6 {6}".format(
-                        factory_onoff[on], param_1, param_2, param_3, param_4, param_5, param_6))
+            #print("DELAY: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}, Param 6 {6}".format(
+            #            factory_onoff[on], param_1, param_2, param_3, param_4, param_5, param_6))
                
             return n
         
@@ -1444,8 +1444,8 @@ class GNX1(QObject):
             n, param_5 = getnum(n, unpacked)
                 
             self.set_values(on = on, type = type, param_1 = param_1, param_2 = param_2, param_3 = param_3, param4 = param_4, param_5 = param_5)
-            print("DELAY: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}".format(
-                        factory_onoff[on], param_1, param_2, param_3, param_4, param_5))
+            #print("DELAY: {0}, Param 1 {1}, Param 2 {2}, Param 3 {3}, Param 4 {4}, Param 5 {5}".format(
+            #            factory_onoff[on], param_1, param_2, param_3, param_4, param_5))
                
             return n
         
@@ -1508,9 +1508,9 @@ class GNX1(QObject):
             self.set_values(assignment = assignment, params = params)
             # one of these print statements allows dial signal blocking to work!
             # otherwise setting pot value triggers code 26 message to be sent
-            print(f"EXPR1: Assignment {assignment[0]}, Min {params[0]['min']}, Max {params[0]['max']}")
-            print(f"EXPR2: Assignment {assignment[1]}, Min {params[1]['min']}, Max {params[1]['max']}")
-            print(f"EXPR3: Assignment {assignment[2]}, Min {params[2]['min']}, Max {params[2]['max']}")
+            #print(f"EXPR1: Assignment {assignment[0]}, Min {params[0]['min']}, Max {params[0]['max']}")
+            #print(f"EXPR2: Assignment {assignment[1]}, Min {params[1]['min']}, Max {params[1]['max']}")
+            #print(f"EXPR3: Assignment {assignment[2]}, Min {params[2]['min']}, Max {params[2]['max']}")
 
             return n
 
@@ -1582,7 +1582,8 @@ class GNX1(QObject):
         dev_file = QFile(path)
 
         if not dev_file.open(QIODevice.ReadOnly):
-            print(f"Cannot open {path}: {dev_file.errorString()}")
+            raise GNXError(icon = QMessageBox.Warning, title = "GNX UI error", text = f"Cannot open {path}: {dev_file.errorString()}", \
+                           buttons = QMessageBox.Ok)
         
         loader = QUiLoader()
         loader.registerCustomWidget(StyleDial)
@@ -1594,6 +1595,8 @@ class GNX1(QObject):
         return device
 
     # MAIN CLASS CODE
+
+    midiPatchChange = Signal(int)      # MIDI patch change 0xCn
    
     def __init__(self, ui = None, midicontrol = None):
         super().__init__()
@@ -1674,14 +1677,14 @@ class GNX1(QObject):
 
     def midi_watchdog_bite(self):
         if self.midi_watchdog_bite_count > self.midi_watchdog_bite_count_limit:
-            print("WATCHDOG HAS BITTEN")
+            #print("WATCHDOG HAS BITTEN")
             self.setDeviceConnected(False)
             self.resyncing = True
             self.enquire_device()
             self.midi_watchdog_bite_count = 0
             self.midi_watchdog.start()
         else:
-            print(".", end = "")
+            #print(".", end = "")
             self.midi_watchdog_bite_count += 1
             self.midi_watchdog.start()
             self.send_keep_alive()
@@ -1696,11 +1699,11 @@ class GNX1(QObject):
         
         data = pack_data([0x02, 0x00] + [section, parameter] + v)
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, command + data)
-        print("Sending Message:", msg)
+        #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
         pass
 
-    patchNameChanged = Signal(str, int, int)
+    patchNameChanged = Signal(str, int, int)    
     def setPatchName(self, name):
         if name != None:
             if self.current_patch_name != name:
@@ -1712,7 +1715,7 @@ class GNX1(QObject):
         settings.GNXEDIT_CONFIG["midi"]["channel"] = channel
         settings.save_settings()
         self.midiChannelChanged.emit(channel + 1)
-        print(f"GNX1 MIDI Channel: {channel:02X}")
+        #(f"GNX1 MIDI Channel: {channel:02X}")
 
     def ports_open(self):
         self.setDeviceConnected(False)
@@ -1760,8 +1763,11 @@ class GNX1(QObject):
         self.midicontrol.send_message(msg)
 
     def send_patch_change(self, bank, patch):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
-        self.midicontrol.send_message(msg)
+        if self.device_connected:
+            self.current_patch_bank = bank
+            self.current_patch_number = patch
+            msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
+            self.midicontrol.send_message(msg)
 
     def sendcode26message(self):
         
@@ -1812,16 +1818,20 @@ class GNX1(QObject):
 
         packed = pack_data(exp + lfo)
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x26] + packed)
-        print("Sending Message:", msg)
+        #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
 
     def dispatcher(self, msg):
 
         try:
             if type(msg) != type(None):
-                if msg[0] == 0xF0:      # system exclusive
+                # check for patch change
+                if msg[0] == 0xC0 | settings.GNXEDIT_CONFIG["midi"]["channel"]:
+                    self.midiPatchChange.emit(msg[1])
+
+                elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -1837,7 +1847,9 @@ class GNX1(QObject):
                                         self.midi_watchdog_bite_count = 0
                                         #self.midi_watchdog.reset()
                                     case _:
-                                        print(f"Non-Realtime Message[6] code not recognised {msg}")
+                                        raise GNXError(icon = QMessageBox.Warning, title = "System Exclusive Error", \
+                                                text = f"Non-Realtime Message[6] code not recognised {msg}", \
+                                                buttons = QMessageBox.Ok)
                                 
 
                         elif (msg[4] == 0x7F or msg[6] == 0x02 or msg[4] == settings.GNXEDIT_CONFIG["midi"]["channel"]) and (msg[5] == self.device_id ):
@@ -2000,6 +2012,7 @@ class GNX1(QObject):
         self.current_patch_bank = unpacked[10]
         self.current_patch_number = unpacked[11]
 
+        print("CODE 06: Setting Patch Name")
         self.setPatchName(None)
 
         if self.resyncing:
@@ -2046,7 +2059,7 @@ class GNX1(QObject):
 
             n += 8
 
-        print("AMP/CAB NAMES:", amp_names, cab_names)
+        #print("AMP/CAB NAMES:", amp_names, cab_names)
 
         if self.resyncing:
             self.request_current_patch_name()
@@ -2078,6 +2091,7 @@ class GNX1(QObject):
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
+        print("CODE 21: Setting Patch Name")
         self.setPatchName("".join(map(chr, unpacked[3:])).split('\x00')[0])       # "".join(map(chr, unpacked[3: 9]))
 
         if self.resyncing:
@@ -2204,7 +2218,7 @@ class GNX1(QObject):
         parameter = unpacked[3]
         n, value = getnum(4, unpacked)
 
-        print(f"Section {section} parameter {parameter} value {value}")
+        #print(f"Section {section} parameter {parameter} value {value}")
 
         match section:      # section code
             case 0x01:      # pickup
@@ -2247,7 +2261,9 @@ class GNX1(QObject):
                 self.device_reverb.parameter_change(parameter, value) 
 
             case _:
-                print(f"Received parameter change not recognised {msg}")
+                raise GNXError(icon = QMessageBox.Warning, title = "Parameter Error", \
+                                                text = f"Received parameter change not recognised {section}", \
+                                                buttons = QMessageBox.Ok)
 
         self.send_keep_alive()
 
@@ -2259,10 +2275,13 @@ class GNX1(QObject):
 
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
-        self.current_patch_bank = unpacked[1]
-        self.current_patch_number = unpacked[2]
+        bank = unpacked[1]
+        patch = unpacked[2]
 
-        print(f"Bank: {self.current_patch_bank} Patch: {self.current_patch_number}")
+        print(f"CODE 2D Bank: {bank} Patch: {patch}")
+
+        self.current_patch_bank = bank
+        self.current_patch_number = patch
 
         # resync
         self.resyncing = True
@@ -2306,7 +2325,7 @@ class GNX1(QObject):
 
         elif compare_array(unpacked, [0x01, 0x2C, 0x00]):
             # parameter change acknowledged
-            print("Parameter change acknowledged", msg)
+            #print("Parameter change acknowledged", msg)
             pass
 
         elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
@@ -2316,7 +2335,7 @@ class GNX1(QObject):
 
         elif compare_array(unpacked, [0x01, 0x26, 0x00]):
             # parameter change acknowledged
-            print("Expression parameter change acknowledged", msg)
+            #print("Expression parameter change acknowledged", msg)
             pass        
         else:
             print("Code 7E unrecognised: ", msg, unpacked)

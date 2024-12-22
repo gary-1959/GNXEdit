@@ -190,6 +190,8 @@ class MIDIControl:
             
         else:
             print("MIDI message: ", message)
+            for t in self.registered_input_targets:
+                result = t(message)
             pass    # process other messages (e.g. patch change)
 
     def send_message(self, msg):

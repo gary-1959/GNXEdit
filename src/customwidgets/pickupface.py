@@ -52,7 +52,7 @@ class PickupFace(QWidget):
 
     def setPickup(self, type = None):
         self._type = type if type != None else self._type
-        print(f"PICKUP: Type: {self._type}")
+        #print(f"PICKUP: Type: {self._type}")
         self.update()
     
     def paintEvent(self, event):

@@ -105,7 +105,7 @@ class WarpFace(QWidget):
         self._cab_warp = cab_warp if cab_warp != None else self._cab_warp # cab warp: 0 = max green, 99 = max red
         self._warpD = warpD if warpD != None else self._warpD
 
-        print(f"WARP: Type: {self._type} Amp Select: {self._amp_select}, Amp Warp: {self._amp_warp}, C: {self._cab_warp}, D: {self._warpD}")
+        #print(f"WARP: Type: {self._type} Amp Select: {self._amp_select}, Amp Warp: {self._amp_warp}, C: {self._cab_warp}, D: {self._warpD}")
 
         self.update()
     
@@ -183,7 +183,6 @@ class WarpFace(QWidget):
                 amp_warp = 50 + (pos.y() - self._origin["y"]) / self._scale
                 self.setAmpWarp(amp_warp)
 
-                print(f"Position: {pos.x()}, {pos.y()} Left Button: {buttons & Qt.LeftButton}")
             else:
                 self.setCursor(Qt.CrossCursor)
 
