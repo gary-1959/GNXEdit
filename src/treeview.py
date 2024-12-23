@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import settings
+import time
 from exceptions import GNXError
 
 from PySide6.QtUiTools import QUiLoader
@@ -46,17 +47,21 @@ class TreeHandler(QObject):
 
         self.gnxHeader = QStandardItem("GNX1")
         self.gnxHeader.setEnabled(False)
+        self.gnxHeader.setData("header", Qt.UserRole)
 
         self.factoryHeader = QStandardItem("FACTORY")
         self.factoryHeader.setEnabled(False)
+        self.factoryHeader.setData("header", Qt.UserRole)
         self.gnxHeader.appendRow(self.factoryHeader)
 
         self.userHeader = QStandardItem("USER")
         self.userHeader.setEnabled(False)
+        self.userHeader.setData("header", Qt.UserRole)
         self.gnxHeader.appendRow(self.userHeader)
 
         self.libHeader = QStandardItem("LIBRARY")
         self.libHeader.setEnabled(False)
+        self.libHeader.setData("header", Qt.UserRole)
 
         self.rootNode.appendRow(self.gnxHeader)
         self.rootNode.appendRow(self.libHeader)
@@ -66,7 +71,9 @@ class TreeHandler(QObject):
         self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
         self.selection.selectionChanged.connect(self.selectionChangedEvent)
 
-        self.tree.setFirstColumnSpanned(self.factoryHeader.index().row(), QModelIndex(), True)
+        self.tree.model().dataChanged.connect(self.dataChanged)
+
+        self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
         if self.gnx != None:
             self.setGNX(gnx)
@@ -80,6 +87,23 @@ class TreeHandler(QObject):
         #self.gnx.midiPatchChange.connect(self.midiPatchChange)             # patch number may be mapped - do not use
 
     @Slot()
+    def dataChanged(self, topleft, bottomright, roles):
+        if Qt.EditRole in roles:
+            text = topleft.data(Qt.EditRole)
+            if len(text) > 6:
+                text = text[0:6]
+            data = topleft.data(Qt.UserRole)
+            bank = data["bank"]
+            patch = data["patch"]
+            
+
+            #model = topleft.model()
+            #item = model.itemFromIndex(topleft)
+            #item.setData(text, Qt.DisplayRole)
+
+            self.gnx.send_patch_name(text, bank, patch, bank, patch)
+
+    @Slot()
     def midiPatchChange(self, parameter):
         bank = int(parameter / 48)
         patch = parameter % 48
@@ -90,7 +114,7 @@ class TreeHandler(QObject):
     def selectionChangedEvent(self):
         for x in self.selection.selectedIndexes():
             data = x.data(Qt.UserRole)
-            if data != None:
+            if data != None and data != "header":
                 bank = data["bank"]
                 patch = data["patch"]
                 blocked = "BLOCKED" if self.blockPatchChange else ""
@@ -100,7 +124,6 @@ class TreeHandler(QObject):
                 pass
         pass
 
-    
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
         print(f"Received from GNX Bank: {bank}, Patch: {patch}, Name {name}")
@@ -113,30 +136,30 @@ class TreeHandler(QObject):
 
         rows = self.model.rowCount(parent)
         for r in range(rows):
-            index = self.model.index(r, 0, parent)
-            #data = self.model.data(index)
-            data = index.data(Qt.UserRole)
-            if data != None:
+            index1 = self.model.index(r, 0, parent)
+            index2 = self.model.index(r, 1, parent)
+            data = index2.data(Qt.UserRole)
+            if data != None and data != "header":
                 if data["bank"] == bank and data["patch"] == patch:
 
                     if name != None:
-                        index.model().setData(index, f"{(patch + 1):02.0f}:{name}", Qt.DisplayRole )
+                        index2.model().setData(index2, name, Qt.DisplayRole )
                         self.current_patch_name = name
                     else:
                         name = self.current_patch_name  #to exit recurion
                     self.current_patch_bank = bank
                     self.current_patch_number = patch
-                    #self.tree.selectionModel().blockSignals(True)
+                    #self.tree.selectionModel().blockSignals(True)   - DO NOT USE prevents tree update
                     self.blockPatchChange = True
                     self.tree.selectionModel().clearSelection()
                     self.tree.selectionModel().clearCurrentIndex()
-                    self.tree.selectionModel().select(index, QItemSelectionModel.ClearAndSelect)
+                    self.tree.selectionModel().select(index2, QItemSelectionModel.ClearAndSelect)
                     self.blockPatchChange = False
                     #self.tree.selectionModel().blockSignals(False)
                     break
             # recursion
-            if self.model.hasChildren(index):
-                self.setPatchInTree(name, bank, patch, index)
+            if self.model.hasChildren(index1):
+                self.setPatchInTree(name, bank, patch, index1)
 
     @Slot()
     def setConnected(self, connected):
@@ -156,10 +179,33 @@ class TreeHandler(QObject):
         k = 0
         for n in names:
             w1 = QStandardItem(f"{(k + 1):02.0f}:")
-            w1.setEnabled(False)
             w2 = QStandardItem(n)
+            w1.setEnabled(False)
+            if w2 != None:
+                w2.setEditable(bank == 1)   # only user bank is editable
+
             w2.setData({"bank": bank, "patch": k}, Qt.UserRole)
             h.appendRow([w1, w2])
-            k += 1            
+            k += 1
 
         
+
+        self.setHeaderSpanned(self.tree.model().invisibleRootItem())
+
+    # all rows with children will span comlumns
+    def setHeaderSpanned(self, parent):
+        idx = parent.index()
+        for row in range(parent.rowCount()):
+
+            index1 = self.model.index(row, 0, idx)
+            index2 = self.model.index(row, 1, idx)
+            data1 = index1.data(Qt.UserRole)
+            data2 = index2.data(Qt.UserRole)
+
+            #print(idx.data(Qt.DisplayRole), data1, data2)
+
+            if parent.child(row, 0).hasChildren() or data1 == "header":
+                self.tree.setFirstColumnSpanned(row, idx, True)
+
+            if parent.child(row, 0).hasChildren():
+                self.setHeaderSpanned(parent.child(row, 0))

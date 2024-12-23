@@ -302,11 +302,6 @@ QTreeView::branch:open:has-children:has-siblings  {
            <property name="headerHidden">
             <bool>true</bool>
            </property>
-           <column>
-            <property name="text">
-             <string notr="true">1</string>
-            </property>
-           </column>
           </widget>
          </item>
         </layout>
@@ -780,6 +775,7 @@ QTreeView::branch:open:has-children:has-siblings  {
      <string>Device</string>
     </property>
     <addaction name="actionResync"/>
+    <addaction name="actionSavePatch"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuMIDI"/>
@@ -835,6 +831,11 @@ QTreeView::branch:open:has-children:has-siblings  {
   <action name="actionAnother_Option">
    <property name="text">
     <string>Another Option</string>
+   </property>
+  </action>
+  <action name="actionSavePatch">
+   <property name="text">
+    <string>Save Patch to User Bank</string>
    </property>
   </action>
  </widget>

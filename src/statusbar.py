@@ -55,7 +55,7 @@ class StatusControl(QObject):
         self.gnx = gnx
         gnx.deviceConnectedChanged.connect(self.setConnected)
         gnx.midiChannelChanged.connect(self.setMIDIChannel)
-        gnx.patchNameChanged.connect(self.setCurrentPatch)
+        gnx.patchNameChanged.connect(self.patchNameChanged)
 
     @Slot()
     def setConnected(self, connected):
@@ -69,6 +69,6 @@ class StatusControl(QObject):
         self.midi_channel_label.setText(f"MIDI Channel: {channel:02.0f}")
 
     @Slot()
-    def setCurrentPatch(self, name, bank, patch):
+    def patchNameChanged(self, name, bank, patch):
         banks = {0: "FACTORY", 1: "USER"}
         self.patch_label.setText(f"Current Patch: {name} [{banks[bank]}:{(patch + 1):02.0f}]")

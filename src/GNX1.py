@@ -24,8 +24,8 @@ import settings
 from exceptions import GNXError
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox
-from PySide6.QtCore import QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
+from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit
+from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
 
 from customwidgets.styledial import StyleDial
 from customwidgets.ampface import AmpFace
@@ -1677,16 +1677,14 @@ class GNX1(QObject):
 
     def midi_watchdog_bite(self):
         if self.midi_watchdog_bite_count > self.midi_watchdog_bite_count_limit:
-            #print("WATCHDOG HAS BITTEN")
-            self.setDeviceConnected(False)
-            self.resyncing = True
-            self.enquire_device()
+            print("WATCHDOG HAS BITTEN")
+            self.midi_resync()
             self.midi_watchdog_bite_count = 0
-            self.midi_watchdog.start()
+            self.midi_watchdog.reset()
         else:
-            #print(".", end = "")
+            print(self.midi_watchdog_bite_count, self.device_connected)
             self.midi_watchdog_bite_count += 1
-            self.midi_watchdog.start()
+            self.midi_watchdog.reset()
             self.send_keep_alive()
 
     def send_parameter_change(self, section = None, parameter = None, value = None):
@@ -1706,9 +1704,12 @@ class GNX1(QObject):
     patchNameChanged = Signal(str, int, int)    
     def setPatchName(self, name):
         if name != None:
-            if self.current_patch_name != name:
+            if self.current_patch_name != name or True:
                 self.current_patch_name = name
+                print("Changing patch name")
                 self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+            else:
+                pass
 
     midiChannelChanged = Signal(int)
     def set_midi_channel(self, channel):
@@ -1735,6 +1736,7 @@ class GNX1(QObject):
     # request_ampcab_names(0x07) -> decode08 -> request_current_patch_name(0x20) -> decode 0x21-> acknowledge_patch_name(0x7E) -> patch data follows
 
     def enquire_device(self):
+        print("Enquiring")
         self.midicontrol.send_message([0xF0, 0x00, 0x00, 0x10, 0x7E, 0x7F, 0x01, 0x00, 0x01, 0x00, 0x00, 0x11, 0xF7])
 
     def request_status(self):
@@ -1768,6 +1770,16 @@ class GNX1(QObject):
             self.current_patch_number = patch
             msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
             self.midicontrol.send_message(msg)
+
+    def send_patch_name(self, name, sourcebank, sourcepatch, targetbank, targetpatch):
+
+        self.setPatchName(name)
+        data = [0x01, sourcebank, sourcepatch, targetbank, targetpatch] + [ord(c) for c in name] + [0x00, 0xFF]
+        packed = pack_data(data)
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
+        #print("Sending Message:", msg)
+        self.midicontrol.send_message(msg)
+        pass
 
     def sendcode26message(self):
         
@@ -1831,7 +1843,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -1839,12 +1851,14 @@ class GNX1(QObject):
                                 match msg[6]:
                                     case 0x01:
                                         self.decode01()
-                                        self.midi_watchdog_bite_count = 0
+                                        if self.device_connected:
+                                            self.midi_watchdog_bite_count = 0
                                         #self.midi_watchdog.reset()
 
                                     case 0x02:                  # CODE 02: Device Response
                                         self.decode02(msg)
-                                        self.midi_watchdog_bite_count = 0
+                                        if self.device_connected:
+                                            self.midi_watchdog_bite_count = 0
                                         #self.midi_watchdog.reset()
                                     case _:
                                         raise GNXError(icon = QMessageBox.Warning, title = "System Exclusive Error", \
@@ -1854,7 +1868,8 @@ class GNX1(QObject):
 
                         elif (msg[4] == 0x7F or msg[6] == 0x02 or msg[4] == settings.GNXEDIT_CONFIG["midi"]["channel"]) and (msg[5] == self.device_id ):
 
-                            self.midi_watchdog_bite_count = 0
+                            if self.device_connected:
+                                self.midi_watchdog_bite_count = 0
                             #self.midi_watchdog.reset()
 
                             match msg[6]:
@@ -1996,10 +2011,11 @@ class GNX1(QObject):
         if not self.device_connected:
             if settings.GNXEDIT_CONFIG["midi"]["lockchannel"] == None:
                 self.set_midi_channel(msg[9])
-                self.setDeviceConnected(True)
+            
+            self.setDeviceConnected(True)
 
-                # resync
-                self.request_status()
+            # resync
+            self.request_status()
 
     # CODE 06: Device Status
     def decode06(self, msg):
@@ -2116,7 +2132,9 @@ class GNX1(QObject):
         unpacked = self.unpack(pint)
         n = 0
 
-        n = skip_bytes(n, unpacked, [0x02, 0x02, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00])
+        n = skip_bytes(n, unpacked, [0x02, 0x02])
+        n += 1  # can be 0x00 or 0x09 - 0x09 seems to be after error
+        n = skip_bytes(n, unpacked, [0x10, 0x00, 0x00, 0x00, 0x00, 0x00])
         # pickup
         n = skip_bytes(n, unpacked, [0x50, 0x01, 0x01, 0x90])
         n = self.device_pickup.get_values(n, unpacked)
@@ -2174,7 +2192,9 @@ class GNX1(QObject):
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
         n = 0
-        n = skip_bytes(n, unpacked, [0x02, 0x02, 0x00, 0x03, 0x80, 0x00, 0x03])
+        n = skip_bytes(n, unpacked, [0x02, 0x02])
+        n += 1  # can be 0x00 or 0x09  - 0x09 seems to be after error
+        n = skip_bytes(n, unpacked, [0x03, 0x80, 0x00, 0x03])
         n = self.device_expression.get_values(n, unpacked)
         n = self.device_lfo.get_values(n, unpacked)
 
@@ -2333,10 +2353,60 @@ class GNX1(QObject):
             self.resyncing = True
             self.request_current_patch_name()
 
+        elif compare_array(unpacked, [0x01, 0x2E, 0x00]):
+            # patch name change acknowledged
+            pass
+
         elif compare_array(unpacked, [0x01, 0x26, 0x00]):
             # parameter change acknowledged
             #print("Expression parameter change acknowledged", msg)
             pass        
         else:
             print("Code 7E unrecognised: ", msg, unpacked)
+        pass
+
+
+    def save_patch_to_gnx(self):
+        ui_file_name = "src/ui/savepatchtognxdialog.ui"
+        ui_file = QFile(ui_file_name)
+        if not ui_file.open(QIODevice.ReadOnly):
+            raise GNXError(icon = QMessageBox.Alert, title = "Save Patch To GNX Error", \
+                           text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", buttons = QMessageBox.Ok)
+            return
+
+        loader = QUiLoader()
+        self.save_patch_to_gnx_dialog = loader.load(ui_file)
+
+        ui_file.close()
+        targetCB = self.save_patch_to_gnx_dialog.findChild(QComboBox, "targetComboBox")
+
+        p = 0
+        for  n in self.user_patch_names:
+            targetCB.addItem(f"{(p + 1):02.0f}: {n}", p)                
+            if self.current_patch_number == p:
+                    targetCB.setCurrentIndex(p)
+            p += 1
+
+        inputName = self.save_patch_to_gnx_dialog.findChild(QLineEdit, "inputName")
+        inputName.setText(self.current_patch_name)
+
+        self.save_patch_to_gnx_dialog.accepted.connect(self.save_patch_to_gnx_dialog_accepted)
+        self.save_patch_to_gnx_dialog.rejected.connect(self.save_patch_to_gnx_dialog_rejected)
+        self.save_patch_to_gnx_dialog.setParent(self.ui, Qt.Dialog)
+        self.save_patch_to_gnx_dialog.show()
+
+    def save_patch_to_gnx_dialog_accepted(self):
+        targetCB = self.save_patch_to_gnx_dialog.findChild(QComboBox, "targetComboBox")
+        inputName = self.save_patch_to_gnx_dialog.findChild(QLineEdit, "inputName")
+        patch = targetCB.currentIndex()
+        bank = 1 # user
+        name = inputName.text()
+        
+        # save patch
+        self.current_patch_bank = bank
+        self.current_patch_number = patch
+        self.send_patch_name(name, 0x02, 0x00, bank, patch)
+        self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+    def save_patch_to_gnx_dialog_rejected(self):
         pass

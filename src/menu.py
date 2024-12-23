@@ -69,8 +69,11 @@ class MenuHandler():
             match n:
                 case "actionResync":
                     a.triggered.connect(self.gnx.midi_resync)
+                case "actionSavePatch":
+                    a.triggered.connect(self.gnx.save_patch_to_gnx)
                 case _:
                     print(f"Unrecognised menu option {n}")
+
             pass
 
     

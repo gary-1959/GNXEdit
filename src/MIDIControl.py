@@ -19,6 +19,7 @@
 
 import rtmidi
 import settings
+import time
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox
