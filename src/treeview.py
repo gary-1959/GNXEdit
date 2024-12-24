@@ -22,9 +22,9 @@ import time
 from exceptions import GNXError
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem, QTreeView, QAbstractItemView
+from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem, QTreeView, QAbstractItemView, QMenu
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
 class TreeHandler(QObject):
 
@@ -41,27 +41,29 @@ class TreeHandler(QObject):
         self.current_patch_number = None
 
         self.tree = self.window.findChild(QTreeView, "treeView")
+        self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.contextMenu)
         self.tree.setHeaderHidden(True)
         self.model = QStandardItemModel(0, 2)
         self.rootNode = self.model.invisibleRootItem()
 
         self.gnxHeader = QStandardItem("GNX1")
         self.gnxHeader.setEnabled(False)
-        self.gnxHeader.setData("header", Qt.UserRole)
+        self.gnxHeader.setData({"role": "header", "type": "gnx"}, Qt.UserRole)
 
         self.factoryHeader = QStandardItem("FACTORY")
         self.factoryHeader.setEnabled(False)
-        self.factoryHeader.setData("header", Qt.UserRole)
+        self.factoryHeader.setData({"role": "header", "type": "factory"}, Qt.UserRole)
         self.gnxHeader.appendRow(self.factoryHeader)
 
         self.userHeader = QStandardItem("USER")
         self.userHeader.setEnabled(False)
-        self.userHeader.setData("header", Qt.UserRole)
+        self.userHeader.setData({"role": "header", "type": "user"}, Qt.UserRole)
         self.gnxHeader.appendRow(self.userHeader)
 
         self.libHeader = QStandardItem("LIBRARY")
         self.libHeader.setEnabled(False)
-        self.libHeader.setData("header", Qt.UserRole)
+        self.libHeader.setData({"role": "header", "type": "library"}, Qt.UserRole)
 
         self.rootNode.appendRow(self.gnxHeader)
         self.rootNode.appendRow(self.libHeader)
@@ -77,7 +79,25 @@ class TreeHandler(QObject):
 
         if self.gnx != None:
             self.setGNX(gnx)
-        
+    
+    def contextMenu(self, point):
+        index = self.tree.indexAt(point)
+        if index.isValid():
+            d1 = index.data(Qt.UserRole)
+            print(d1)
+            if d1 != None and d1["role"] == "header" and d1["type"] == "library":
+                contextMenu = QMenu(self.tree)
+                actions = [{"text": "Add Category", "connect": self.addCategory}]
+                for a in actions:
+                    action = QAction(a["text"])
+                    action.triggered.connect(a["connect"])
+                    contextMenu.addAction(action)
+
+                contextMenu.exec(self.tree.viewport().mapToGlobal(point))
+
+    def addCategory(self):
+        pass
+
     # to set gnx after init
     def setGNX(self, gnx):
         self.gnx = gnx
@@ -93,8 +113,9 @@ class TreeHandler(QObject):
             if len(text) > 6:
                 text = text[0:6]
             data = topleft.data(Qt.UserRole)
-            bank = data["bank"]
-            patch = data["patch"]
+            if data["role"] == "patch" and data["type"] == "user":
+                bank = data["bank"]
+                patch = data["patch"]
             
 
             #model = topleft.model()
@@ -107,18 +128,18 @@ class TreeHandler(QObject):
     def midiPatchChange(self, parameter):
         bank = int(parameter / 48)
         patch = parameter % 48
-        print(f"Tree MIDI Patch Change: Bank: {bank}, Patch: {patch}")
+        #print(f"Tree MIDI Patch Change: Bank: {bank}, Patch: {patch}")
         self.setPatchInTree(None, bank, patch, QModelIndex())
 
     @Slot()
     def selectionChangedEvent(self):
         for x in self.selection.selectedIndexes():
             data = x.data(Qt.UserRole)
-            if data != None and data != "header":
+            if data["role"] == "patch":
                 bank = data["bank"]
                 patch = data["patch"]
                 blocked = "BLOCKED" if self.blockPatchChange else ""
-                print(f"Tree Selection Changed Bank: {bank}, Patch: {patch} {blocked}")
+                #print(f"Tree Selection Changed Bank: {bank}, Patch: {patch} {blocked}")
                 if not self.blockPatchChange:
                     self.gnx.send_patch_change(bank, patch)
                 pass
@@ -126,7 +147,7 @@ class TreeHandler(QObject):
 
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
-        print(f"Received from GNX Bank: {bank}, Patch: {patch}, Name {name}")
+        #print(f"Received from GNX Bank: {bank}, Patch: {patch}, Name {name}")
         self.setPatchInTree(name, bank, patch, parent = QModelIndex())
 
     def setPatchInTree(self, name, bank, patch, parent):
@@ -138,9 +159,12 @@ class TreeHandler(QObject):
         for r in range(rows):
             index1 = self.model.index(r, 0, parent)
             index2 = self.model.index(r, 1, parent)
-            data = index2.data(Qt.UserRole)
-            if data != None and data != "header":
-                if data["bank"] == bank and data["patch"] == patch:
+            data1 = index1.data(Qt.UserRole)
+            data2 = index2.data(Qt.UserRole)
+            if data1 == None:
+                data1 = data2 
+            if data1["role"] == "patch":
+                if data1["bank"] == bank and data1["patch"] == patch:
 
                     if name != None:
                         index2.model().setData(index2, name, Qt.DisplayRole )
@@ -163,6 +187,10 @@ class TreeHandler(QObject):
 
     @Slot()
     def setConnected(self, connected):
+        if not connected:
+            self.current_patch_bank = None
+            self.current_patch_number = None
+            self.current_patch_name = None
         pass
 
     # populate tree
@@ -184,7 +212,7 @@ class TreeHandler(QObject):
             if w2 != None:
                 w2.setEditable(bank == 1)   # only user bank is editable
 
-            w2.setData({"bank": bank, "patch": k}, Qt.UserRole)
+            w2.setData({"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": k}, Qt.UserRole)
             h.appendRow([w1, w2])
             k += 1
 
@@ -201,10 +229,12 @@ class TreeHandler(QObject):
             index2 = self.model.index(row, 1, idx)
             data1 = index1.data(Qt.UserRole)
             data2 = index2.data(Qt.UserRole)
+            if data1 == None:
+                data1 = data2 
 
-            #print(idx.data(Qt.DisplayRole), data1, data2)
+            print(idx.data(Qt.DisplayRole), data1, data2)
 
-            if parent.child(row, 0).hasChildren() or data1 == "header":
+            if parent.child(row, 0).hasChildren() or data1["role"] == "header":
                 self.tree.setFirstColumnSpanned(row, idx, True)
 
             if parent.child(row, 0).hasChildren():
