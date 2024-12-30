@@ -20,9 +20,11 @@
 import settings
 import time
 from exceptions import GNXError
+import sqlite3
+from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem, QTreeView, QAbstractItemView, QMenu
+from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem, QTreeView, QAbstractItemView, QMenu, QLineEdit, QMessageBox
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
@@ -63,7 +65,7 @@ class TreeHandler(QObject):
 
         self.libHeader = QStandardItem("LIBRARY")
         self.libHeader.setEnabled(False)
-        self.libHeader.setData({"role": "header", "type": "library"}, Qt.UserRole)
+        self.libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
 
         self.rootNode.appendRow(self.gnxHeader)
         self.rootNode.appendRow(self.libHeader)
@@ -76,6 +78,33 @@ class TreeHandler(QObject):
         self.tree.model().dataChanged.connect(self.dataChanged)
 
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
+
+        # add library data
+
+        db = gnxDB()
+        if db.conn == None:
+            return
+        
+        try:
+            db.conn.row_factory = sqlite3.Row
+            cur = db.conn.cursor()
+            cur.execute("SELECT * FROM categories ORDER by parent ASC")
+            rc = cur.fetchall()
+            crows = [dict(row) for row in rc]
+
+            for c in crows:
+                data = {"role": "header", "type": "library", "category": c["parent"]} # look for parent
+                pcat = self.findByData(self.libHeader, data)
+                self.add_category_to_tree(pcat, c["id"], c["name"])
+            pass
+
+
+
+        except Exception as e:
+            e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                                    text = f"Unable to add category to tree {e}", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)  
 
         if self.gnx != None:
             self.setGNX(gnx)
@@ -91,12 +120,80 @@ class TreeHandler(QObject):
                 for a in actions:
                     action = QAction(a["text"])
                     action.triggered.connect(a["connect"])
+                    action.setData(d1)
                     contextMenu.addAction(action)
 
                 contextMenu.exec(self.tree.viewport().mapToGlobal(point))
 
+    @Slot()
     def addCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
+        ui_file_name = "src/ui/addcategorydialog.ui"
+        ui_file = QFile(ui_file_name)
+        if not ui_file.open(QIODevice.ReadOnly):
+            print(f"Cannot open {ui_file_name}: {ui_file.errorString()}")
+            return
+
+        loader = QUiLoader()
+        self.add_category_dialog = loader.load(ui_file)
+
+        ui_file.close()
+        inputName = self.add_category_dialog.findChild(QLineEdit, "inputName")
+        inputName.setText("New Category")
+
+        setattr(self.add_category_dialog, "gnxdata", data)
+        self.add_category_dialog.accepted.connect(self.add_category_dialog_accepted)
+        self.add_category_dialog.rejected.connect(self.add_category_dialog_rejected)
+        self.add_category_dialog.setParent(self.window, Qt.Dialog)
+        self.add_category_dialog.show()
+
+    def add_category_dialog_accepted(self):
+        data = getattr(self.add_category_dialog, "gnxdata")
+        inputName = self.add_category_dialog.findChild(QLineEdit, "inputName")
+        name = inputName.text()
+
+        name = name.strip()
+        if name != None and name != "":
+            db = gnxDB()
+            if db.conn == None:
+                return
+            
+            try:
+                cur = db.conn.cursor()
+                cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [data["category"], name])
+                db.conn.commit()
+
+                # add to tree
+                pcat = self.findByData(self.libHeader, data)
+                self.add_category_to_tree(pcat, cur.lastrowid, name)
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                                        text = f"Unable to add category to database {e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)                
+
+        else:
+            e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                                    text = f"Empty category name not permitted", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+
+    def add_category_dialog_rejected(self):
         pass
+
+    def add_category_to_tree(self, parent, cid, name):
+        # add to tree
+        cat = QStandardItem(name)
+        cat.setEnabled(False)
+        cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
+        
+        parent.appendRow(cat)
+        ctx = self.model.indexFromItem(cat)
+        self.tree.setFirstColumnSpanned(ctx.row(), self.model.indexFromItem(parent), True)
+        self.tree.setExpanded(self.model.indexFromItem(parent), True)
 
     # to set gnx after init
     def setGNX(self, gnx):
@@ -216,8 +313,6 @@ class TreeHandler(QObject):
             h.appendRow([w1, w2])
             k += 1
 
-        
-
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
     # all rows with children will span comlumns
@@ -239,3 +334,27 @@ class TreeHandler(QObject):
 
             if parent.child(row, 0).hasChildren():
                 self.setHeaderSpanned(parent.child(row, 0))
+
+
+    # all rows with children will span comlumns
+    def findByData(self, parent, data):
+        idx = parent.index()
+        index1 = idx.siblingAtColumn(0)
+        index2 = idx.siblingAtColumn(1)
+        data1 = index1.data(Qt.UserRole)
+        data2 = index2.data(Qt.UserRole)
+        if data1 == None:
+            data1 = data2
+
+        print(index1.data(Qt.DisplayRole), index2.data(Qt.DisplayRole), data1)
+        if data1 == data:
+            return parent
+
+        if parent.hasChildren():
+            for row in range(parent.rowCount()):
+                result = self.findByData(parent.child(row, 0), data)
+                if result != None:
+                    return result
+            
+            return None
+        return None

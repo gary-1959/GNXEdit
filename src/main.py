@@ -51,6 +51,7 @@ if __name__ == "__main__":
         statusHandler.setGNX(gnx)
         menuHandler.setGNX(gnx)
         treeHandler.setGNX(gnx)
+        treeHandler.gnxAlert.connect(showAlert)
 
         if not window:
             print(loader.errorString())
