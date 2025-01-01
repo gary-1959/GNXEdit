@@ -1803,6 +1803,7 @@ class GNX1(QObject):
     # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12, 0) -> decode13 -> request_patch_names(0x12, 1) -> decode13 -> 
     # request_ampcab_names(0x07) -> decode08 -> request_current_patch_name(0x20) -> decode 0x21-> acknowledge_patch_name(0x7E) -> patch data follows
 
+    # send code 0x01 device enquiry broadcast to all devices on all channels
     def enquire_device(self):
         #print("Enquiring")
         self.midicontrol.send_message([0xF0, 0x00, 0x00, 0x10, 0x7E, 0x7F, 0x01, 0x00, 0x01, 0x00, 0x00, 0x11, 0xF7])
@@ -1816,6 +1817,7 @@ class GNX1(QObject):
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, bank, 0x00])
         self.midicontrol.send_message(msg)
 
+    # send code 07 request
     def request_ampcab_names(self, subcode):
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x07, 0x00, 0x01, subcode])
         self.midicontrol.send_message(msg)
@@ -1839,15 +1841,21 @@ class GNX1(QObject):
             msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
             self.midicontrol.send_message(msg)
 
-    def send_patch_name(self, name, sourcebank, sourcepatch, targetbank, targetpatch):
-
+    # save patch with patch name
+    def save_patch(self, name, sourcebank, sourcepatch, targetbank, targetpatch):
         self.setPatchName(name)
         data = [0x01, sourcebank, sourcepatch, targetbank, targetpatch] + [ord(c) for c in name] + [0x00, 0xFF]
         packed = pack_data(data)
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
-        pass
+
+    # send patch name
+    def sendcode21message(self, name):
+        data = [0x01, 0x02, 0x00] + [ord(c) for c in name] + [0x00, 0x00, 0x08, 0x09, 0x7C]
+        packed = pack_data(data)
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x21] + packed)
+        self.midicontrol.send_message(msg)
 
     def sendcode26message(self):
         
@@ -2505,7 +2513,7 @@ class GNX1(QObject):
         # save patch
         self.current_patch_bank = bank
         self.current_patch_number = patch
-        self.send_patch_name(name, 0x02, 0x00, bank, patch)
+        self.save_patch(name, 0x02, 0x00, bank, patch)
         self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
 
     def save_patch_to_gnx_dialog_rejected(self):

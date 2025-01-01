@@ -139,3 +139,8 @@ def get_expression_assignment_index(section, parameter):
             return k
         
     return None
+
+def printhex(msg):
+    for x in msg:
+        print(f"{x:02X} ", end = "")
+    print()

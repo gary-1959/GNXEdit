@@ -769,6 +769,7 @@ QTreeView::branch:open:has-children:has-siblings  {
      <string>File</string>
     </property>
     <addaction name="actionQuit"/>
+    <addaction name="actionTestClick"/>
    </widget>
    <widget class="QMenu" name="menuDevice">
     <property name="title">
@@ -836,6 +837,11 @@ QTreeView::branch:open:has-children:has-siblings  {
   <action name="actionSavePatch">
    <property name="text">
     <string>Save Patch to User Bank</string>
+   </property>
+  </action>
+  <action name="actionTestClick">
+   <property name="text">
+    <string>Test Click</string>
    </property>
   </action>
  </widget>

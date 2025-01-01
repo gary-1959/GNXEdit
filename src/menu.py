@@ -38,6 +38,8 @@ class MenuHandler():
             match n:
                 case "actionQuit":
                     a.triggered.connect(self.window.close)
+                case "actionTestClick":
+                    a.triggered.connect(self.test_click)
                 case _:
                     print(f"Unrecognised menu option {n}")
             pass
@@ -55,6 +57,9 @@ class MenuHandler():
 
         if gnx != None:
             self.setGNX()
+
+    def test_click(self):
+        self.gnx.sendcode21message("XXXX")
 
     # to set gnx after init
     def setGNX(self, gnx):
