@@ -137,6 +137,9 @@ def printpacked(prefix, packed):
     mask = 0b10000000
     n = 0
 
+    flog = open(logfile, "a")
+    flog.write(comment + "\t")
+
     while (block + n) < len(pint):
         if n == 0:
             bit8 = pint[block + n]          # first byte contains MSBs of subsequent 7 bytes
@@ -147,6 +150,7 @@ def printpacked(prefix, packed):
                 data = data | 0b10000000
 
             unpacked.append(data)
+
 
         n += 1
         if n == 8:
@@ -167,6 +171,12 @@ def printpacked(prefix, packed):
             print(strh, stra)
             strh = ""
             stra = ""
+
+        flog.write("\"{:02X}\"\t".format(s))
+
+    flog.write("\n")
+    flog.close()
+            
     print("{0:<25}{1:<25}".format(strh, stra))
     print("Input length ", len(pint), " Output length: ", len(unpacked) )
 
@@ -215,7 +225,8 @@ ms = []
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-ms.append("F0 00 00 10 00 56 09 00 01 01 4F F7")
+#ms.append("F0 00 00 10 00 56 09 00 01 01 4F F7")
+ms.append("F0 00 00 10 00 56 0B 00 01 4C F7")
 
 # change patch to USER 4
 #ms.append("F0 00 00 10 00 56 2D 00 01 01 10 00 7B F7")
@@ -261,8 +272,9 @@ while True:
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
                     #printbytes(sbytes)
                     print("--------------PACKED-----------------")
-                    printpacked("RECEIVED", msg.data)
+                    #printpacked("RECEIVED", msg.data)
                     #printpacked_lin(sbytes, received_count, comment)
+                    printbytes(sbytes)
                     c += 1
                     received_count += 1
             else:

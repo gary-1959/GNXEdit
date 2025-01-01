@@ -215,7 +215,8 @@ ms = []
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-ms.append("F0 00 00 10 00 56 09 00 01 01 4F F7")
+#ms.append("F0 00 00 10 00 56 09 00 01 01 4F F7")
+ms.append("F0 00 00 10 00 56 09 00 01 4E F7")
 
 # change patch to USER 4
 #ms.append("F0 00 00 10 00 56 2D 00 01 01 10 00 7B F7")
