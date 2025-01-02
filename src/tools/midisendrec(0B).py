@@ -22,7 +22,6 @@ def on_release(key):
 listener = Listener(on_press = on_press, on_release = on_release)
 listener.start()
 
-
 def toint(s):
     return int("0x" + s.lower(), 16)
 
@@ -57,7 +56,7 @@ def printpacked_lin(packed, compareto, comment):
     
     unpacked = []
     print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(packed[3], packed[5], packed[6]) )
-    pint = packed[7:-1]
+    pint = packed[7:-2]
     block = 0
     mask = 0b10000000
     n = 0
@@ -82,7 +81,7 @@ def printpacked_lin(packed, compareto, comment):
     bcount = 0
 
     flog = open(logfile, "a")
-    flog.write(comment + "\t")
+    flog.write(f"{comment}({packed[6]:02X})\t") # comment and command
 
     for s in unpacked:
         newbytes.append(s)
@@ -184,10 +183,6 @@ outports = mido.get_output_names()
 inports = mido.get_input_names()
 pass
 
-#msg = mido.Message('program_change', channel=0, program=6)
-#port = mido.open_output(ports[1])
-#port.send(msg)
-
 # test to receive patch dump from Digitech GENX1
 genx1_mnfr_id = [0x00, 0x00, 0x10]
 midi_channel = 0x00
@@ -204,32 +199,7 @@ for p in outports:
         break
 
 ms = []
-
-#ms.append("F0 00 00 10 7E 7F 01 00 01 00 00 11 F7")           # 01: device enquiry
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7")            # active control
-#ms.append("F0 00 00 10 00 56 70 00 01 08 3F F7")
-#ms.append("F0 00 00 10 00 56 05 00 01 42 F7")       
-#ms.append("F0 00 00 10 00 56 07 00 01 00 40 F7")            # 07:00 Amp and Cabinet Names (basic)
-##ms.append("F0 00 00 10 00 56 07 00 01 01 41 F7")           # 07:01 User
-#ms.append("F0 00 00 10 00 56 07 00 01 02 42 F7")           # 07:02 Bad?
-#ms.append("F0 00 00 10 00 56 12 00 01 01 00 54 F7")        # user patch names
-##ms.append("F0 00 00 10 00 56 20 00 01 02 00 1F 7A F7")     # response 21 gets patch name and params (amp?, cab?)
-##ms.append("F0 00 00 10 00 56 7E 00 01 21 18 F7")           # acknowledge              q
-#ms.append("F0 00 00 10 00 56 2E 00 01 02 00 02 01 00 00 68 F7") # DIRECT amp model
-#ms.append("F0 00 00 10 00 56 2D 00 01 01 00 00 6B F7")
-#ms.append("F0 00 00 10 00 56 20 00 01 03 00 1F 7B F7")
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7")  
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7")  
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7")  
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-#ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7") 
-#ms.append("F0 00 00 10 00 56 09 00 01 01 4F F7")
-ms.append("F0 00 00 10 00 56 0B 00 01 4C F7")
-
-# change patch to USER 4
-#ms.append("F0 00 00 10 00 56 2D 00 01 01 10 00 7B F7")
+ms.append("F0 00 00 10 00 56 0B 00 01 4C F7")           # command to send
 
 logfile = input("Logfile name: ").lower()
 if len(logfile) == 0:
@@ -259,7 +229,6 @@ while True:
 
         nonecount = 5
         c = 1
-        
         while True:
             if BREAK:
                 break
@@ -271,10 +240,9 @@ while True:
                     sbytes = msg.bytes()
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
                     #printbytes(sbytes)
-                    print("--------------PACKED-----------------")
                     #printpacked("RECEIVED", msg.data)
-                    #printpacked_lin(sbytes, received_count, comment)
-                    printbytes(sbytes)
+                    printpacked_lin(sbytes, received_count, comment)
+                    #qprintbytes(sbytes)
                     c += 1
                     received_count += 1
             else:
