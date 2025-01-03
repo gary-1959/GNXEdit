@@ -1964,7 +1964,7 @@ class GNX1(QObject):
                                     case 0x21:                  # CODE 21: Current Patch Name
                                         self.decode21(msg)
 
-                                    case 0x22:                  # CODE 22: ???
+                                    case 0x22:                  # CODE 22: End of Patch Dump
                                         self.decode22(msg)
 
                                     case 0x24:
@@ -2065,7 +2065,7 @@ class GNX1(QObject):
     def printpacked(self, msg, compareto, comment, logfile):
         global lastbytes
 
-        unpacked = self.unpack(msg[7:-1])
+        unpacked = self.unpack(msg[7:-2])
         if comment == None:
             comment = "No comment"
 
@@ -2147,37 +2147,39 @@ class GNX1(QObject):
         unpacked = self.unpack(pint[:-1])       # chop off final 00 to avoid extra array element
 
         ntype = unpacked[1]                     # name type: 0 = basic, 1 = user
-        ncount = unpacked[5] - 1                # number of names in list
+        ncount = unpacked[5]                    # number of names in list
 
         n = 6
         k = 0
         amp_names = {}
         while k < ncount:
-            k = unpacked[n]
+            idx = unpacked[n]
             name = "".join(map(chr, unpacked[n + 1: n + 7]))
-            amp_names[k] = name
+            amp_names[idx] = name
 
-            self.device_green_amp.ui_device.set_user_name(k, name)
-            self.device_red_amp.ui_device.set_user_name(k, name)
+            self.device_green_amp.ui_device.set_user_name(idx, name)
+            self.device_red_amp.ui_device.set_user_name(idx, name)
 
             n += 8
+            k += 1
 
         n += 2
-        ncount = unpacked[n] - 1
+        ncount = unpacked[n]
         n += 1
         k = 0
         cab_names = {}
         while k < ncount:
-            k = unpacked[n]
+            idx = unpacked[n]
             name = "".join(map(chr, unpacked[n + 1: n + 7]))
-            cab_names[k] = name
+            cab_names[idx] = name
 
-            self.device_green_cab.ui_device.set_user_name(k, name)
-            self.device_red_cab.ui_device.set_user_name(k, name)
+            self.device_green_cab.ui_device.set_user_name(idx, name)
+            self.device_red_cab.ui_device.set_user_name(idx, name)
 
             n += 8
+            k += 1
 
-        #print("AMP/CAB NAMES:", amp_names, cab_names)
+        print("AMP/CAB NAMES:", amp_names, cab_names)
 
         if self.resyncing:
             self.request_current_patch_name()
@@ -2206,7 +2208,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
 
         #print("CODE 21: Setting Patch Name")
@@ -2230,14 +2232,14 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
         n = 0
 
         n = skip_bytes(n, unpacked, [0x02, 0x02])
         n += 1  # can be 0x00 or 0x09 - 0x09 seems to be after error
         n = skip_bytes(n, unpacked, [0x10, 0x00, 0x00, 0x00, 0x00, 0x00])
-        # pickup
+        # pickup n = 9
         n = skip_bytes(n, unpacked, [0x50, 0x01, 0x01, 0x90])
         n = self.device_pickup.get_values(n, unpacked)
         # wah
@@ -2271,6 +2273,7 @@ class GNX1(QObject):
         n = self.device_gate.get_values(n, unpacked)
         # modulation
         n = skip_bytes(n, unpacked, [0x55, 0x0B])
+        print(f"{unpacked[n]:02X}, {unpacked[n+1]:02X}")
         n += 1 # skip 0x03 or 0x04
         n += 1 # skip 0xE8 (Chorus), etc
         n = self.device_mod.get_values(n, unpacked)
@@ -2280,8 +2283,8 @@ class GNX1(QObject):
         # reverb
         n = skip_bytes(n, unpacked, [0x57, 0x0D, 0x02, 0xBD])
         n = self.device_reverb.get_values(n, unpacked)
+        pass
 
-        #expr pedal
 
         #self.printpacked(unpacked, None, None, None)
 
@@ -2291,7 +2294,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
         n = 0
         n = skip_bytes(n, unpacked, [0x02, 0x02])
@@ -2312,7 +2315,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
 
         if compare_array([0x3C, 0x06], unpacked[3:5]):      # GREEN Amp
@@ -2333,7 +2336,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
 
         section = unpacked[2]
@@ -2399,7 +2402,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
         bank = unpacked[1]
         patch = unpacked[2]
@@ -2419,7 +2422,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-1]
+        pint = msg[7:-2]
         unpacked = self.unpack(pint)
 
         self.current_patch_bank = unpacked[2]
