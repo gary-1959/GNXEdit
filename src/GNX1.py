@@ -86,6 +86,9 @@ class GNX1(QObject):
     device_expression = None
     device_lfo = None
 
+    last_extra = None
+    lastbytes = None
+
     class watchdog(Exception):
         def __init__(self, timeout = None, userHandler = None):  # timeout in seconds
             self.handler = userHandler if userHandler is not None else self.defaultHandler
@@ -1958,6 +1961,9 @@ class GNX1(QObject):
                                     case 0x08:                  # CODE 08: Amp/Cab Names
                                         self.decode08(msg)
 
+                                    case 0x0A:                  # CODE 0A: Devide Status
+                                        self.decode0A(msg)
+
                                     case 0x13:                  # CODE 13: Patch Names
                                         self.decode13(msg)
 
@@ -2000,7 +2006,7 @@ class GNX1(QObject):
 
                                     case _:
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
-                                                text = f"Message[6] code not recognised {msg}",\
+                                                text = f"Message[{msg[6]}] code not recognised {msg}",\
                                                 buttons = QMessageBox.Ok)
                                         self.gnxAlert.emit(e)
                     
@@ -2063,8 +2069,7 @@ class GNX1(QObject):
         return unpacked
     
     def printpacked(self, msg, compareto, comment, logfile):
-        global lastbytes
-
+        
         unpacked = self.unpack(msg[7:-2])
         if comment == None:
             comment = "No comment"
@@ -2080,8 +2085,8 @@ class GNX1(QObject):
             newbytes.append(s)
             diff = False
             
-            if compareto != None and lastbytes != None and compareto < len(lastbytes) and bcount < len(lastbytes[compareto]):
-                if lastbytes[compareto][bcount] != s:
+            if compareto != None and self.lastbytes != None and compareto < len(self.lastbytes) and bcount < len(self.lastbytes[compareto]):
+                if self.lastbytes[compareto][bcount] != s:
                     diff = True
             if diff:
                 print("\033[7m{:02X}\033[m".format(s), end = " ")
@@ -2102,9 +2107,11 @@ class GNX1(QObject):
 
         print()
         if compareto != None:
-            while len(lastbytes) < (compareto + 1):
-                lastbytes.append([])
-            lastbytes[compareto] = newbytes.copy()
+            if self.lastbytes == None:
+                self.lastbytes = []
+            while len(self.lastbytes) < (compareto + 1):
+                self.lastbytes.append([])
+            self.lastbytes[compareto] = newbytes.copy()
 
 
     # CODE 02: Device Response
@@ -2179,10 +2186,17 @@ class GNX1(QObject):
             n += 8
             k += 1
 
-        print("AMP/CAB NAMES:", amp_names, cab_names)
+        #print("AMP/CAB NAMES:", amp_names, cab_names)
 
         if self.resyncing:
             self.request_current_patch_name()
+
+    # CODE 0A: Device Status
+    def decode0A(self, msg):
+        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+            return
+        
+        #self.printpacked(msg, 0, "CODE 0A", "code0A.csv")
         
     # CODE 13: User Patch Names
     def decode13(self, msg):
@@ -2273,7 +2287,6 @@ class GNX1(QObject):
         n = self.device_gate.get_values(n, unpacked)
         # modulation
         n = skip_bytes(n, unpacked, [0x55, 0x0B])
-        print(f"{unpacked[n]:02X}, {unpacked[n+1]:02X}")
         n += 1 # skip 0x03 or 0x04
         n += 1 # skip 0xE8 (Chorus), etc
         n = self.device_mod.get_values(n, unpacked)
@@ -2284,9 +2297,16 @@ class GNX1(QObject):
         n = skip_bytes(n, unpacked, [0x57, 0x0D, 0x02, 0xBD])
         n = self.device_reverb.get_values(n, unpacked)
         pass
+        # remainder
+        #self.print_remainder(n, unpacked, "CODE 24 REMAINDER")
+        n = skip_bytes(n, unpacked, [0x14, 0x0E, 0x00, 0x64, 0x06, 0x00])
+        n += 1 #Volume PRE value (modified by Pedal and LFO)
+        n += 1 #Volume POST value (modified by Pedal and LFO)
+        n += 1 #Amp Footswitch setting
+        n += 1 #LFO1 Speed
+        n += 1 #LFO2 Speed
+        n = skip_bytes(n, unpacked, [0x02, 0x0F, 0x00, 0x02, 0x00])
 
-
-        #self.printpacked(unpacked, None, None, None)
 
     # CODE 26: LFO and Expression Pedals
     def decode26(self, msg):
@@ -2302,6 +2322,7 @@ class GNX1(QObject):
         n = skip_bytes(n, unpacked, [0x03, 0x80, 0x00, 0x03])
         n = self.device_expression.get_values(n, unpacked)
         n = self.device_lfo.get_values(n, unpacked)
+
 
     # CODE 28: Unknown
     def decode28(self, msg):
@@ -2385,7 +2406,9 @@ class GNX1(QObject):
             case 0x0D:      # reverb
                 self.device_reverb.parameter_change(parameter, value)
 
-            case 0x0E:      # don't know
+            case 0x0E:      # pedal value, not used
+                #print("CODE 0E RECEIVED")
+                #self.printpacked(msg, 0, "CODE 0E", "code0E.csv")
                 pass
 
             case _:
@@ -2521,3 +2544,24 @@ class GNX1(QObject):
 
     def save_patch_to_gnx_dialog_rejected(self):
         pass
+
+    
+    def print_remainder(self, n, unpacked, text):
+        print(text)
+        if self.last_extra == None:
+            self.last_extra = unpacked[n:]
+
+        xc = 0
+        for x in self.last_extra:
+            if xc < len(self.last_extra):
+                if self.last_extra[xc] == unpacked[n + xc]:
+                    print(f"{unpacked[n + xc]:02X}", end = " ")
+                else:
+                    print(f"\033[7m{unpacked[n + xc]:02X}\033[m", end = " ")
+            else:
+                print("**", end = " ")
+            xc += 1
+        
+        print()
+        self.last_extra = unpacked[n:]
+

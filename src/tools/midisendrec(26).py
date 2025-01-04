@@ -55,6 +55,7 @@ def printpacked_lin(packed, compareto, comment):
     if packed[6] != 0x26:   # code 26 only
         return
     
+    
     unpacked = []
     print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(packed[3], packed[5], packed[6]) )
     pint = packed[7:-1]

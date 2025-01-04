@@ -113,7 +113,6 @@ class TreeHandler(QObject):
         index = self.tree.indexAt(point)
         if index.isValid():
             d1 = index.data(Qt.UserRole)
-            print(d1)
             if d1 != None and d1["role"] == "header" and d1["type"] == "library":
                 contextMenu = QMenu(self.tree)
                 actions = [{"text": "Add Category", "connect": self.addCategory}]
@@ -133,7 +132,10 @@ class TreeHandler(QObject):
         ui_file_name = "src/ui/addcategorydialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
-            print(f"Cannot open {ui_file_name}: {ui_file.errorString()}")
+            e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                        text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", \
+                                        buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e) 
             return
 
         loader = QUiLoader()
@@ -225,7 +227,6 @@ class TreeHandler(QObject):
     def midiPatchChange(self, parameter):
         bank = int(parameter / 48)
         patch = parameter % 48
-        #print(f"Tree MIDI Patch Change: Bank: {bank}, Patch: {patch}")
         self.setPatchInTree(None, bank, patch, QModelIndex())
 
     @Slot()
@@ -235,8 +236,6 @@ class TreeHandler(QObject):
             if data["role"] == "patch":
                 bank = data["bank"]
                 patch = data["patch"]
-                blocked = "BLOCKED" if self.blockPatchChange else ""
-                #print(f"Tree Selection Changed Bank: {bank}, Patch: {patch} {blocked}")
                 if not self.blockPatchChange:
                     self.gnx.send_patch_change(bank, patch)
                 pass
@@ -244,7 +243,6 @@ class TreeHandler(QObject):
 
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
-        #print(f"Received from GNX Bank: {bank}, Patch: {patch}, Name {name}")
         self.setPatchInTree(name, bank, patch, parent = QModelIndex())
 
     def setPatchInTree(self, name, bank, patch, parent):
@@ -327,8 +325,6 @@ class TreeHandler(QObject):
             if data1 == None:
                 data1 = data2 
 
-            print(idx.data(Qt.DisplayRole), data1, data2)
-
             if parent.child(row, 0).hasChildren() or data1["role"] == "header":
                 self.tree.setFirstColumnSpanned(row, idx, True)
 
@@ -346,7 +342,6 @@ class TreeHandler(QObject):
         if data1 == None:
             data1 = data2
 
-        print(index1.data(Qt.DisplayRole), index2.data(Qt.DisplayRole), data1)
         if data1 == data:
             return parent
 
