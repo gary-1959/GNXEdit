@@ -2070,7 +2070,7 @@ class GNX1(QObject):
     
     def printpacked(self, msg, compareto, comment, logfile):
         
-        unpacked = self.unpack(msg[7:-2])
+        unpacked = self.unpack(msg[7:-1])
         if comment == None:
             comment = "No comment"
 
@@ -2131,7 +2131,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint[:-1])
 
         self.current_patch_bank = unpacked[10]
@@ -2150,15 +2150,17 @@ class GNX1(QObject):
             return
         
         # self.printpacked(msg, None, None, None)
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint[:-1])       # chop off final 00 to avoid extra array element
 
         ntype = unpacked[1]                     # name type: 0 = basic, 1 = user
         ncount = unpacked[5]                    # number of names in list
 
+        amp_names = {}
+        cab_names = {}
+
         n = 6
         k = 0
-        amp_names = {}
         while k < ncount:
             idx = unpacked[n]
             name = "".join(map(chr, unpacked[n + 1: n + 7]))
@@ -2174,7 +2176,7 @@ class GNX1(QObject):
         ncount = unpacked[n]
         n += 1
         k = 0
-        cab_names = {}
+
         while k < ncount:
             idx = unpacked[n]
             name = "".join(map(chr, unpacked[n + 1: n + 7]))
@@ -2203,7 +2205,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint[:-1])       # chop off final 00 to avoid extra array element
 
         self.user_patch_names = "".join(map(chr, unpacked[2:])).split('\x00')
@@ -2222,7 +2224,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
         #print("CODE 21: Setting Patch Name")
@@ -2246,7 +2248,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
         n = 0
 
@@ -2314,7 +2316,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
         n = 0
         n = skip_bytes(n, unpacked, [0x02, 0x02])
@@ -2336,7 +2338,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
         if compare_array([0x3C, 0x06], unpacked[3:5]):      # GREEN Amp
@@ -2357,7 +2359,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
         section = unpacked[2]
@@ -2425,7 +2427,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
         bank = unpacked[1]
         patch = unpacked[2]
@@ -2445,7 +2447,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
-        pint = msg[7:-2]
+        pint = msg[7:-1]
         unpacked = self.unpack(pint)
 
         self.current_patch_bank = unpacked[2]
@@ -2469,7 +2471,7 @@ class GNX1(QObject):
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
-        pint = msg[7:-2]
+        pint =msg[7:-2]
         unpacked = self.unpack(pint)
         if compare_array(unpacked, [0x01, 0x76, 0x00]):
             # patch number has not changed?

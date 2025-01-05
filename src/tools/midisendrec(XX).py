@@ -52,12 +52,12 @@ def printpacked_lin(packed, compareto, comment):
         comment = "No comment"
 
     # show patch parameters only
-    #if packed[6] != 0x24:   # code 24 only
-    #    return
+    if packed[6] != 0x28:   # code 28 only
+        return
     
     unpacked = []
     print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(packed[3], packed[5], packed[6]) )
-    pint = packed[7:-1]
+    pint = packed[7:-2]
     block = 0
     mask = 0b10000000
     n = 0
@@ -110,6 +110,76 @@ def printpacked_lin(packed, compareto, comment):
             lastbytes.append([])
         lastbytes[compareto] = newbytes.copy()
 
+def printpacked(prefix, packed):
+
+    command_name = ""
+    match packed[5]:
+        case 0x7F:
+            command_name = "ERROR"
+        case 0x7E:
+            command_name = "ACKNOWLEDGE"
+        case 0x26:
+            command_name = "EXPRESSION ASSIGN"
+        case 0x2C:
+            command_name = "PARAMETER"
+        case 0x2D:
+            command_name = "PATCH CHANGE"
+        case _:
+            command_name = ""
+
+    command_name += " {:02X}".format(packed[5])
+
+    print(prefix, command_name)
+    unpacked = []
+    pint = packed[6:-1]
+
+    block = 0
+    mask = 0b10000000
+    n = 0
+
+    flog = open(logfile, "a")
+    flog.write(comment + "\t")
+
+    while (block + n) < len(pint):
+        if n == 0:
+            bit8 = pint[block + n]          # first byte contains MSBs of subsequent 7 bytes
+        else:
+            b8 = bit8 & (mask >> n)         # MSBs packed bit 7  = data byte 0, bit 0 = data byte 7
+            data = pint[block + n]
+            if b8:
+                data = data | 0b10000000
+
+            unpacked.append(data)
+
+
+        n += 1
+        if n == 8:
+            n = 0
+            block += 8
+
+    i = 8
+    strh = ""
+    stra = ""
+
+    for s in unpacked:
+        strh += "{:02X}".format(s) + " "
+        stra += (chr(s) if s >=32 and s <= 127 else ".") + " "
+
+        i -= 1
+        if i == 0:
+            i = 8
+            print(strh, stra)
+            strh = ""
+            stra = ""
+
+        flog.write("\"{:02X}\"\t".format(s))
+
+    flog.write("\n")
+    flog.close()
+            
+    print("{0:<25}{1:<25}".format(strh, stra))
+    print("Input length ", len(pint), " Output length: ", len(unpacked) )
+
 outports = mido.get_output_names()
 inports = mido.get_input_names()
 pass
@@ -138,13 +208,13 @@ ms = []
 #ms.append("F0 00 00 10 7E 7F 01 00 01 00 00 11 F7")           # 01: device enquiry
 #ms.append("F0 00 00 10 00 56 76 20 01 7F 6E F7")            # active control
 #ms.append("F0 00 00 10 00 56 70 00 01 08 3F F7")
-ms.append("F0 00 00 10 00 56 05 00 01 42 F7")                
+#ms.append("F0 00 00 10 00 56 05 00 01 42 F7")                
 #ms.append("F0 00 00 10 00 56 07 00 01 00 40 F7")            # 07:00 Amp and Cabinet Names
 #ms.append("F0 00 00 10 00 56 07 00 01 01 41 F7")           # 07:01 Bad?
 #ms.append("F0 00 00 10 00 56 07 00 01 02 42 F7")           # 07:02 Bad?
 #ms.append("F0 00 00 10 00 56 12 00 01 01 00 54 F7")        # user patch names
-#ms.append("F0 00 00 10 00 56 20 00 01 02 00 1F 7A F7")     # response 21 gets patch name and params (amp?, cab?)
-#ms.append("F0 00 00 10 00 56 7E 00 01 21 18 F7")           # acknowledge              q
+ms.append("F0 00 00 10 00 56 20 00 01 02 00 1F 7A F7")     # response 21 gets patch name and params (amp?, cab?)
+ms.append("F0 00 00 10 00 56 7E 00 01 21 18 F7")           # acknowledge              q
 #ms.append("F0 00 00 10 00 56 2E 00 01 02 00 02 01 00 00 68 F7") # DIRECT amp model
 #ms.append("F0 00 00 10 00 56 2D 00 01 01 00 00 6B F7")         # response 7E - don't know
 #ms.append("F0 00 00 10 00 56 20 00 01 03 00 1F 7B F7")        # get current patch name (response 21)
@@ -193,7 +263,8 @@ while True:
                     sbytes = msg.bytes()
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
                     #printbytes(sbytes)
-                    printpacked_lin(sbytes, received_count, comment)
+                    #printpacked_lin(sbytes, received_count, comment)
+                    printpacked("RECEIVED", msg.data)
                     c += 1
                     received_count += 1
             else:
