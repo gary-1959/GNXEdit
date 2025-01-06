@@ -221,7 +221,7 @@ class TreeHandler(QObject):
             #item = model.itemFromIndex(topleft)
             #item.setData(text, Qt.DisplayRole)
 
-            self.gnx.send_patch_name(text, bank, patch, bank, patch)
+            self.gnx.save_patch(text, bank, patch, bank, patch)
 
     @Slot()
     def midiPatchChange(self, parameter):

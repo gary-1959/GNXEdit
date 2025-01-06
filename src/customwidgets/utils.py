@@ -76,19 +76,16 @@ def compile_number(value):
     # split value into 8 bit bytes
     v =[]
     n = value
-    if n == 0:
-        v = [0]
-    else:
-        while n > 0:
-            d = n % 256
-            v.append(d)
-            n = (n // 256)
+    if n < 0x80:
+        v = [n]
+    elif n < 0x100:     # to 0xFF
+        v = [0x81, n]
+    elif n < 0x10000:   # to  0xFFFF
+        v = [0x82, (n // 0x100),  (n % 0x100)]
+    else:               # to 0xFFFFFF
+        v = [0x83, (n // 0x10000), (n % 0x10000)]
 
-    if len(v) > 1:
-        v.append(0b10000000 | len(v))   # signals multi-byte number
-
-    #reverse the order
-    v = v[::-1]
+    print(value, v)
     return v
 
 # pack bytes into 1 MSB byte + (up to) 7 data bytes
