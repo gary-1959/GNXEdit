@@ -85,7 +85,6 @@ def compile_number(value):
     else:               # to 0xFFFFFF
         v = [0x83, (n // 0x10000), (n % 0x10000)]
 
-    print(value, v)
     return v
 
 # pack bytes into 1 MSB byte + (up to) 7 data bytes

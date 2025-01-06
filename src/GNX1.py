@@ -56,7 +56,8 @@ class GNX1(QObject):
     midi_watchdog_bite_count = 0    # count timeouts before biting
     midi_watchdog_bite_count_limit = 5 # number of timeouts before biting
 
-    resyncing = False 
+    resyncing = False   # not resyncing
+    uploading = 0       # not uploading
     midicontrol = None
     mnfr_id = [0x00, 0x00, 0x10]
     device_id = 0x56
@@ -85,6 +86,12 @@ class GNX1(QObject):
     device_reverb = None
     device_expression = None
     device_lfo = None
+
+    # for saving to library
+    code24data = None
+    code2Adata = None
+    code26data = None
+    code28data = None
 
     last_extra = None
     lastbytes = None
@@ -1801,6 +1808,7 @@ class GNX1(QObject):
             self.midi_watchdog.stop()
         self.setDeviceConnected(False)
         self.resyncing = False
+        self.uploading = 0
 
     # syncing: 
     # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12, 0) -> decode13 -> request_patch_names(0x12, 1) -> decode13 -> 
@@ -1999,12 +2007,17 @@ class GNX1(QObject):
                                         pass                    # acknowledged
 
                                     case 0x7F:                  # checksum error
+                                        self.resyncing = False
+                                        self.uploading = 0
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Error code received {msg}",\
                                                 buttons = QMessageBox.Ok)
                                         self.gnxAlert.emit(e)
 
+
                                     case _:
+                                        self.resyncing = False
+                                        self.uploading = 0
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Message[{msg[6]}] code not recognised {msg}",\
                                                 buttons = QMessageBox.Ok)
@@ -2247,6 +2260,8 @@ class GNX1(QObject):
 
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
+        
+        self.code24data = msg.copy()     # for saving to library
 
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
@@ -2315,6 +2330,8 @@ class GNX1(QObject):
 
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
+        
+        self.code26data = msg.copy()     # for saving to library
 
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
@@ -2331,12 +2348,18 @@ class GNX1(QObject):
 
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
+        
+        self.code28data = msg.copy()     # for saving to library
 
     # CODE 2A: Custom Amps and Cabs
     def decode2A(self, msg):
 
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
+        
+        if self.code2Adata == None:
+            self.code2Adata = {}
+        self.code24data[f"{msg[11]:02X}{msg[12]:02X}"] = msg.copy()     # for saving to library
 
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
@@ -2476,6 +2499,42 @@ class GNX1(QObject):
         if compare_array(unpacked, [0x01, 0x76, 0x00]):
             # patch number has not changed?
             pass #TODO: what exactly is this?
+        
+        elif compare_array(unpacked, [0x01, 0x21, 0x00]):
+            if self.uploading == 1:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code24data)
+
+        elif compare_array(unpacked, [0x01, 0x24, 0x00]):
+            if self.uploading == 2:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3C06"])
+
+        elif compare_array(unpacked, [0x01, 0x26, 0x00]):
+            if self.uploading == 7:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code28data)
+
+        elif compare_array(unpacked, [0x01, 0x28, 0x00]):
+            if self.uploading == 8:
+                self.uploading = 0
+                self.midicontrol.send_code22
+
+        elif compare_array(unpacked, [0x01, 0x2A, 0x00]):
+            # patch name change acknowledged
+            #print("Patch change acknowledged", msg)
+            if self.uploading == 3:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3D07"])
+            elif self.uploading == 4:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3C08"])
+            elif self.uploading == 5:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3D09"])
+            elif self.uploading == 6:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code26data)
 
         elif compare_array(unpacked, [0x01, 0x2C, 0x00]):
             # parameter change acknowledged
@@ -2490,11 +2549,7 @@ class GNX1(QObject):
         elif compare_array(unpacked, [0x01, 0x2E, 0x00]):
             # patch name change acknowledged
             pass
-
-        elif compare_array(unpacked, [0x01, 0x26, 0x00]):
-            # parameter change acknowledged
-            #print("Expression parameter change acknowledged", msg)
-            pass        
+    
         else:
             e = GNXError(icon = QMessageBox.Warning, title = "GNX1 System Exclusive", text = f"Code 7E unrecognised: {msg}, {unpacked}", \
                 buttons = QMessageBox.Ok)
@@ -2566,4 +2621,68 @@ class GNX1(QObject):
         
         print()
         self.last_extra = unpacked[n:]
+
+    def msg2hexstring(self, msg):
+        s = ""
+        for x in msg:
+            s+= f"{x:02X}"
+        return s
+    
+    def hexstring2msg(self, s):
+        msg = []
+        n = 2
+        hs = [s[i:i + n] for i in range(0, len(s), n)]
+
+        for hx in hs:
+            msg.append(int(hx, 16))
+
+        # TODO: check bank and patch numbers 02 00
+        # replace MIDI channel
+        msg[4] = settings.GNXEDIT_CONFIG["midi"]["channel"]
+
+        # recalculate checksum
+        cx = 0
+        i = 1
+        while i < len(msg) - 2:
+            cx = cx ^ msg[i]
+            i += 1
+
+        msg[len(msg) - 1] = cx
+
+        return msg
+
+    def serialise_to_file(self):
+        s = ""
+        blocks = [self.code24data, self.code2A["3C06"], self.code2A["3D07"], self.code2A["3C08"], self.code2A["3D09"], self.code26data, self.code28data]
+        for b in blocks:
+            s += "|" if len(s) > 0 else ""
+            s += self.msg2hexstring(b)
+
+    def deserialise_from_file(self, data, name):
+
+        blocks = data.split("|")
+        msg0 = self.hexstring2msg(blocks[0])
+        self.code24data = msg0
+        msg1 = self.hexstring2msg(blocks[1])
+        self.code2Adata["3C06"] = msg1
+        msg2 = self.hexstring2msg(blocks[2])
+        self.code2Adata["3D07"] = msg2
+        msg3 = self.hexstring2msg(blocks[3])
+        self.code2Adata["3C08"] = msg3
+        msg4 = self.hexstring2msg(blocks[4])
+        self.code2Adata["3D09"] = msg4
+        msg5 = self.hexstring2msg(blocks[5])
+        self.code26data = msg5
+        msg6 = self.hexstring2msg(blocks[6])
+        self.code28data = msg6
+
+        self.resyncing = False
+        self.uploading = 1      # indicates upload phase
+
+        # send patch name to buffer
+
+        self.sendcode21message(name)    # acknowledgement will trigger next blocks
+
+
+
 
