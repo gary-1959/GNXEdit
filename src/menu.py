@@ -76,6 +76,8 @@ class MenuHandler():
                     a.triggered.connect(self.gnx.midi_resync)
                 case "actionSavePatch":
                     a.triggered.connect(self.gnx.save_patch_to_gnx)
+                case "actionSavePatchToLibrary":
+                    a.triggered.connect(self.gnx.save_patch_to_library)
                 case _:
                     print(f"Unrecognised menu option {n}")
 

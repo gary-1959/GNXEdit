@@ -22,10 +22,13 @@ import time
 import os
 import settings
 from exceptions import GNXError
+from db import gnxDB
+import sqlite3
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit
+from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit, QTreeView, QAbstractItemView
 from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
 from customwidgets.styledial import StyleDial
 from customwidgets.ampface import AmpFace
@@ -45,6 +48,8 @@ from customwidgets.factory import factory_expression_assignments
 
 from customwidgets.utils import get_expression_assignment_index
 from customwidgets.utils import getnum, skip_bytes, compile_number, pack_data, build_sysex, compare_array
+
+from treeview import findByData, add_category_to_tree
                           
 class GNX1(QObject):
 
@@ -1746,6 +1751,7 @@ class GNX1(QObject):
     def midi_resync(self):
         self.setDeviceConnected(False)
         self.resyncing = True
+        self.uploading = 0
         self.enquire_device()
 
     deviceConnectedChanged = Signal(bool)
@@ -1866,6 +1872,13 @@ class GNX1(QObject):
         data = [0x01, 0x02, 0x00] + [ord(c) for c in name] + [0x00, 0x00, 0x08, 0x09, 0x7C]
         packed = pack_data(data)
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x21] + packed)
+        self.midicontrol.send_message(msg)
+
+    # send end of patch dump
+    def sendcode22message(self):
+        data = [0x01]
+        packed = pack_data(data)
+        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x22] + packed)
         self.midicontrol.send_message(msg)
 
     def sendcode26message(self):
@@ -2359,7 +2372,8 @@ class GNX1(QObject):
         
         if self.code2Adata == None:
             self.code2Adata = {}
-        self.code24data[f"{msg[11]:02X}{msg[12]:02X}"] = msg.copy()     # for saving to library
+        
+        self.code2Adata[f"{msg[11]:02X}{msg[12]:02X}"] = msg.copy()     # for saving to library
 
         pint = msg[7:-1]
         unpacked = self.unpack(pint)
@@ -2501,44 +2515,21 @@ class GNX1(QObject):
             pass #TODO: what exactly is this?
         
         elif compare_array(unpacked, [0x01, 0x21, 0x00]):
-            if self.uploading == 1:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code24data)
+            self.upload_control()
 
         elif compare_array(unpacked, [0x01, 0x24, 0x00]):
-            if self.uploading == 2:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code2Adata["3C06"])
+            self.upload_control()
 
         elif compare_array(unpacked, [0x01, 0x26, 0x00]):
-            if self.uploading == 7:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code28data)
+            self.upload_control()
 
         elif compare_array(unpacked, [0x01, 0x28, 0x00]):
-            if self.uploading == 8:
-                self.uploading = 0
-                self.midicontrol.send_code22
+            self.upload_control()
 
         elif compare_array(unpacked, [0x01, 0x2A, 0x00]):
-            # patch name change acknowledged
-            #print("Patch change acknowledged", msg)
-            if self.uploading == 3:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code2Adata["3D07"])
-            elif self.uploading == 4:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code2Adata["3C08"])
-            elif self.uploading == 5:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code2Adata["3D09"])
-            elif self.uploading == 6:
-                self.uploading += 1
-                self.midicontrol.send_message(self.code26data)
+            self.upload_control()
 
         elif compare_array(unpacked, [0x01, 0x2C, 0x00]):
-            # parameter change acknowledged
-            #print("Parameter change acknowledged", msg)
             pass
 
         elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
@@ -2602,6 +2593,89 @@ class GNX1(QObject):
     def save_patch_to_gnx_dialog_rejected(self):
         pass
 
+
+    def save_patch_to_library(self):
+        ui_file_name = "src/ui/savepatchtolibrarydialog.ui"
+        ui_file = QFile(ui_file_name)
+        if not ui_file.open(QIODevice.ReadOnly):
+            e = GNXError(icon = QMessageBox.Alert, title = "Save Patch To Library Error", \
+                           text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+            return
+
+        loader = QUiLoader()
+        self.save_patch_to_library_dialog = loader.load(ui_file)
+
+        ui_file.close()
+        treeView = self.save_patch_to_library_dialog.findChild(QTreeView, "treeView")
+        treeView.setHeaderHidden(True)
+        model = QStandardItemModel(0, 2)
+        rootNode = model.invisibleRootItem()
+        libHeader = QStandardItem("LIBRARY")
+        libHeader.setEnabled(False)
+        libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
+        rootNode.appendRow(libHeader)
+        treeView.setModel(model)
+        selection = treeView.selectionModel()
+        treeView.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        # add library data
+
+        db = gnxDB()
+        if db.conn == None:
+            return
+        
+        try:
+            db.conn.row_factory = sqlite3.Row
+            cur = db.conn.cursor()
+            cur.execute("SELECT * FROM categories ORDER by parent ASC")
+            rc = cur.fetchall()
+            crows = [dict(row) for row in rc]
+
+            for c in crows:
+                data = {"role": "header", "type": "library", "category": c["parent"]} # look for parent
+                pcat = findByData(libHeader, data)
+                add_category_to_tree(treeView, model, pcat, c["id"], c["name"], True)
+            pass
+
+        except Exception as e:
+            e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
+                                                    text = f"Unable to add category to tree {e}", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)  
+
+        inputName = self.save_patch_to_library_dialog.findChild(QLineEdit, "inputName")
+        inputName.setText(self.current_patch_name)
+
+        self.save_patch_to_library_dialog.accepted.connect(self.save_patch_to_library_dialog_accepted)
+        self.save_patch_to_library_dialog.rejected.connect(self.save_patch_to_library_dialog_rejected)
+        self.save_patch_to_library_dialog.setParent(self.ui, Qt.Dialog)
+        self.save_patch_to_library_dialog.show()
+
+    def save_patch_to_library_dialog_accepted(self):
+        treeView = self.save_patch_to_library_dialog.findChild(QTreeView, "treeView")
+        inputName = self.save_patch_to_library_dialog.findChild(QLineEdit, "inputName")
+
+        selection_model = treeView.selectionModel()
+        selected = selection_model.selectedIndexes()
+        for r in selected:
+            data = r.data(Qt.UserRole)
+        bank = 1 # user
+        name = inputName.text()
+        
+        # save patch
+        self.save_patch(name, 0x02, 0x00, bank, patch)
+        self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+        # save to library
+        data = self.serialise_to_file()
+
+
+
+
+
+    def save_patch_to_library_dialog_rejected(self):
+        pass
     
     def print_remainder(self, n, unpacked, text):
         print(text)
@@ -2653,27 +2727,37 @@ class GNX1(QObject):
 
     def serialise_to_file(self):
         s = ""
-        blocks = [self.code24data, self.code2A["3C06"], self.code2A["3D07"], self.code2A["3C08"], self.code2A["3D09"], self.code26data, self.code28data]
-        for b in blocks:
-            s += "|" if len(s) > 0 else ""
+        blocks = {  "24":self.code24data, 
+                    "3C06": self.code2A["3C06"],
+                    "3D07": self.code2A["3D07"], 
+                    "3C08": self.code2A["3C08"],
+                    "3D09": self.code2A["3D09"],
+                    "26": self.code26data,
+                    "28": self.code28data
+        }
+        result = {}
+        for k, b in blocks.items():
+            s = ""
             s += self.msg2hexstring(b)
+            result[k] = s
+
+        return result
 
     def deserialise_from_file(self, data, name):
 
-        blocks = data.split("|")
-        msg0 = self.hexstring2msg(blocks[0])
+        msg0 = self.hexstring2msg(data["24"])
         self.code24data = msg0
-        msg1 = self.hexstring2msg(blocks[1])
+        msg1 = self.hexstring2msg(data["3C06"])
         self.code2Adata["3C06"] = msg1
-        msg2 = self.hexstring2msg(blocks[2])
+        msg2 = self.hexstring2msg(data["3D07"])
         self.code2Adata["3D07"] = msg2
-        msg3 = self.hexstring2msg(blocks[3])
+        msg3 = self.hexstring2msg(data["3C08"])
         self.code2Adata["3C08"] = msg3
-        msg4 = self.hexstring2msg(blocks[4])
+        msg4 = self.hexstring2msg(data["3D09"])
         self.code2Adata["3D09"] = msg4
-        msg5 = self.hexstring2msg(blocks[5])
+        msg5 = self.hexstring2msg(data["26"])
         self.code26data = msg5
-        msg6 = self.hexstring2msg(blocks[6])
+        msg6 = self.hexstring2msg(data["28"])
         self.code28data = msg6
 
         self.resyncing = False
@@ -2683,6 +2767,35 @@ class GNX1(QObject):
 
         self.sendcode21message(name)    # acknowledgement will trigger next blocks
 
+    # uploading state machine called after acknowledge received
+    def upload_control(self):
 
+        match self.uploading:
+            case 0:
+                return
+            case 1:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code24data)
+            case 2:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3C06"])
+            case 3:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3D07"])
+            case 4:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3C08"])
+            case 5:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code2Adata["3D09"])
+            case 6:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code26data)
+            case 7:
+                self.uploading += 1
+                self.midicontrol.send_message(self.code28data)
+            case 8:
+                self.uploading = 0  # finished
+                self.sendcode22message()
 
 

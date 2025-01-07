@@ -28,6 +28,39 @@ from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWid
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
+# all rows with children will span columns
+def findByData(parent, data):
+    idx = parent.index()
+    index1 = idx.siblingAtColumn(0)
+    index2 = idx.siblingAtColumn(1)
+    data1 = index1.data(Qt.UserRole)
+    data2 = index2.data(Qt.UserRole)
+    if data1 == None:
+        data1 = data2
+
+    if data1 == data:
+        return parent
+
+    if parent.hasChildren():
+        for row in range(parent.rowCount()):
+            result = findByData(parent.child(row, 0), data)
+            if result != None:
+                return result
+        
+        return None
+    return None
+
+def add_category_to_tree(tree, model, parent, cid, name, enabled):
+    # add to tree
+    cat = QStandardItem(name)
+    cat.setEnabled(enabled)
+    cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
+    
+    parent.appendRow(cat)
+    ctx = model.indexFromItem(cat)
+    tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
+    tree.setExpanded(model.indexFromItem(parent), True)
+
 class TreeHandler(QObject):
 
     gnxAlert = Signal(GNXError)
@@ -94,11 +127,9 @@ class TreeHandler(QObject):
 
             for c in crows:
                 data = {"role": "header", "type": "library", "category": c["parent"]} # look for parent
-                pcat = self.findByData(self.libHeader, data)
-                self.add_category_to_tree(pcat, c["id"], c["name"])
+                pcat = findByData(self.libHeader, data)
+                add_category_to_tree(self.tree, self.model, pcat, c["id"], c["name"], False)
             pass
-
-
 
         except Exception as e:
             e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
@@ -168,8 +199,8 @@ class TreeHandler(QObject):
                 db.conn.commit()
 
                 # add to tree
-                pcat = self.findByData(self.libHeader, data)
-                self.add_category_to_tree(pcat, cur.lastrowid, name)
+                pcat = findByData(self.libHeader, data)
+                add_category_to_tree(self.tree, self.model, pcat, cur.lastrowid, name, False)
 
             except Exception as e:
                 e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
@@ -185,17 +216,6 @@ class TreeHandler(QObject):
 
     def add_category_dialog_rejected(self):
         pass
-
-    def add_category_to_tree(self, parent, cid, name):
-        # add to tree
-        cat = QStandardItem(name)
-        cat.setEnabled(False)
-        cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
-        
-        parent.appendRow(cat)
-        ctx = self.model.indexFromItem(cat)
-        self.tree.setFirstColumnSpanned(ctx.row(), self.model.indexFromItem(parent), True)
-        self.tree.setExpanded(self.model.indexFromItem(parent), True)
 
     # to set gnx after init
     def setGNX(self, gnx):
@@ -332,24 +352,4 @@ class TreeHandler(QObject):
                 self.setHeaderSpanned(parent.child(row, 0))
 
 
-    # all rows with children will span comlumns
-    def findByData(self, parent, data):
-        idx = parent.index()
-        index1 = idx.siblingAtColumn(0)
-        index2 = idx.siblingAtColumn(1)
-        data1 = index1.data(Qt.UserRole)
-        data2 = index2.data(Qt.UserRole)
-        if data1 == None:
-            data1 = data2
-
-        if data1 == data:
-            return parent
-
-        if parent.hasChildren():
-            for row in range(parent.rowCount()):
-                result = self.findByData(parent.child(row, 0), data)
-                if result != None:
-                    return result
-            
-            return None
-        return None
+    
