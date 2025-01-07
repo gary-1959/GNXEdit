@@ -60,6 +60,33 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
     ctx = model.indexFromItem(cat)
     tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
     tree.setExpanded(model.indexFromItem(parent), True)
+    return cat
+
+def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank = None, patch_num = None,
+                               patch_id = None, name = "", description = "", tags = "" ):
+    if type == "library":
+        w1 = QStandardItem(name)
+        w1.setEnabled(True)
+        w1.setEditable(True)   # library patch name is editable
+        w1.setData({"role": "patch", "type": "library", "bank": None, "patch": patch_id,
+                    "description": description, "tags": tags}, Qt.UserRole)
+        parent.appendRow([w1])
+        ctx = model.indexFromItem(w1)
+        tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
+        tree.setExpanded(model.indexFromItem(parent), True)
+        w2 = None
+
+    else:
+        w1 = QStandardItem(f"{(patch_num + 1):02.0f}:")
+        w2 = QStandardItem(name)
+        w1.setEnabled(True)
+        if w2 != None:
+            w2.setEditable(bank == 1)   # only user bank is editable
+
+        w2.setData({"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}, Qt.UserRole)
+        parent.appendRow([w1, w2])
+
+    return w1, w2
 
 class TreeHandler(QObject):
 
@@ -121,14 +148,28 @@ class TreeHandler(QObject):
         try:
             db.conn.row_factory = sqlite3.Row
             cur = db.conn.cursor()
-            cur.execute("SELECT * FROM categories ORDER by parent ASC")
+            cur.execute("SELECT c.parent AS cat_parent, c.id as cat_id, c.name as cat_name, \
+		                    p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags \
+	                        FROM categories AS c \
+	                        LEFT JOIN patches AS p ON p.category = c.id \
+                            ORDER by cat_parent, cat_id, patch_name ASC")
             rc = cur.fetchall()
             crows = [dict(row) for row in rc]
 
+            last_cat = None
+            cat = None
+
             for c in crows:
-                data = {"role": "header", "type": "library", "category": c["parent"]} # look for parent
-                pcat = findByData(self.libHeader, data)
-                add_category_to_tree(self.tree, self.model, pcat, c["id"], c["name"], False)
+                if last_cat != c["cat_id"]:
+                    data = {"role": "header", "type": "library", "category": c["cat_parent"]} # look for parent
+                    pcat = findByData(self.libHeader, data)
+                    cat = add_category_to_tree(self.tree, self.model, pcat, c["cat_id"], c["cat_name"], True)
+                    last_cat = c["cat_id"]
+
+                if c["patch_id"] != None:
+                    add_patch_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
+                        patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])
+
             pass
 
         except Exception as e:
@@ -142,18 +183,64 @@ class TreeHandler(QObject):
     
     def contextMenu(self, point):
         index = self.tree.indexAt(point)
+        actions = None
         if index.isValid():
             d1 = index.data(Qt.UserRole)
             if d1 != None and d1["role"] == "header" and d1["type"] == "library":
-                contextMenu = QMenu(self.tree)
-                actions = [{"text": "Add Category", "connect": self.addCategory}]
-                for a in actions:
-                    action = QAction(a["text"])
-                    action.triggered.connect(a["connect"])
-                    action.setData(d1)
-                    contextMenu.addAction(action)
+                actions = [{"text": "Add Category", "connect": self.addCategory},
+                           {"text": "Edit", "connect": self.editCategory},
+                           {"text": "---", "connect": None},
+                           {"text": "Cut", "connect": self.cutCategory},
+                           {"text": "Copy", "connect": self.copyCategory},
+                           {"text": "Paste", "connect": self.pasteCategory},
+                           {"text": "---", "connect": None},
+                           {"text": "Delete", "connect": self.deleteCategory}
+                ]
 
-                contextMenu.exec(self.tree.viewport().mapToGlobal(point))
+            elif d1 != None and d1["role"] == "patch" and d1["type"] == "library":
+                actions = [{"text": "Edit", "connect": self.editPatch},
+                           {"text": "---", "connect": None},
+                           {"text": "Cut", "connect": self.cutPatch},
+                           {"text": "Copy", "connect": self.copyPatch},
+                           {"text": "---", "connect": None},
+                           {"text": "Delete", "connect": self.deletePatch}
+                ]
+
+            if actions != None:
+                cm = QMenu(self.tree)
+                for a in actions:
+                    if a["text"] == "---":
+                        cm.addSeparator()
+                        pass
+                    else:
+                        action = QAction(a["text"])
+                        action.triggered.connect(a["connect"])
+                        action.setData(d1)
+                        cm.addAction(action)
+                        x = cm.actions()
+
+                cm.exec(self.tree.viewport().mapToGlobal(point))
+
+
+    @Slot()
+    def editPatch(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def cutPatch(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def copyPatch(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def deletePatch(self):
+        sender = self.sender()
+        data = sender.data()
 
     @Slot()
     def addCategory(self):
@@ -206,7 +293,8 @@ class TreeHandler(QObject):
                 e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
                                                         text = f"Unable to add category to database {e}", \
                                                         buttons = QMessageBox.Ok)
-                self.gnxAlert.emit(e)                
+                self.gnxAlert.emit(e)     
+            db.conn.close()           
 
         else:
             e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
@@ -217,6 +305,31 @@ class TreeHandler(QObject):
     def add_category_dialog_rejected(self):
         pass
 
+    @Slot()
+    def editCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def cutCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def copyCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def pasteCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
+    @Slot()
+    def deleteCategory(self):
+        sender = self.sender()
+        data = sender.data()
+
     # to set gnx after init
     def setGNX(self, gnx):
         self.gnx = gnx
@@ -224,6 +337,14 @@ class TreeHandler(QObject):
         self.gnx.gnxPatchNamesUpdated.connect(self.patchNamesUpdated)
         self.gnx.patchNameChanged.connect(self.setCurrentPatch)
         #self.gnx.midiPatchChange.connect(self.midiPatchChange)             # patch number may be mapped - do not use
+        self.gnx.patch_added_to_library.connect(self.patchAdded)
+
+    @Slot()
+    def patchAdded(self, category, id, name, description, tags):          
+            data = {"role": "header", "type": "library", "category": category} # look for parent category
+            pcat = findByData(self.libHeader, data)
+            add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
+                              name = name, description = description, tags = tags)
 
     @Slot()
     def dataChanged(self, topleft, bottomright, roles):
@@ -257,7 +378,12 @@ class TreeHandler(QObject):
                 bank = data["bank"]
                 patch = data["patch"]
                 if not self.blockPatchChange:
-                    self.gnx.send_patch_change(bank, patch)
+                    if data["type"] == "factory" or data["type"] == "user":
+                        self.gnx.send_patch_change(bank, patch)
+                    else:
+                        # TODO: what to do when library patch clicked
+                        # send to GNX1 - needs confirmation
+                        pass
                 pass
         pass
 
@@ -321,14 +447,9 @@ class TreeHandler(QObject):
         
         k = 0
         for n in names:
-            w1 = QStandardItem(f"{(k + 1):02.0f}:")
-            w2 = QStandardItem(n)
-            w1.setEnabled(False)
-            if w2 != None:
-                w2.setEditable(bank == 1)   # only user bank is editable
+            add_patch_to_tree(tree = self.tree, model = self.model, parent = h, type = "factory" if bank == 0 else "user",
+                               bank = bank, patch_num = k, name = n, description = None, tags = None)
 
-            w2.setData({"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": k}, Qt.UserRole)
-            h.appendRow([w1, w2])
             k += 1
 
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
