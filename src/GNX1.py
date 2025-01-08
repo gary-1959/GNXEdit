@@ -2584,7 +2584,7 @@ class GNX1(QObject):
         inputName = self.save_patch_to_gnx_dialog.findChild(QLineEdit, "inputName")
         patch = targetCB.currentIndex()
         bank = 1 # user
-        name = inputName.text()
+        name = inputName.text().upper()
         
         # save patch
         self.current_patch_bank = bank
@@ -2673,9 +2673,9 @@ class GNX1(QObject):
         else:
             cat = selected[0].data(Qt.UserRole)
             category = cat["category"]
-            name = inputName.text()
-            description = inputDescription.toPlainText()
-            tags = inputTags.toPlainText()
+            name = inputName.text().upper()
+            description = inputDescription.toPlainText().upper()
+            tags = inputTags.toPlainText().upper()
         
             # save patch if in user space
             if self.current_patch_bank == 1:
@@ -2704,7 +2704,6 @@ class GNX1(QObject):
             db.conn.close()     
 
             self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
-            QMessageBox.information(self.ui, "Save Patch to Library", "Patch saved!", QMessageBox.Ok)
 
     def save_patch_to_library_dialog_rejected(self):
         pass

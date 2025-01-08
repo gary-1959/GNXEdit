@@ -38,7 +38,21 @@ def findByData(parent, data):
     if data1 == None:
         data1 = data2
 
-    if data1 == data:
+    # compare only supplied parts of data
+    # it's up to the calling routine to make sure this is suitably specific
+    found = True
+    for k, d in data.items():
+        if k in data1:
+            if data1[k] == d:
+                continue
+            else:
+                found = False
+                break
+        else:
+            found = False
+            break
+
+    if found:
         return parent
 
     if parent.hasChildren():
@@ -52,15 +66,19 @@ def findByData(parent, data):
 
 def add_category_to_tree(tree, model, parent, cid, name, enabled):
     # add to tree
-    cat = QStandardItem(name)
-    cat.setEnabled(enabled)
-    cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
-    
-    parent.appendRow(cat)
-    ctx = model.indexFromItem(cat)
-    tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
-    tree.setExpanded(model.indexFromItem(parent), True)
-    return cat
+    if parent != None:     
+        cat = QStandardItem(name)
+        cat.setEnabled(enabled)
+        cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
+        
+        parent.appendRow(cat)
+        ctx = model.indexFromItem(cat)
+        tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
+        tree.setExpanded(model.indexFromItem(parent), True)
+        model.layoutChanged
+        return cat
+    else:
+        return None
 
 def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank = None, patch_num = None,
                                patch_id = None, name = "", description = "", tags = "" ):
@@ -86,6 +104,7 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w2.setData({"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}, Qt.UserRole)
         parent.appendRow([w1, w2])
 
+    model.layoutChanged
     return w1, w2
 
 class TreeHandler(QObject):
@@ -101,6 +120,7 @@ class TreeHandler(QObject):
         self.current_patch_name = None
         self.current_patch_bank = None
         self.current_patch_number = None
+        self.clipBoard = None
 
         self.tree = self.window.findChild(QTreeView, "treeView")
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -140,18 +160,20 @@ class TreeHandler(QObject):
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
         # add library data
-
-        db = gnxDB()
-        if db.conn == None:
-            return
         
         try:
+            db = gnxDB()
+            if db.conn == None:
+                return
             db.conn.row_factory = sqlite3.Row
             cur = db.conn.cursor()
             cur.execute("SELECT c.parent AS cat_parent, c.id as cat_id, c.name as cat_name, \
-		                    p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags \
+		                    p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags, \
+                            c2.id AS parent_id \
 	                        FROM categories AS c \
 	                        LEFT JOIN patches AS p ON p.category = c.id \
+                            LEFT JOIN categories AS c2 on c.parent = c2.id \
+                            WHERE cat_parent IS NOT NULL \
                             ORDER by cat_parent, cat_id, patch_name ASC")
             rc = cur.fetchall()
             crows = [dict(row) for row in rc]
@@ -163,18 +185,19 @@ class TreeHandler(QObject):
                 if last_cat != c["cat_id"]:
                     data = {"role": "header", "type": "library", "category": c["cat_parent"]} # look for parent
                     pcat = findByData(self.libHeader, data)
-                    cat = add_category_to_tree(self.tree, self.model, pcat, c["cat_id"], c["cat_name"], True)
-                    last_cat = c["cat_id"]
+                    if pcat != None:
+                        cat = add_category_to_tree(self.tree, self.model, pcat, c["cat_id"], c["cat_name"], True)
+                        last_cat = c["cat_id"]
 
                 if c["patch_id"] != None:
                     add_patch_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
                         patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])
 
-            pass
+            db.conn.close()
 
         except Exception as e:
             e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
-                                                    text = f"Unable to add category to tree {e}", \
+                                                    text = f"Unable to add category to tree\n{e}", \
                                                     buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e)  
 
@@ -190,9 +213,9 @@ class TreeHandler(QObject):
                 actions = [{"text": "Add Category", "connect": self.addCategory},
                            {"text": "Edit", "connect": self.editCategory},
                            {"text": "---", "connect": None},
-                           {"text": "Cut", "connect": self.cutCategory},
-                           {"text": "Copy", "connect": self.copyCategory},
-                           {"text": "Paste", "connect": self.pasteCategory},
+                           {"text": "Cut", "connect": self.cutBranch},
+                           {"text": "Copy", "connect": self.copyBranch},
+                           {"text": "Paste", "connect": self.pasteBranch},
                            {"text": "---", "connect": None},
                            {"text": "Delete", "connect": self.deleteCategory}
                 ]
@@ -200,8 +223,8 @@ class TreeHandler(QObject):
             elif d1 != None and d1["role"] == "patch" and d1["type"] == "library":
                 actions = [{"text": "Edit", "connect": self.editPatch},
                            {"text": "---", "connect": None},
-                           {"text": "Cut", "connect": self.cutPatch},
-                           {"text": "Copy", "connect": self.copyPatch},
+                           {"text": "Cut", "connect": self.cutBranch},
+                           {"text": "Copy", "connect": self.copyBranch},
                            {"text": "---", "connect": None},
                            {"text": "Delete", "connect": self.deletePatch}
                 ]
@@ -229,21 +252,105 @@ class TreeHandler(QObject):
 
     @Slot()
     def cutPatch(self):
-        sender = self.sender()
-        data = sender.data()
+        self.cutCopyPatch(self.sender(), "cut")
 
     @Slot()
     def copyPatch(self):
-        sender = self.sender()
+        self.cutCopyPatch(self.sender(), "copy")
+
+    def cutCopyPatch(self, sender, mode):
+
         data = sender.data()
+        id = data["patch"]
+
+        try:
+            db = gnxDB()
+            if db.conn == None:
+                return
+            db.conn.row_factory = sqlite3.Row
+            cur = db.conn.cursor()
+            cur.execute("SELECT * FROM patches WHERE id = ?", [id])
+            rc = cur.fetchall()
+            row = [dict(row) for row in rc]
+            self.clipBoard = {"type": "patch", "mode": mode, "data": row}
+            db.conn.close()
+        except Exception as e:
+            e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
+                                                    text = f"Unable to retrieve patch data from database\n{e}", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+        pass
 
     @Slot()
     def deletePatch(self):
         sender = self.sender()
         data = sender.data()
 
+        result = QMessageBox.question(self.window, "Delete Patch", 
+                                      "This will permanently delete this patch.\nAre you sure you want to continue?", 
+                                      QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
+        if result == QMessageBox.Yes:
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+            
+                cur = db.conn.cursor()
+
+                cur.execute("DELETE FROM patches WHERE id = ?", [data["patch"]])
+                db.conn.commit()
+
+                # remove from tree
+                patch = findByData(self.libHeader, data)
+                p = patch.index()
+                self.model.removeRow(patch.index().row(), patch.index().parent())
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Delete Patch Error", \
+                                                        text = f"Unable to delete patch from database.\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)     
+            db.conn.close() 
+            self.model.layoutChanged
+
     @Slot()
     def addCategory(self):
+        def add_category_dialog_accepted():
+            data = getattr(add_category_dialog, "gnxdata")
+            inputName = add_category_dialog.findChild(QLineEdit, "inputName")
+            name = inputName.text().upper()
+
+            name = name.strip()
+            if name != None and name != "":
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+                
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [data["category"], name])
+                    db.conn.commit()
+
+                    # add to tree
+                    pcat = findByData(self.libHeader, data)
+                    add_category_to_tree(self.tree, self.model, pcat, cur.lastrowid, name, True)
+
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                                            text = f"Unable to add category to database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()           
+
+            else:
+                e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                                                        text = f"Empty category name not permitted", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+
+        def add_category_dialog_rejected(self):
+            pass
+
         sender = self.sender()
         data = sender.data()
 
@@ -257,53 +364,17 @@ class TreeHandler(QObject):
             return
 
         loader = QUiLoader()
-        self.add_category_dialog = loader.load(ui_file)
+        add_category_dialog = loader.load(ui_file)
 
         ui_file.close()
-        inputName = self.add_category_dialog.findChild(QLineEdit, "inputName")
-        inputName.setText("New Category")
+        inputName = add_category_dialog.findChild(QLineEdit, "inputName")
+        inputName.setText("NEW CATEGORY")
 
-        setattr(self.add_category_dialog, "gnxdata", data)
-        self.add_category_dialog.accepted.connect(self.add_category_dialog_accepted)
-        self.add_category_dialog.rejected.connect(self.add_category_dialog_rejected)
-        self.add_category_dialog.setParent(self.window, Qt.Dialog)
-        self.add_category_dialog.show()
-
-    def add_category_dialog_accepted(self):
-        data = getattr(self.add_category_dialog, "gnxdata")
-        inputName = self.add_category_dialog.findChild(QLineEdit, "inputName")
-        name = inputName.text()
-
-        name = name.strip()
-        if name != None and name != "":
-            db = gnxDB()
-            if db.conn == None:
-                return
-            
-            try:
-                cur = db.conn.cursor()
-                cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [data["category"], name])
-                db.conn.commit()
-
-                # add to tree
-                pcat = findByData(self.libHeader, data)
-                add_category_to_tree(self.tree, self.model, pcat, cur.lastrowid, name, False)
-
-            except Exception as e:
-                e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
-                                                        text = f"Unable to add category to database {e}", \
-                                                        buttons = QMessageBox.Ok)
-                self.gnxAlert.emit(e)     
-            db.conn.close()           
-
-        else:
-            e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
-                                                    text = f"Empty category name not permitted", \
-                                                    buttons = QMessageBox.Ok)
-            self.gnxAlert.emit(e)
-
-    def add_category_dialog_rejected(self):
-        pass
+        setattr(add_category_dialog, "gnxdata", data)
+        add_category_dialog.accepted.connect(add_category_dialog_accepted)
+        add_category_dialog.rejected.connect(add_category_dialog_rejected)
+        add_category_dialog.setParent(self.window, Qt.Dialog)
+        add_category_dialog.show()
 
     @Slot()
     def editCategory(self):
@@ -311,24 +382,221 @@ class TreeHandler(QObject):
         data = sender.data()
 
     @Slot()
-    def cutCategory(self):
-        sender = self.sender()
-        data = sender.data()
+    def cutBranch(self):
+        self.cutCopyBranch(self.sender(), "cut")
 
     @Slot()
-    def copyCategory(self):
-        sender = self.sender()
+    def copyBranch(self):
+        self.cutCopyBranch(self.sender(), "copy")
+
+    def cutCopyBranch(self, sender, mode):
         data = sender.data()
+        parent = findByData(self.libHeader, data)
+        self.clipBoard = self.addBranchToClipboard(parent, mode, [])
+        pass
+
+        # build category tree on clipboard
+
+    def addBranchToClipboard(self, parent, mode, branch):
+        idx = parent.index()
+        index1 = idx.siblingAtColumn(0)
+        index2 = idx.siblingAtColumn(1)
+        data1 = index1.data(Qt.UserRole)
+        data2 = index2.data(Qt.UserRole)
+        if data1 == None:
+            data1 = data2
+
+        if data1["role"] == "patch":
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+                db.conn.row_factory = sqlite3.Row
+                cur = db.conn.cursor()
+                cur.execute("SELECT * FROM patches WHERE id = ?", [data1["patch"]])
+                rc = cur.fetchall()
+                row = [dict(row) for row in rc]
+                branch.append({"type": "patch", "mode": mode, "data": row[0]})
+                db.conn.close()
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
+                                                        text = f"Unable to retrieve patch data from database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+                return
+        elif data1["role"] == "header":
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+                db.conn.row_factory = sqlite3.Row
+                cur = db.conn.cursor()
+                cur.execute("SELECT * FROM categories WHERE id = ?", [data1["category"]])
+                rc = cur.fetchall()
+                row = [dict(row) for row in rc]
+                branch.append({"type": "category", "mode": mode, "data": row[0]})
+                db.conn.close()
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
+                                                        text = f"Unable to retrieve patch data from database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+                return
+
+        if parent.hasChildren():
+            for row in range(parent.rowCount()):
+                branch = self.addBranchToClipboard(parent.child(row, 0), mode, branch)
+        return branch
 
     @Slot()
-    def pasteCategory(self):
-        sender = self.sender()
+    def pasteBranch(self):
+        sender = self.sender()  # target
         data = sender.data()
+        clip = self.clipBoard
+
+        # as categories are added, parent links need to be remapped.
+        # create source/target stack starting with paste target which is unchanged
+
+        parents = {}
+        parents[data["category"]] = data["category"]
+
+        for clip in self.clipBoard:
+            if clip["type"] == "patch":
+
+                clipdata = clip["data"]
+
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+
+                    # remap parent
+                    if clipdata["category"] not in parents:
+                        newparent = data["category"]
+                    else:
+                        newparent = parents[clipdata["category"]]
+                    
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                [newparent, clipdata["name"], clipdata["description"], clipdata["tags"],
+                                clipdata["C24"], clipdata["C26"], clipdata["C28"], clipdata["C3C06"], clipdata["C3D07"], 
+                                clipdata["C3C08"], clipdata["C3D09"]])
+                    db.conn.commit()
+
+                    # add to tree
+                    pcat = findByData(self.libHeader, {"role": "header", "type": "library", "category": newparent})
+                    id = cur.lastrowid
+                    add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type="library", patch_id = id,
+                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"])
+                    
+                    if clip["mode"] == "cut":
+                        cur.execute("DELETE FROM patches WHERE id = ?", [clipdata["id"]])
+                        db.conn.commit()
+
+                        # remove from tree
+                        dpatch = {"role": "patch", "type": "library", "bank": None, "patch": clipdata["id"]}
+                        patch = findByData(self.libHeader, dpatch)
+                        if patch != None:   # already deleted, multiple pastes
+                            self.model.removeRow(patch.index().row(), patch.index().parent())        
+            
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Paste Patch Error", \
+                                                            text = f"Unable to add patch to database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+            elif clip["type"] == "category":
+                clipdata = clip["data"]
+
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+                    
+                    # remap parent
+                    if clipdata["parent"] not in parents:
+                        newparent = data["category"]
+                    else:
+                        newparent = parents[clipdata["parent"]]
+                
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [newparent, clipdata["name"]])
+                    db.conn.commit()
+
+                    # add to tree
+                    pcat = findByData(self.libHeader, {"role": "header", "type": "library", "category": newparent})
+                    id = cur.lastrowid
+                    parents[clipdata["id"]] = id  # add remapped parent
+                    add_category_to_tree(tree = self.tree, model = self.model, parent = pcat, cid = id, name = clipdata["name"], enabled = True)
+                    
+                    if clip["mode"] == "cut":
+                        cur.execute("DELETE FROM categories WHERE id = ?", [clipdata["category"]])
+                        db.conn.commit()
+
+                        # remove from tree
+                        dpatch = {"role": "header", "type": "library", "category": clipdata["category"]}
+                        patch = findByData(self.libHeader, dpatch)
+                        if patch != None:   # already deleted, multiple pastes
+                            self.model.removeRow(patch.index().row(), patch.index().parent())        
+            
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Paste Category Error", \
+                                                            text = f"Unable to add category to database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+
 
     @Slot()
     def deleteCategory(self):
         sender = self.sender()
         data = sender.data()
+
+        result = QMessageBox.question(self.window, "Delete Category", 
+                                      "This will permanently delete this category and its contents.\nAre you sure you want to continue?", 
+                                      QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
+        if result == QMessageBox.Yes:
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+            
+                cur = db.conn.cursor()
+
+                cur.execute("DELETE FROM categories WHERE parent = ? OR id = ?", [data["category"], data["category"]])
+                db.conn.commit()
+
+                # clean up
+                while True:
+                    cur.execute("DELETE FROM categories WHERE id IN \
+                                    (SELECT c.id AS id FROM categories AS c \
+                                        LEFT JOIN categories AS c2 ON c.parent = c2.id \
+                                        WHERE c2.id IS NULL AND c.parent <> 0)")
+
+                    db.conn.commit()
+                    if cur.rowcount == 0:
+                        break
+
+                # delete all orphan patches
+                cur.execute("DELETE FROM patches WHERE id IN \
+                                (SELECT p.id AS id FROM patches AS p \
+                                    LEFT JOIN categories AS c ON p.category = c.id \
+                                    WHERE c.id IS NULL)")
+                db.conn.commit()
+
+                # remove from tree
+                pcat = findByData(self.libHeader, data)
+                p = pcat.index()
+                self.model.removeRow(pcat.index().row(), pcat.index().parent())
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Delete Category Error", \
+                                                        text = f"Unable to delete category from database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)     
+            db.conn.close() 
+            self.model.layoutChanged
 
     # to set gnx after init
     def setGNX(self, gnx):
@@ -341,10 +609,10 @@ class TreeHandler(QObject):
 
     @Slot()
     def patchAdded(self, category, id, name, description, tags):          
-            data = {"role": "header", "type": "library", "category": category} # look for parent category
-            pcat = findByData(self.libHeader, data)
-            add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
-                              name = name, description = description, tags = tags)
+        data = {"role": "header", "type": "library", "category": category} # look for parent category
+        pcat = findByData(self.libHeader, data)
+        add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
+                            name = name, description = description, tags = tags)
 
     @Slot()
     def dataChanged(self, topleft, bottomright, roles):
@@ -386,6 +654,7 @@ class TreeHandler(QObject):
                         pass
                 pass
         pass
+        self.model.layoutChanged
 
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
