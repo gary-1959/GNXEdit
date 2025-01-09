@@ -69,6 +69,7 @@ class MenuHandler():
         # Device menu    
     def setDeviceMenu(self):   
         device_menu = self.menubar.findChild(QMenu, "menuDevice")
+        device_menu.aboutToShow.connect(self.deviceMenuAboutToShow)
         for a in device_menu.actions():
             n = a.objectName()
             match n:
@@ -82,6 +83,14 @@ class MenuHandler():
                     print(f"Unrecognised menu option {n}")
 
             pass
+
+    def deviceMenuAboutToShow(self):
+        device_menu = self.menubar.findChild(QMenu, "menuDevice")
+        for a in device_menu.actions():
+            n = a.objectName()
+            if n in ["actionSavePatch", "actionSavePatchToLibrary"]:
+                a.setEnabled(self.gnx.has_patch())
+        pass
 
     
 

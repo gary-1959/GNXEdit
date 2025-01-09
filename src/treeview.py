@@ -32,11 +32,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 def findByData(parent, data):
     idx = parent.index()
     index1 = idx.siblingAtColumn(0)
-    index2 = idx.siblingAtColumn(1)
     data1 = index1.data(Qt.UserRole)
-    data2 = index2.data(Qt.UserRole)
-    if data1 == None:
-        data1 = data2
 
     # compare only supplied parts of data
     # it's up to the calling routine to make sure this is suitably specific
@@ -101,7 +97,9 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         if w2 != None:
             w2.setEditable(bank == 1)   # only user bank is editable
 
-        w2.setData({"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}, Qt.UserRole)
+        data = {"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}
+        w1.setData(data, Qt.UserRole)
+        w2.setData(data, Qt.UserRole)
         parent.appendRow([w1, w2])
 
     model.layoutChanged
@@ -131,24 +129,25 @@ class TreeHandler(QObject):
 
         self.gnxHeader = QStandardItem("GNX1")
         self.gnxHeader.setEnabled(False)
+        self.rootNode.appendRow(self.gnxHeader)     # important to append before setting data so that dat appears in model
         self.gnxHeader.setData({"role": "header", "type": "gnx"}, Qt.UserRole)
 
         self.factoryHeader = QStandardItem("FACTORY")
         self.factoryHeader.setEnabled(False)
-        self.factoryHeader.setData({"role": "header", "type": "factory"}, Qt.UserRole)
         self.gnxHeader.appendRow(self.factoryHeader)
+        self.factoryHeader.setData({"role": "header", "type": "factory"}, Qt.UserRole)
+
 
         self.userHeader = QStandardItem("USER")
         self.userHeader.setEnabled(False)
-        self.userHeader.setData({"role": "header", "type": "user"}, Qt.UserRole)
         self.gnxHeader.appendRow(self.userHeader)
+        self.userHeader.setData({"role": "header", "type": "user"}, Qt.UserRole)
+
 
         self.libHeader = QStandardItem("LIBRARY")
-        self.libHeader.setEnabled(False)
-        self.libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
-
-        self.rootNode.appendRow(self.gnxHeader)
+        self.libHeader.setEnabled(True)
         self.rootNode.appendRow(self.libHeader)
+        self.libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
 
         self.tree.setModel(self.model)
         self.selection = self.tree.selectionModel()
@@ -207,21 +206,34 @@ class TreeHandler(QObject):
     def contextMenu(self, point):
         index = self.tree.indexAt(point)
         actions = None
+        title = None
         if index.isValid():
             d1 = index.data(Qt.UserRole)
             if d1 != None and d1["role"] == "header" and d1["type"] == "library":
-                actions = [{"text": "Add Category", "connect": self.addCategory},
-                           {"text": "Edit", "connect": self.editCategory},
-                           {"text": "---", "connect": None},
-                           {"text": "Cut", "connect": self.cutBranch},
-                           {"text": "Copy", "connect": self.copyBranch},
-                           {"text": "Paste", "connect": self.pasteBranch},
-                           {"text": "---", "connect": None},
-                           {"text": "Delete", "connect": self.deleteCategory}
-                ]
+                title = "CATEGORY"
+                if d1["category"] == 0:     # library root
+
+                    actions = [{"text": "Add Category", "connect": self.addCategory},
+                            {"text": "---", "connect": None},
+                            {"text": "Copy", "connect": self.copyBranch},
+                            {"text": "Paste", "connect": self.pasteBranch}
+                    ]
+
+                else:
+                    actions = [{"text": "Add Category", "connect": self.addCategory},
+                            {"text": "Edit", "connect": self.editCategory},
+                            {"text": "---", "connect": None},
+                            {"text": "Cut", "connect": self.cutBranch},
+                            {"text": "Copy", "connect": self.copyBranch},
+                            {"text": "Paste", "connect": self.pasteBranch},
+                            {"text": "---", "connect": None},
+                            {"text": "Delete", "connect": self.deleteCategory}
+                    ]
 
             elif d1 != None and d1["role"] == "patch" and d1["type"] == "library":
+                title = "PATCH"
                 actions = [{"text": "Edit", "connect": self.editPatch},
+                           {"text": "Send Patch to GNX", "connect": self.sendPatch},
                            {"text": "---", "connect": None},
                            {"text": "Cut", "connect": self.cutBranch},
                            {"text": "Copy", "connect": self.copyBranch},
@@ -231,6 +243,14 @@ class TreeHandler(QObject):
 
             if actions != None:
                 cm = QMenu(self.tree)
+                if title != None:
+                    action = QAction(title)
+                    action.setProperty("class", "context-menu-title")
+                    action.setDisabled(True)
+                    action.triggered.connect(self.noAction)
+                    cm.addAction(action)
+                    x = cm.actions()
+                    cm.addSeparator()
                 for a in actions:
                     if a["text"] == "---":
                         cm.addSeparator()
@@ -244,42 +264,20 @@ class TreeHandler(QObject):
 
                 cm.exec(self.tree.viewport().mapToGlobal(point))
 
+    @Slot()
+    def noAction(self):
+        pass
+
+    @Slot()
+    def sendPatch(self):
+        sender = self.sender()
+        data = sender.data()
+        self.gnx.send_to_device(data["patch"])
 
     @Slot()
     def editPatch(self):
         sender = self.sender()
         data = sender.data()
-
-    @Slot()
-    def cutPatch(self):
-        self.cutCopyPatch(self.sender(), "cut")
-
-    @Slot()
-    def copyPatch(self):
-        self.cutCopyPatch(self.sender(), "copy")
-
-    def cutCopyPatch(self, sender, mode):
-
-        data = sender.data()
-        id = data["patch"]
-
-        try:
-            db = gnxDB()
-            if db.conn == None:
-                return
-            db.conn.row_factory = sqlite3.Row
-            cur = db.conn.cursor()
-            cur.execute("SELECT * FROM patches WHERE id = ?", [id])
-            rc = cur.fetchall()
-            row = [dict(row) for row in rc]
-            self.clipBoard = {"type": "patch", "mode": mode, "data": row}
-            db.conn.close()
-        except Exception as e:
-            e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
-                                                    text = f"Unable to retrieve patch data from database\n{e}", \
-                                                    buttons = QMessageBox.Ok)
-            self.gnxAlert.emit(e)
-        pass
 
     @Slot()
     def deletePatch(self):
@@ -400,11 +398,7 @@ class TreeHandler(QObject):
     def addBranchToClipboard(self, parent, mode, branch):
         idx = parent.index()
         index1 = idx.siblingAtColumn(0)
-        index2 = idx.siblingAtColumn(1)
         data1 = index1.data(Qt.UserRole)
-        data2 = index2.data(Qt.UserRole)
-        if data1 == None:
-            data1 = data2
 
         if data1["role"] == "patch":
             try:
@@ -434,7 +428,8 @@ class TreeHandler(QObject):
                 cur.execute("SELECT * FROM categories WHERE id = ?", [data1["category"]])
                 rc = cur.fetchall()
                 row = [dict(row) for row in rc]
-                branch.append({"type": "category", "mode": mode, "data": row[0]})
+                if len(row) > 0:
+                    branch.append({"type": "category", "mode": mode, "data": row[0]})
                 db.conn.close()
             except Exception as e:
                 e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
@@ -452,7 +447,6 @@ class TreeHandler(QObject):
     def pasteBranch(self):
         sender = self.sender()  # target
         data = sender.data()
-        clip = self.clipBoard
 
         # as categories are added, parent links need to be remapped.
         # create source/target stack starting with paste target which is unchanged
@@ -460,11 +454,23 @@ class TreeHandler(QObject):
         parents = {}
         parents[data["category"]] = data["category"]
 
+        if self.clipBoard[0]["mode"] == "cut":
+
+            # check that clipboard is not being pasted into a category contained in clipboard
+            # otherwise deleting source deletes everything
+            for c in self.clipBoard:
+                if c["type"] == "category":
+                    if c["data"]["id"] == data["category"]:
+                        e = GNXError(icon = QMessageBox.Critical, title = "Cut and Paste Category Error", \
+                                                                text = f"Operation not permitted here\nUnable to delete source category because it would delete the newly pasted items.", \
+                                                                buttons = QMessageBox.Ok)
+                        self.gnxAlert.emit(e)
+                        return
+                pass
+
         for clip in self.clipBoard:
             if clip["type"] == "patch":
-
                 clipdata = clip["data"]
-
                 try:
                     db = gnxDB()
                     if db.conn == None:
@@ -506,6 +512,7 @@ class TreeHandler(QObject):
                                                             buttons = QMessageBox.Ok)
                     self.gnxAlert.emit(e)     
                 db.conn.close()
+
             elif clip["type"] == "category":
                 clipdata = clip["data"]
 
@@ -531,11 +538,12 @@ class TreeHandler(QObject):
                     add_category_to_tree(tree = self.tree, model = self.model, parent = pcat, cid = id, name = clipdata["name"], enabled = True)
                     
                     if clip["mode"] == "cut":
-                        cur.execute("DELETE FROM categories WHERE id = ?", [clipdata["category"]])
+
+                        cur.execute("DELETE FROM categories WHERE id = ?", [clipdata["id"]])
                         db.conn.commit()
 
                         # remove from tree
-                        dpatch = {"role": "header", "type": "library", "category": clipdata["category"]}
+                        dpatch = {"role": "header", "type": "library", "category": clipdata["id"]}
                         patch = findByData(self.libHeader, dpatch)
                         if patch != None:   # already deleted, multiple pastes
                             self.model.removeRow(patch.index().row(), patch.index().parent())        
@@ -641,6 +649,10 @@ class TreeHandler(QObject):
     @Slot()
     def selectionChangedEvent(self):
         for x in self.selection.selectedIndexes():
+
+            if x.data() == None:    # click on LIBRARY chucks this out
+                return
+
             data = x.data(Qt.UserRole)
             if data["role"] == "patch":
                 bank = data["bank"]
@@ -670,9 +682,7 @@ class TreeHandler(QObject):
             index1 = self.model.index(r, 0, parent)
             index2 = self.model.index(r, 1, parent)
             data1 = index1.data(Qt.UserRole)
-            data2 = index2.data(Qt.UserRole)
-            if data1 == None:
-                data1 = data2 
+
             if data1["role"] == "patch":
                 if data1["bank"] == bank and data1["patch"] == patch:
 
@@ -729,11 +739,7 @@ class TreeHandler(QObject):
         for row in range(parent.rowCount()):
 
             index1 = self.model.index(row, 0, idx)
-            index2 = self.model.index(row, 1, idx)
             data1 = index1.data(Qt.UserRole)
-            data2 = index2.data(Qt.UserRole)
-            if data1 == None:
-                data1 = data2 
 
             if parent.child(row, 0).hasChildren() or data1["role"] == "header":
                 self.tree.setFirstColumnSpanned(row, idx, True)

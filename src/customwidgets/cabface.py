@@ -173,6 +173,14 @@ class CabFace(QWidget):
         # Create the context menu
         context_menu = QMenu(self)
 
+        action = QAction("SELECT CABINET")
+        action.setProperty("class", "context-menu-title")
+        action.setDisabled(True)
+        action.triggered.connect(self.contextMenuClicked)
+        context_menu.addAction(action)
+        x = context_menu.actions()
+        context_menu.addSeparator()
+
         for k, cab in self.CAB_STYLES.items():
 
             n = cab["name"]

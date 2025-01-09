@@ -30,12 +30,24 @@ class StatusControl(QObject):
 
         self.window = window
         self.gnx = gnx
-
         self.status_bar = self.window.findChild(QStatusBar, "statusBar")
+        
+        # uploading
+        self.uploading_label = QLabel("UPLOADING", self.status_bar)
+        self.uploading_label.setToolTip("Uploading to GNX1 Status")
+        self.status_bar.addPermanentWidget(self.uploading_label)
+
+        # resyncing
+        self.resync_label = QLabel("RESYNC", self.status_bar)
+        self.resync_label.setToolTip("Resync Status")
+        self.status_bar.addPermanentWidget(self.resync_label)
+
+        # MIDI channel
         self.midi_channel_label = QLabel("MIDI Channel: --", self.status_bar)
         self.midi_channel_label.setToolTip("GNX MIDI channel number")
         self.status_bar.addPermanentWidget(self.midi_channel_label)
 
+        # connected status
         self.gnx_connected_label = QLabel("\u2b24", self.status_bar)
         self.gnx_connected_label.setToolTip("Connected status")
         self.gnx_connected_label.setObjectName("gnxConnectedLabel")
@@ -43,6 +55,7 @@ class StatusControl(QObject):
         self.status_bar.addPermanentWidget(self.gnx_connected_label)
         self.setMIDIChannel(0)
         
+        # patch number
         self.patch_label = QLabel("Current Patch: --", self.status_bar)
         self.gnx_connected_label.setToolTip("Current patch")
         self.status_bar.addPermanentWidget(self.patch_label)
@@ -56,6 +69,25 @@ class StatusControl(QObject):
         gnx.deviceConnectedChanged.connect(self.setConnected)
         gnx.midiChannelChanged.connect(self.setMIDIChannel)
         gnx.patchNameChanged.connect(self.patchNameChanged)
+        gnx.resyncChanged.connect(self.setResync)
+        gnx.uploadChanged.connect(self.setUploading)
+
+    @Slot()
+    def setUploading(self, uploading):
+        if uploading == 0:
+            self.uploading_label.setText(f"Uploading: WAITING")
+            self.uploading_label.setStyleSheet("color: gray;")
+        else:
+            self.uploading_label.setText(f"Uploading: {uploading:02.0f}")
+            self.uploading_label.setStyleSheet("color: green;")
+    @Slot()
+    def setResync(self, resync):
+        if resync:
+            self.resync_label.setText(f"Resync: ON")
+            self.resync_label.setStyleSheet("color: green;")
+        else:
+            self.resync_label.setText(f"Resync: OFF")
+            self.resync_label.setStyleSheet("color: gray;")
 
     @Slot()
     def setConnected(self, connected):

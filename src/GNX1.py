@@ -55,6 +55,8 @@ from treeview import findByData, add_category_to_tree
 class GNX1(QObject):
 
     gnxAlert = Signal(GNXError)
+    resyncChanged = Signal(bool)
+    uploadChanged = Signal(int)
     patch_added_to_library = Signal(int, int, str, str, str)
     gnxPatchNamesUpdated = Signal(int, list)
 
@@ -1750,10 +1752,26 @@ class GNX1(QObject):
         self.ui.ampGreen.setAmpStyle(0)
         self.ui.ampRed.setAmpStyle(0)
 
+        self.setUploading(None)
+        self.setResync(None)
+
+    def setUploading(self, uploading):
+        changed = self.uploading != uploading
+        self.uploading = uploading
+        if changed:
+            self.uploadChanged.emit(uploading)
+
+    def setResync(self, resync):
+        changed = self.resyncing != resync
+        if resync:
+            self.setUploading(0)
+        self.resyncing = resync
+        if changed:
+            self.resyncChanged.emit(resync)
+
     def midi_resync(self):
         self.setDeviceConnected(False)
-        self.resyncing = True
-        self.uploading = 0
+        self.setResync(True)
         self.enquire_device()
 
     deviceConnectedChanged = Signal(bool)
@@ -1806,7 +1824,7 @@ class GNX1(QObject):
 
     def ports_open(self):
         self.setDeviceConnected(False)
-        self.resyncing = True
+        self.setResync(True)
         self.enquire_device()
         self.midi_watchdog = self.watchdog(timeout = self.midi_watchdog_time, userHandler = self.midi_watchdog_bite)
         self.midi_watchdog.start()
@@ -1815,8 +1833,8 @@ class GNX1(QObject):
         if self.midi_watchdog != None:
             self.midi_watchdog.stop()
         self.setDeviceConnected(False)
-        self.resyncing = False
-        self.uploading = 0
+        self.setResync(False)
+        self.setUploading(0)
 
     # syncing: 
     # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12, 0) -> decode13 -> request_patch_names(0x12, 1) -> decode13 -> 
@@ -2022,8 +2040,8 @@ class GNX1(QObject):
                                         pass                    # acknowledged
 
                                     case 0x7F:                  # checksum error
-                                        self.resyncing = False
-                                        self.uploading = 0
+                                        self.setResync(False)
+                                        self.setUploading(0)
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Error code received {msg}",\
                                                 buttons = QMessageBox.Ok)
@@ -2031,8 +2049,8 @@ class GNX1(QObject):
 
 
                                     case _:
-                                        self.resyncing = False
-                                        self.uploading = 0
+                                        self.setResync(False)
+                                        self.setUploading(0)
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Message[{msg[6]}] code not recognised {msg}",\
                                                 buttons = QMessageBox.Ok)
@@ -2268,7 +2286,7 @@ class GNX1(QObject):
             return
         
         if self.resyncing:
-            self.resyncing = False
+            self.setResync(False)
 
     # CODE 24: Patch Dump
     def decode24(self, msg):
@@ -2477,7 +2495,7 @@ class GNX1(QObject):
         self.current_patch_number = patch
 
         # resync
-        self.resyncing = True
+        self.setResync(True)
         self.request_current_patch_name()
 
     # CODE 2E: Patch name changed (saved)
@@ -2536,7 +2554,7 @@ class GNX1(QObject):
 
         elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
             # patch change acknowledged - get patch dump
-            self.resyncing = True
+            self.setResync(True)
             self.request_current_patch_name()
 
         elif compare_array(unpacked, [0x01, 0x2E, 0x00]):
@@ -2595,8 +2613,15 @@ class GNX1(QObject):
     def save_patch_to_gnx_dialog_rejected(self):
         pass
 
-
     def save_patch_to_library(self):
+
+        if not self.has_patch():
+            e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
+                                                    text = f"No or incomplete patch data.\nResync to GNX1 to acquire data.", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e) 
+            return
+
         ui_file_name = "src/ui/savepatchtolibrarydialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
@@ -2622,12 +2647,12 @@ class GNX1(QObject):
         treeView.setSelectionMode(QAbstractItemView.SingleSelection)
 
         # add library data
-
-        db = gnxDB()
-        if db.conn == None:
-            return
         
         try:
+            db = gnxDB()
+            if db.conn == None:
+                return
+        
             db.conn.row_factory = sqlite3.Row
             cur = db.conn.cursor()
             cur.execute("SELECT * FROM categories ORDER by parent ASC")
@@ -2658,6 +2683,7 @@ class GNX1(QObject):
         db.conn.close()
 
     def save_patch_to_library_dialog_accepted(self):
+
         treeView = self.save_patch_to_library_dialog.findChild(QTreeView, "treeView")
         inputName = self.save_patch_to_library_dialog.findChild(QLineEdit, "inputName")
         inputDescription = self.save_patch_to_library_dialog.findChild(QPlainTextEdit, "inputDescription")
@@ -2733,13 +2759,11 @@ class GNX1(QObject):
             s+= f"{x:02X}"
         return s
     
-    def hexstring2msg(self, s):
+    def blob2msg(self, blob):
         msg = []
-        n = 2
-        hs = [s[i:i + n] for i in range(0, len(s), n)]
 
-        for hx in hs:
-            msg.append(int(hx, 16))
+        for b in blob:
+            msg.append(b)
 
         # TODO: check bank and patch numbers 02 00
         # replace MIDI channel
@@ -2758,6 +2782,7 @@ class GNX1(QObject):
 
     def serialise_to_file(self):
         s = ""
+
         blocks = {  "24":self.code24data, 
                     "3C06": self.code2Adata["3C06"],
                     "3D07": self.code2Adata["3D07"], 
@@ -2775,29 +2800,54 @@ class GNX1(QObject):
 
         return result
 
-    def deserialise_from_file(self, data, name):
+    def send_to_device(self, id):
 
-        msg0 = self.hexstring2msg(data["24"])
-        self.code24data = msg0
-        msg1 = self.hexstring2msg(data["3C06"])
-        self.code2Adata["3C06"] = msg1
-        msg2 = self.hexstring2msg(data["3D07"])
-        self.code2Adata["3D07"] = msg2
-        msg3 = self.hexstring2msg(data["3C08"])
-        self.code2Adata["3C08"] = msg3
-        msg4 = self.hexstring2msg(data["3D09"])
-        self.code2Adata["3D09"] = msg4
-        msg5 = self.hexstring2msg(data["26"])
-        self.code26data = msg5
-        msg6 = self.hexstring2msg(data["28"])
-        self.code28data = msg6
+        # get data from db
+        try:
+            db = gnxDB()
+            if db.conn == None:
+                return
+            db.conn.row_factory = sqlite3.Row
+            cur = db.conn.cursor()
+            cur.execute("SELECT * FROM patches WHERE id = ?", [id])
+            rc = cur.fetchall()
+            row = [dict(row) for row in rc]
+            if len(row) == 0:
+                raise
+            
+            data = row[0]
+            msg0 = self.blob2msg(data["C24"])
+            self.code24data = msg0
+            msg1 = self.blob2msg(data["C3C06"])
+            self.code2Adata["3C06"] = msg1
+            msg2 = self.blob2msg(data["C3D07"])
+            self.code2Adata["3D07"] = msg2
+            msg3 = self.blob2msg(data["C3C08"])
+            self.code2Adata["3C08"] = msg3
+            msg4 = self.blob2msg(data["C3D09"])
+            self.code2Adata["3D09"] = msg4
+            msg5 = self.blob2msg(data["C26"])
+            self.code26data = msg5
+            msg6 = self.blob2msg(data["C28"])
+            self.code28data = msg6
 
-        self.resyncing = False
-        self.uploading = 1      # indicates upload phase
+            self.setResync(False)
+            self.setUploading(1)      # indicates upload phase
 
-        # send patch name to buffer
+            # send patch name to buffer
 
-        self.sendcode21message(name)    # acknowledgement will trigger next blocks
+            self.sendcode21message(data["name"])    # acknowledgement will trigger next blocks
+            db.conn.close()
+
+        except Exception as e:
+            e = GNXError(icon = QMessageBox.Critical, title = "Send to Device Error", \
+                                                    text = f"Unable to retrieve patch data from database\n{e}", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+            return
+
+
+
 
     # uploading state machine called after acknowledge received
     def upload_control(self):
@@ -2806,28 +2856,33 @@ class GNX1(QObject):
             case 0:
                 return
             case 1:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code24data)
             case 2:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code2Adata["3C06"])
             case 3:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code2Adata["3D07"])
             case 4:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code2Adata["3C08"])
             case 5:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code2Adata["3D09"])
             case 6:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code26data)
             case 7:
-                self.uploading += 1
+                self.setUploading(self.uploading + 1)
                 self.midicontrol.send_message(self.code28data)
             case 8:
-                self.uploading = 0  # finished
+                self.setUploading(0)  # finished
                 self.sendcode22message()
+                self.midi_resync()
+
+    def has_patch(self):
+        return not (self.code24data == None or self.code2Adata["3C06"] == None or self.code2Adata["3D07"] == None or self.code2Adata["3C08"] == None \
+            or self.code2Adata["3D09"] == None or self.code26data == None or self.code28data == None)
 
 

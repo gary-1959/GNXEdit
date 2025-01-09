@@ -203,6 +203,14 @@ class AmpFace(QWidget):
         # Create the context menu
         context_menu = QMenu(self)
 
+        action = QAction("SELECT AMP")
+        action.setProperty("class", "context-menu-title")
+        action.setDisabled(True)
+        action.triggered.connect(self.contextMenuClicked)
+        context_menu.addAction(action)
+        x = context_menu.actions()
+        context_menu.addSeparator()
+
         for k, amp in self.AMP_STYLES.items():
             n = amp["name"]
 

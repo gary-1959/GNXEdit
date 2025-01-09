@@ -51,6 +51,11 @@ QMenu {
 QMenu::item {
 	color: black;
 }
+QMenu::item:selected {
+	background-color: red;
+	color: white;
+}
+
 QGroupBox#groupBoxAmpRed QMenu::item:selected,
 QGroupBox#groupBoxCabRed QMenu::item:selected {
 	background-color: red;
@@ -62,6 +67,20 @@ QGroupBox#groupBoxCabGreen QMenu::item:selected {
 	background-color: green;
 	color: white;
 }
+QMenu::item:disabled {
+   background-color: palegoldenrod;
+   color: gray;
+}
+
+QGroupBox#groupBoxAmpGreen QMenu::item:disabled, 
+QGroupBox#groupBoxCabGreen QMenu::item:disabled,
+QGroupBox#groupBoxAmpRed QMenu::item:disabled, 
+QGroupBox#groupBoxCabRed QMenu::item:disabled
+ {
+	background-color: palegoldenrod;
+   color: black;
+ }
+
 QComboBox {
    padding: 4px; 
    margin: 0px; 
@@ -187,6 +206,7 @@ QTreeView::branch:open:has-children:has-siblings  {
         border-image: none;
         image: url('./src/ui/tree/branch-open.png');
 }
+
 
 
 
