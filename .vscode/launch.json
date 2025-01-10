@@ -18,14 +18,14 @@
             "name": "Python Debugger: GNXEdit App",
             "type": "debugpy",
             "request": "launch",
-            "program": "C:/Users/garyb/Projects/GNXEdit/src/main.py",
+            "program": "./src/main.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Python Debugger: Custom Widget Viewer",
             "type": "debugpy",
             "request": "launch",
-            "program": "C:/Users/garyb/Projects/GNXEdit/src/widgettest.py",
+            "program": "./src/widgettest.py",
             "console": "integratedTerminal"
         }
     ]

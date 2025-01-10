@@ -15,6 +15,20 @@ from menu import MenuHandler
 from statusbar import StatusControl
 from treeview import TreeHandler
 
+from customwidgets.ampface import AmpFace
+from customwidgets.cabface import CabFace
+from customwidgets.compressorface import CompressorFace
+from customwidgets.delayface import DelayFace
+from customwidgets.expface import ExpFace
+from customwidgets.gateface import GateFace
+from customwidgets.lfoface import LFOFace
+from customwidgets.modface import ModFace
+from customwidgets.pickupface import PickupFace
+from customwidgets.reverbface import ReverbFace
+from customwidgets.wahface import WahFace
+from customwidgets.warpface import WarpFace
+from customwidgets.whammyface import WhammyFace
+
 from GNX1 import GNX1
 
 def showAlert(e):
@@ -37,6 +51,21 @@ if __name__ == "__main__":
             sys.exit(-1)
 
         loader = QUiLoader()
+
+        loader.registerCustomWidget(AmpFace)
+        loader.registerCustomWidget(CabFace)
+        loader.registerCustomWidget(CompressorFace)
+        loader.registerCustomWidget(DelayFace)
+        loader.registerCustomWidget(ExpFace)
+        loader.registerCustomWidget(GateFace)
+        loader.registerCustomWidget(LFOFace)
+        loader.registerCustomWidget(ModFace)
+        loader.registerCustomWidget(PickupFace)
+        loader.registerCustomWidget(ReverbFace)
+        loader.registerCustomWidget(WahFace)
+        loader.registerCustomWidget(WarpFace)
+        loader.registerCustomWidget(WhammyFace)
+        print(loader.availableWidgets())
         window = loader.load(ui_file)
 
         ui_file.close()
