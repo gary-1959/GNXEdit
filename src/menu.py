@@ -20,7 +20,7 @@
 from PySide6.QtCore import Slot, Signal, QObject
 from PySide6.QtGui import QAction
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QMenu, QMenuBar, QComboBox
+from PySide6.QtWidgets import QMenu, QMenuBar, QComboBox, QMessageBox
 from PySide6.QtCore import QFile, QIODevice, Qt
 
 class MenuHandler():
@@ -38,10 +38,8 @@ class MenuHandler():
             match n:
                 case "actionQuit":
                     a.triggered.connect(self.window.close)
-                case "actionTestClick":
-                    a.triggered.connect(self.test_click)
                 case _:
-                    print(f"Unrecognised menu option {n}")
+                    print(f"Unrecognised FILE menu option {n}")
             pass
 
         # MIDI menu       
@@ -52,14 +50,30 @@ class MenuHandler():
                 case "actionMIDIInterface":
                     a.triggered.connect(self.midicontrol.openMIDIDialog)
                 case _:
-                    print(f"Unrecognised menu option {n}")
+                    print(f"Unrecognised MIDI menu option {n}")
+            pass
+
+        # help menu       
+        help_menu = self.menubar.findChild(QMenu, "menuHelp")
+        for a in help_menu.actions():
+            n = a.objectName()
+            match n:
+                case "actionAbout":
+                    a.triggered.connect(self.about)
+                case "actionHelp":
+                    a.triggered.connect(self.help)
+                case _:
+                    print(f"Unrecognised HELP menu option {n}")
             pass
 
         if gnx != None:
             self.setGNX()
 
-    def test_click(self):
-        self.gnx.sendcode21message("XXXX")
+    def about(self):
+        QMessageBox.about(self.window, "About GNXEdit", "This is the about text")
+
+    def help(self):
+        QMessageBox.about(self.window, "GNXEdit Help", "This is the help text")
 
     # to set gnx after init
     def setGNX(self, gnx):

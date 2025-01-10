@@ -20,11 +20,22 @@
    <string>GNX Edit MIDI Device Controller</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight,  QScrollArea, QTreeView {
+   <string notr="true">
+QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight,  QScrollArea, QTreeView {
    font-family: 'Arial';
    font-size: 12px; 
    color: white; 
 	background-color: black;
+}
+QGroupBox {
+   border: 1px solid lightgray;
+   margin: 10px 4px 4px 4px;
+   padding: 10px;
+}
+
+QGroupBox::title {
+    left: 10px;
+    top: -12px;
 }
 
 QGroupBox#groupBoxAmpRed, 
@@ -135,32 +146,36 @@ QMenuBar#mainMenuBar::item:selected {
 }
  
 QLabel[cssClass='blue'] {
-   padding: -1px, 0, 0, 0; 
+   padding: 0, 0, 0, 0; 
    margin: 0; 
    color: lightblue;
-   font-size: 12px;
+   font-size: 14px;
+   font-family: 'Arial Narrow'
 }
 QLabel[cssClass='orange'] {
-   padding: -1px, 0, 0, 0; 
+   padding: 0, 0, 0, 0; 
    margin: 0; 
    color: khaki;
-   font-size: 12px;
+   font-size: 14px;
+   font-family: 'Arial Narrow'
 }
 QLabel[cssClass='green'] {
-   padding: -1px, 0, 0, 0; 
+   padding: 0, 0, 0, 0; 
    margin: 0; 
    color: white;
-   font-size: 12px;
+   font-size: 14px;
+   font-family: 'Arial Narrow'
 }
 QLabel[cssClass='red'] {
-   padding: -1px, 0, 0, 0; 
+   padding: 0, 0, 0, 0; 
    margin: 0; 
    color: lightpink;
-   font-size: 12px;
+   font-size: 14px;
+   font-family: 'Arial Narrow'
 }
 QStatusBar {
 	padding: 8px, 0;
-	background-color: lightgray;
+	background-color: palegoldenrod;
 	color: black;
 }
 
@@ -170,8 +185,9 @@ QStatusBar QLabel {
 
 QTreeView {
    font-size: 14px;
-   margin: 0px;
+   margin: 10px 0 0 0;
    padding: 10px 0 10px 0;
+   border: 1px solid lightgray;
 }
 
 QTreeView::item:selected {
@@ -207,12 +223,60 @@ QTreeView::branch:open:has-children:has-siblings  {
         image: url('./src/ui/tree/branch-open.png');
 }
 
+QSplitter::handle {
+    background: black;
+}
 
+QScrollArea {
+   border: 2px solid lightgray;
+}
 
+QScrollBar {
+     border: 1px solid black;
+     background: goldenrod;
+     width: 22px;
+     margin: 24px 0 24px 0;
+}
+QScrollBar::handle {
+     background: none;
+     min-height: 20px;
+}
+QScrollBar::add-line {
+     border: 1px solid black;
+     background: goldenrod;
+     height: 22px;
+     subcontrol-position: bottom;
+     subcontrol-origin: margin;
+}
+QScrollBar::sub-line {
+     border: 1px solid black;
+     background: goldenrod;
+     height: 22px;
+     subcontrol-position: top;
+     subcontrol-origin: margin;
+}
+QScrollBar::left-arrow, QScrollBar::right-arrow,
+QScrollBar::up-arrow, QScrollBar::down-arrow {
+     border: none;
+     width: 18px;
+     height: 18px;
+ }
+QScrollBar::up-arrow {
+   image: url('./src/ui/scroller/up.png');
+}
+QScrollBar::down-arrow {
+   image: url('./src/ui/scroller/down.png');
+}
+QScrollBar::left-arrow {
+   image: url('./src/ui/scroller/left.png');
+}
+QScrollBar::right-arrow {
+   image: url('./src/ui/scroller/right.png');
+}
 
 </string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="CentralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
      <number>0</number>
@@ -294,8 +358,8 @@ QTreeView::branch:open:has-children:has-siblings  {
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>343</width>
-          <height>798</height>
+          <width>341</width>
+          <height>796</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -348,8 +412,8 @@ QTreeView::branch:open:has-children:has-siblings  {
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>1038</width>
-          <height>2710</height>
+          <width>1066</width>
+          <height>2766</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -789,7 +853,6 @@ QTreeView::branch:open:has-children:has-siblings  {
      <string>File</string>
     </property>
     <addaction name="actionQuit"/>
-    <addaction name="actionTestClick"/>
    </widget>
    <widget class="QMenu" name="menuDevice">
     <property name="title">

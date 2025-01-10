@@ -1893,11 +1893,8 @@ class GNX1(QObject):
     # send patch name
     def sendcode21message(self, name):
         data = [0x01, 0x02, 0x00] + [ord(c) for c in name] + [0x00, 0x00, 0x08, 0x09, 0x7C]
-        
-        #data = [0x01, 0x02, 0x00, 0x46, 0x49, 0x4C, 0x45, 0x00, 0x00, 0x08, 0x09, 0x7C]
         packed = pack_data(data)
         msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x21] + packed)
-        print("Sent patch name")
         self.midicontrol.send_message(msg)
 
     # send end of patch dump
@@ -1969,7 +1966,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -2531,7 +2528,6 @@ class GNX1(QObject):
 
     # CODE 7E: e.g: current patch number has not changed
     def decode7E(self, msg):
-        print(f"Ack {msg}")
         if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         

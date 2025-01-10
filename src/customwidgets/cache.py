@@ -19,7 +19,7 @@
 from PySide6.QtGui import QImage
 
 IMAGE_CACHE = {}
-IMAGE_CACHING = False   # for development
+IMAGE_CACHING = True   # for development
 # get or add image to cache
 def cache_image(key, path):
     if IMAGE_CACHING:

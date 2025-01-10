@@ -65,7 +65,7 @@ if __name__ == "__main__":
         loader.registerCustomWidget(WahFace)
         loader.registerCustomWidget(WarpFace)
         loader.registerCustomWidget(WhammyFace)
-        print(loader.availableWidgets())
+
         window = loader.load(ui_file)
 
         ui_file.close()
