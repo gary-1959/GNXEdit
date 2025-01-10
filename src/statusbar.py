@@ -21,9 +21,13 @@ import settings
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QStatusBar, QLabel
-from PySide6.QtCore import QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
+from PySide6.QtCore import QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject, Qt
 
 class StatusControl(QObject):
+    connected = False
+    resync = True
+    uploading = 0
+    watchdog = True
 
     def __init__(self, window = None, gnx = None):
         super().__init__()
@@ -41,6 +45,11 @@ class StatusControl(QObject):
         self.resync_label = QLabel("RESYNC", self.status_bar)
         self.resync_label.setToolTip("Resync Status")
         self.status_bar.addPermanentWidget(self.resync_label)
+
+        # watchdog
+        self.watchdog_label = QLabel("WATCHDOG", self.status_bar)
+        self.watchdog_label.setToolTip("Watchdog Status")
+        self.status_bar.addPermanentWidget(self.watchdog_label)
 
         # MIDI channel
         self.midi_channel_label = QLabel("MIDI Channel: --", self.status_bar)
@@ -63,6 +72,9 @@ class StatusControl(QObject):
         if self.gnx != None:
             self.setGNX(gnx)
 
+        self.busy = False
+        self.setBusyIndicator()
+
     # to set gnx after init
     def setGNX(self, gnx):
         self.gnx = gnx
@@ -71,23 +83,54 @@ class StatusControl(QObject):
         gnx.patchNameChanged.connect(self.patchNameChanged)
         gnx.resyncChanged.connect(self.setResync)
         gnx.uploadChanged.connect(self.setUploading)
+        gnx.watchDogBite.connect(self.setWatchdog)
+
+    def setBusyIndicator(self):
+        app = QApplication.instance()
+        if self.watchdog or self.uploading > 0 or self.resync:
+            if not self.busy:
+                app.setOverrideCursor(Qt.WaitCursor)
+                self.busy = True
+        else:
+            if self.busy:
+                app.restoreOverrideCursor()
+                self.busy = False
+
+    @Slot()
+    def setWatchdog(self, watchdog):
+        if not watchdog:
+            self.watchdog_label.setText(f"WATCHDOG")
+            self.watchdog_label.setStyleSheet("color: gray;")
+        else:
+            self.watchdog_label.setText(f"WATCHDOG")
+            self.watchdog_label.setStyleSheet("color: red;")
+
+        self.watchdog = watchdog
+        self.setBusyIndicator()
 
     @Slot()
     def setUploading(self, uploading):
         if uploading == 0:
-            self.uploading_label.setText(f"Uploading: WAITING")
+            self.uploading_label.setText(f"UPLOADING")
             self.uploading_label.setStyleSheet("color: gray;")
         else:
-            self.uploading_label.setText(f"Uploading: {uploading:02.0f}")
+            self.uploading_label.setText(f"UPLOADING [{uploading:02.0f}]")
             self.uploading_label.setStyleSheet("color: green;")
+
+        self.uploading = uploading
+        self.setBusyIndicator()
+
     @Slot()
     def setResync(self, resync):
         if resync:
-            self.resync_label.setText(f"Resync: ON")
+            self.resync_label.setText(f"RESYNC")
             self.resync_label.setStyleSheet("color: green;")
         else:
-            self.resync_label.setText(f"Resync: OFF")
+            self.resync_label.setText(f"RESYNC")
             self.resync_label.setStyleSheet("color: gray;")
+
+        self.resync = resync
+        self.setBusyIndicator()
 
     @Slot()
     def setConnected(self, connected):
@@ -95,6 +138,7 @@ class StatusControl(QObject):
             self.gnx_connected_label.setStyleSheet("color: green;")
         else:
             self.gnx_connected_label.setStyleSheet("color: red;")
+        self.connected = connected
 
     @Slot()
     def setMIDIChannel(self, channel):
