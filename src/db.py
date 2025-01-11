@@ -19,7 +19,7 @@
 import os
 import sqlite3
 import shutil
-import settings
+import common
 from exceptions import GNXError
 
 from PySide6.QtUiTools import QUiLoader
@@ -28,7 +28,7 @@ from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIn
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
 class gnxDB(QObject):
-    
+
     gnxAlert = Signal(GNXError)
 
     def __init__(self):
@@ -37,10 +37,7 @@ class gnxDB(QObject):
         # create a database connection to a SQLite database
         self.conn = None
         try:
-            rpath = os.path.realpath(__file__)
-            rpath = rpath.replace("db.py", "")
-            jpath = os.path.join(rpath, settings.GNXEDIT_CONFIG["library"]["path"])
-            path = os.path.abspath(jpath)
+            path = os.path.abspath(common.GNXEDIT_DATABASE_FILE)
             # Check whether the specified path exists or not
             pathExists = os.path.exists(path)
             if not pathExists:
@@ -54,7 +51,7 @@ class gnxDB(QObject):
             self.conn = sqlite3.connect(path)
         except Exception as e:
             e = GNXError(icon = QMessageBox.Critical, title = "Database Error", \
-                                                    text = f"Unable to open database on path {settings.GNXEDIT_CONFIG["library"]["path"]}", \
+                                                    text = f"Unable to open database on path {common.GNXEDIT_CONFIG_FILE}", \
                                                     buttons = QMessageBox.Ok)
             e.alert(e)
             return

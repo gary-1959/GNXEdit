@@ -43,5 +43,5 @@ class GNXError(Exception):
             case QMessageBox.Question:
                 f = QMessageBox.question
                 
-        return f(None, self.title, self.text, self.buttons)
+        return f(parent, self.title, self.text, self.buttons)
         pass

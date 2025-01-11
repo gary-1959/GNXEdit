@@ -21,6 +21,7 @@ from threading import Timer
 import time
 import os
 import settings
+import common
 from exceptions import GNXError
 from db import gnxDB
 import sqlite3
@@ -1803,7 +1804,7 @@ class GNX1(QObject):
         v = compile_number(value)
         
         data = pack_data([0x02, 0x00] + [section, parameter] + v)
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, command + data)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, command + data)
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
         pass
@@ -1820,7 +1821,7 @@ class GNX1(QObject):
 
     midiChannelChanged = Signal(int)
     def set_midi_channel(self, channel):
-        settings.GNXEDIT_CONFIG["midi"]["channel"] = channel
+        common.GNXEDIT_CONFIG["midi"]["channel"] = channel
         settings.save_settings()
         self.midiChannelChanged.emit(channel + 1)
         #(f"GNX1 MIDI Channel: {channel:02X}")
@@ -1849,36 +1850,36 @@ class GNX1(QObject):
         self.midicontrol.send_message([0xF0, 0x00, 0x00, 0x10, 0x7E, 0x7F, 0x01, 0x00, 0x01, 0x00, 0x00, 0x11, 0xF7])
 
     def request_status(self):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x05, 0x00, 0x01])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x05, 0x00, 0x01])
         self.midicontrol.send_message(msg)
 
     def request_patch_names(self, bank):        # 0: factory, 1: user
         self.requested_patch_bank = bank
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, bank, 0x00])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, bank, 0x00])
         self.midicontrol.send_message(msg)
 
     # send code 07 request
     def request_ampcab_names(self, subcode):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x07, 0x00, 0x01, subcode])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x07, 0x00, 0x01, subcode])
         self.midicontrol.send_message(msg)
 
     def request_current_patch_name(self):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x20, 0x00, 0x01, 0x02, 0x00, 0x1F])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x20, 0x00, 0x01, 0x02, 0x00, 0x1F])
         self.midicontrol.send_message(msg)
 
     def send_keep_alive(self):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x76, 0x20, 0x01, 0x7F])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x76, 0x20, 0x01, 0x7F])
         self.midicontrol.send_message(msg)
 
     def acknowledge_current_patch_name(self):
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x7E, 0x00, 0x01, 0x21])
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x7E, 0x00, 0x01, 0x21])
         self.midicontrol.send_message(msg)
 
     def send_patch_change(self, bank, patch):
         if self.device_connected:
             self.current_patch_bank = bank
             self.current_patch_number = patch
-            msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
+            msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2D, 0x00, 0x01, bank, patch, 0x00])
             self.midicontrol.send_message(msg)
 
     # save patch with patch name
@@ -1886,7 +1887,7 @@ class GNX1(QObject):
         self.setPatchName(name)
         data = [0x01, sourcebank, sourcepatch, targetbank, targetpatch] + [ord(c) for c in name] + [0x00, 0xFF]
         packed = pack_data(data)
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
 
@@ -1894,14 +1895,14 @@ class GNX1(QObject):
     def sendcode21message(self, name):
         data = [0x01, 0x02, 0x00] + [ord(c) for c in name] + [0x00, 0x00, 0x08, 0x09, 0x7C]
         packed = pack_data(data)
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x21] + packed)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x21] + packed)
         self.midicontrol.send_message(msg)
 
     # send end of patch dump
     def sendcode22message(self):
         data = [0x01]
         packed = pack_data(data)
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x22] + packed)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x22] + packed)
         self.midicontrol.send_message(msg)
 
     def sendcode26message(self):
@@ -1952,7 +1953,7 @@ class GNX1(QObject):
         lfo = lfo1header + lfo1 + lfo2header + lfo2
 
         packed = pack_data(exp + lfo)
-        msg = build_sysex(settings.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x26] + packed)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x26] + packed)
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
 
@@ -1961,7 +1962,7 @@ class GNX1(QObject):
         try:
             if type(msg) != type(None):
                 # check for patch change
-                if msg[0] == 0xC0 | settings.GNXEDIT_CONFIG["midi"]["channel"]:
+                if msg[0] == 0xC0 | common.GNXEDIT_CONFIG["midi"]["channel"]:
                     self.midiPatchChange.emit(msg[1])
 
                 elif msg[0] == 0xF0:      # system exclusive
@@ -1971,7 +1972,7 @@ class GNX1(QObject):
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
                             if self.device_connected:
-                                if msg[5] == settings.GNXEDIT_CONFIG["midi"]["channel"] or msg[5] == 0x7F:    # this or all channels
+                                if msg[5] == common.GNXEDIT_CONFIG["midi"]["channel"] or msg[5] == 0x7F:    # this or all channels
                                     match msg[6]:
                                         case 0x01:
                                             self.decode01()
@@ -1989,7 +1990,7 @@ class GNX1(QObject):
                                             self.gnxAlert.emit(e)
                                 
 
-                        elif (msg[4] == 0x7F or msg[6] == 0x02 or msg[4] == settings.GNXEDIT_CONFIG["midi"]["channel"]) and (msg[5] == self.device_id ):
+                        elif (msg[4] == 0x7F or msg[6] == 0x02 or msg[4] == common.GNXEDIT_CONFIG["midi"]["channel"]) and (msg[5] == self.device_id ):
 
                             if self.device_connected:
                                 self.midi_watchdog_bite_count = 0
@@ -2168,7 +2169,7 @@ class GNX1(QObject):
     def decode02(self, msg):
         # switch to announced channel unless locked
         if not self.device_connected:
-            if settings.GNXEDIT_CONFIG["midi"]["lockchannel"] == None:
+            if common.GNXEDIT_CONFIG["midi"]["lockchannel"] == None:
                 self.set_midi_channel(msg[9])
             
             self.setDeviceConnected(True)
@@ -2178,7 +2179,7 @@ class GNX1(QObject):
 
     # CODE 06: Device Status
     def decode06(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         pint = msg[7:-1]
@@ -2196,7 +2197,7 @@ class GNX1(QObject):
 
     # CODE 08: Amp/Cab Names
     def decode08(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         # self.printpacked(msg, None, None, None)
@@ -2245,14 +2246,14 @@ class GNX1(QObject):
 
     # CODE 0A: Device Status
     def decode0A(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         #self.printpacked(msg, 0, "CODE 0A", "code0A.csv")
         
     # CODE 13: User Patch Names
     def decode13(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         pint = msg[7:-1]
@@ -2271,7 +2272,7 @@ class GNX1(QObject):
         
     # CODE 21: Current Patch Name
     def decode21(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         pint = msg[7:-1]
@@ -2286,7 +2287,7 @@ class GNX1(QObject):
     # CODE 22: End of patch dump
     def decode22(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         if self.resyncing:
@@ -2295,7 +2296,7 @@ class GNX1(QObject):
     # CODE 24: Patch Dump
     def decode24(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         self.code24data = msg.copy()     # for saving to library
@@ -2365,7 +2366,7 @@ class GNX1(QObject):
     # CODE 26: LFO and Expression Pedals
     def decode26(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         self.code26data = msg.copy()     # for saving to library
@@ -2383,7 +2384,7 @@ class GNX1(QObject):
     # CODE 28: Unknown
     def decode28(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         self.code28data = msg.copy()     # for saving to library
@@ -2391,7 +2392,7 @@ class GNX1(QObject):
     # CODE 2A: Custom Amps and Cabs
     def decode2A(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         if self.code2Adata == None:
@@ -2417,7 +2418,7 @@ class GNX1(QObject):
     # CODE 2C: Parameters
     def decode2C(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         pint = msg[7:-1]
@@ -2485,7 +2486,7 @@ class GNX1(QObject):
     # CODE 2D: Current patch number has changed
     def decode2D(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
         pint = msg[7:-1]
@@ -2505,7 +2506,7 @@ class GNX1(QObject):
     # CODE 2E: Patch name changed (saved)
     def decode2E(self, msg):
 
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
 
         pint = msg[7:-1]
@@ -2528,7 +2529,7 @@ class GNX1(QObject):
 
     # CODE 7E: e.g: current patch number has not changed
     def decode7E(self, msg):
-        if not self.device_connected or msg[self.midi_channel_offset] != settings.GNXEDIT_CONFIG["midi"]["channel"]:
+        if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
         
         pint =msg[7:-2]
@@ -2770,7 +2771,7 @@ class GNX1(QObject):
 
         # TODO: check bank and patch numbers 02 00
         # replace MIDI channel
-        msg[4] = settings.GNXEDIT_CONFIG["midi"]["channel"]
+        msg[4] = common.GNXEDIT_CONFIG["midi"]["channel"]
 
         # recalculate checksum
         cx = 0

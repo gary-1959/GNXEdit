@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="author" content="Gary Barnes (gary-1959)">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GNXEdit Help File</title>
+<style>
+    * {
+        background-color: palegoldenrod;
+        font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
+        color: black;
+    }
+    code {
+        display: block;
+        font-family:'Courier New', Courier, monospace;
+        font-weight: bold;
+        margin: 1.0em;
+        color: rgb(151, 12, 12);
+    }
+    li {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+<h1>{APP_TITLE}</h1>
+<h2>{APP_SUBTITLE}</h2>
+<h2>Application Help File</h2>
+<h3>Information</h3>
+<p>{APP_VERSION_TEXT}</p>
+<p>{APP_COPYRIGHT}</p>
+<p>{APP_LICENSE}</p>
+<p>More details at: {APP_LICENSE_LINK}</p>
+<p>Source Code: {APP_GITHUB_LINK}</p>
+
+<h3>Introduction</h3>
+<p>GNXEdit is an editor and librarian program for use with the DigiTech GNX1 guitar effects processor.</p>
+<p>The functionality of the program is similar to the DigiTech GENEdit program for Windows, 
+    but includes enhanced library functionality and is cross-platform (Windows and Linux).</p>
+<p>The program is written in Python and leverages the QT GUI framework. It iscompletely open source and freely
+    available at {APP_GITHUB_LINK}.</p>
+
+<h3>System Exclusive</h3>
+<p>There was no information available from DigiTech detailing the System Exclusive commands, so to write
+    the program the System Exclusive protocol had to be reverse engineered by snooping on communications 
+    between the GENEdit program and a GNX1 device. This work has been documented separately
+    and is available in another GitHub repository: <a href="https://github.com/gary-1959/Digitech-GNX1-System-Exclusive" 
+    target="_blank">https://github.com/gary-1959/Digitech-GNX1-System-Exclusive</a>.</p>
+<p>There are gaps in this knowledge and any contribution to filling these gaps (or errors) will be
+    most gratefully received and incorporated imto the document.</p>
+
+<h3>Installation</h3>
+<h4>Windows</h4>
+<ol>
+    <li>Download and install Python (minimum version 13.2) if not already installed from 
+        <a href="https://www.python.org/downloads/windows">https://www.python.org/downloads/windows</a></li>
+    <li>Download and install the GitHub comman line interface (CLI) from 
+        <a href="https://github.com/cli/cli/releases/download/v2.65.0/gh_2.65.0_windows_386.zip">https://github.com/cli/cli/releases/download/v2.65.0/gh_2.65.0_windows_386.zip</a></a></li>
+    <li>Open a command window, create a local folder called "GNXEdit" and cd into it</li>
+    <li>Create a sub-folder of GNXEdit and call it "program". Clone the GitHub repository at {APP_GITHUB_LINK} into it
+        with the following command:<code>gh repo clone gary-1959/GNXEdit</code></li>
+    <li>Python works best when applications are run in their own dedicated environment. A Python environment
+        is simply a folder which contains the main Python program and all the dependant libraries.
+        Create a folder for your Python environment with the following command:
+        <code>python -m venv env</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+    <li>Activate the Python environment with the command <code>env\Scripts\Activate.ps1</code></li>
+    <li>Install the dependant libraries with the command <code>pip install -r requirements.txt</code></li>
+    <li>Deactivate the Python environment with the command <code>deactivate</code></li>
+</ol>
+
+<h4>Linux</h4>
+<p>You are on your own here</p>
+
+</body>
+</html>

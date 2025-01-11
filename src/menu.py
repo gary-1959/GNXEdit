@@ -23,6 +23,9 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QMenu, QMenuBar, QComboBox, QMessageBox
 from PySide6.QtCore import QFile, QIODevice, Qt
 
+import common
+from help import get_help
+
 class MenuHandler():
 
     def __init__(self, window = None, midicontrol = None, gnx = None):
@@ -70,10 +73,10 @@ class MenuHandler():
             self.setGNX()
 
     def about(self):
-        QMessageBox.about(self.window, "About GNXEdit", "This is the about text")
+        QMessageBox.about(self.window, "About GNXEdit", common.ABOUT_TEXT)
 
     def help(self):
-        QMessageBox.about(self.window, "GNXEdit Help", "This is the help text")
+        get_help()
 
     # to set gnx after init
     def setGNX(self, gnx):

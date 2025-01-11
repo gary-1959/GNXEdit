@@ -9,6 +9,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import QFile, QIODevice
 
+import common
 import settings
 from exceptions import GNXError
 from menu import MenuHandler
@@ -41,7 +42,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     try:
-        settings.get_settings()
+        common.init()
+        settings.appconfig()
+        
 
         # main window
         ui_file_name = "src/ui/mainwindow.ui"
@@ -67,6 +70,7 @@ if __name__ == "__main__":
         loader.registerCustomWidget(WhammyFace)
 
         window = loader.load(ui_file)
+        common.APP_WINDOW = window
 
         ui_file.close()
         statusHandler = StatusControl(window)

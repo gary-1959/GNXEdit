@@ -175,7 +175,7 @@ QLabel[cssClass='red'] {
 }
 QStatusBar {
 	padding: 8px, 0;
-	background-color: palegoldenrod;
+	background-color: lightgray;
 	color: black;
 }
 
@@ -233,13 +233,15 @@ QScrollArea {
 
 QScrollBar {
      border: 1px solid black;
-     background: goldenrod;
+     background: palegoldenrod;
      width: 22px;
      margin: 24px 0 24px 0;
 }
 QScrollBar::handle {
      background: none;
      min-height: 20px;
+     background: goldenrod;
+     border: 1px solid black;
 }
 QScrollBar::add-line {
      border: 1px solid black;
@@ -272,6 +274,9 @@ QScrollBar::left-arrow {
 }
 QScrollBar::right-arrow {
    image: url('./src/ui/scroller/right.png');
+}
+QTitleBar {
+   background: green;
 }
 
 </string>

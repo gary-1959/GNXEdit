@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import rtmidi
+import common
 import settings
 import time
 
@@ -51,7 +52,7 @@ class MIDIControl:
         # check midi input is valid
         p = 0
         valid = False
-        mp = settings.GNXEDIT_CONFIG["midi"]["input"]
+        mp = common.GNXEDIT_CONFIG["midi"]["input"]
         if mp["index"] != None and mp["name"] != None:
             for  n in innames:
                 if mp["index"] == p and mp["name"] == n:
@@ -62,7 +63,7 @@ class MIDIControl:
             p = 0
             for  n in innames:
                 if n.startswith("USB"):
-                    settings.GNXEDIT_CONFIG["midi"]["input"] = {"index": p, "name": n}
+                    common.GNXEDIT_CONFIG["midi"]["input"] = {"index": p, "name": n}
                     valid = True
                     break
                 p += 1
@@ -73,7 +74,7 @@ class MIDIControl:
         # check midi output is valid
         p = 0
         valid = False
-        mp = settings.GNXEDIT_CONFIG["midi"]["output"]
+        mp = common.GNXEDIT_CONFIG["midi"]["output"]
         if mp["index"] != None and mp["name"] != None:
             for  n in outnames:
                 if mp["index"] == p and mp["name"] == n:
@@ -84,7 +85,7 @@ class MIDIControl:
             p = 0
             for  n in outnames:
                 if n.startswith("USB"):
-                    settings.GNXEDIT_CONFIG["midi"]["output"] = {"index": p, "name": n}
+                    common.GNXEDIT_CONFIG["midi"]["output"] = {"index": p, "name": n}
                     valid = True
                     break
                 p += 1
@@ -132,12 +133,12 @@ class MIDIControl:
         if self.port_out == None:   
             self.port_out = rtmidi.MidiOut()
 
-        if self.port_in != None and settings.GNXEDIT_CONFIG["midi"]["input"]["index"] != None:
-            self.port_in.open_port(settings.GNXEDIT_CONFIG["midi"]["input"]["index"])
+        if self.port_in != None and common.GNXEDIT_CONFIG["midi"]["input"]["index"] != None:
+            self.port_in.open_port(common.GNXEDIT_CONFIG["midi"]["input"]["index"])
             self.port_in.set_callback(self.input_callback)
 
-        if self.port_out != None and settings.GNXEDIT_CONFIG["midi"]["output"]["index"] != None:
-            self.port_out.open_port(settings.GNXEDIT_CONFIG["midi"]["output"]["index"])
+        if self.port_out != None and common.GNXEDIT_CONFIG["midi"]["output"]["index"] != None:
+            self.port_out.open_port(common.GNXEDIT_CONFIG["midi"]["output"]["index"])
         
         if self.port_in == None or not self.port_in.is_port_open():
             raise Exception("Unable to open MIDI input port")
@@ -220,7 +221,7 @@ class MIDIControl:
             inputCB = self.midi_dialog.findChild(QComboBox, "inputComboBox")
             innames = self.port_in.get_ports()
             p = 0
-            mp = settings.GNXEDIT_CONFIG["midi"]["input"]
+            mp = common.GNXEDIT_CONFIG["midi"]["input"]
             for  n in innames:
                 inputCB.addItem(n, p)                
                 if mp["index"] != None and mp["name"] != None:
@@ -231,7 +232,7 @@ class MIDIControl:
             outputCB = self.midi_dialog.findChild(QComboBox, "outputComboBox")
             outnames = self.port_out.get_ports()
             p = 0
-            mp = settings.GNXEDIT_CONFIG["midi"]["output"]
+            mp = common.GNXEDIT_CONFIG["midi"]["output"]
             for  n in outnames:
                 outputCB.addItem(n, p)                
                 if mp["index"] != None and mp["name"] != None:
@@ -240,11 +241,11 @@ class MIDIControl:
                 p += 1
 
             curChan = self.midi_dialog.findChild(QLabel, "currentChannel")
-            curChan.setText(str(settings.GNXEDIT_CONFIG["midi"]["channel"] + 1))
+            curChan.setText(str(common.GNXEDIT_CONFIG["midi"]["channel"] + 1))
 
             lockCB = self.midi_dialog.findChild(QComboBox, "lockChannel")
             p = 0
-            l = (settings.GNXEDIT_CONFIG["midi"]["lockchannel"] + 1) if settings.GNXEDIT_CONFIG["midi"]["lockchannel"] != None else 0
+            l = (common.GNXEDIT_CONFIG["midi"]["lockchannel"] + 1) if common.GNXEDIT_CONFIG["midi"]["lockchannel"] != None else 0
             for n in ["None"] + [str(x) for x in range(1, 17)]:
                 lockCB.addItem(n, p)
                 if l == p:
@@ -262,17 +263,17 @@ class MIDIControl:
         input = inputCB.itemData(inputCB.currentIndex())
         name = inputCB.itemText(inputCB.currentIndex())
         if input == -1:
-            settings.GNXEDIT_CONFIG["midi"]["input"] = {"index": None, "name": None}
+            common.GNXEDIT_CONFIG["midi"]["input"] = {"index": None, "name": None}
         else:
-            settings.GNXEDIT_CONFIG["midi"]["input"] = {"index": input, "name": name}
+            common.GNXEDIT_CONFIG["midi"]["input"] = {"index": input, "name": name}
 
         outputCB = self.midi_dialog.findChild(QComboBox, "outputComboBox")
         output = outputCB.itemData(outputCB.currentIndex())
         name = outputCB.itemText(outputCB.currentIndex())
         if output == -1:
-            settings.GNXEDIT_CONFIG["midi"]["output"] = {"index": None, "name": None}
+            common.GNXEDIT_CONFIG["midi"]["output"] = {"index": None, "name": None}
         else:
-            settings.GNXEDIT_CONFIG["midi"]["output"] = {"index": output, "name": name}
+            common.GNXEDIT_CONFIG["midi"]["output"] = {"index": output, "name": name}
 
 
         lockCB = self.midi_dialog.findChild(QComboBox, "lockChannel")
@@ -280,7 +281,7 @@ class MIDIControl:
         if lockchannel == -1:
             lockchannel = None
 
-        settings.GNXEDIT_CONFIG["midi"]["lockchannel"] = lockchannel
+        common.GNXEDIT_CONFIG["midi"]["lockchannel"] = lockchannel
 
         settings.save_settings()
 

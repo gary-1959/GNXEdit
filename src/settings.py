@@ -19,29 +19,82 @@
 
 import json
 import os
+from appdirs import user_config_dir
+import shutil
+import common
+from db import gnxDB
+import sqlite3
 
-GNXEDIT_CONFIG = {}
-GNXEDIT_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "GNXEdit.json")
+def appconfig():
 
-def get_settings():
-    global GNXEDIT_CONFIG, GNXEDIT_CONFIG_FILE
+    common.GNXEDIT_CONFIG_PATH = user_config_dir(appname = 'GNXEdit')
+    source_settings = os.path.join(os.path.dirname(__file__), "GNXEdit.json")
+    source_library = os.path.join(os.path.dirname(__file__), "GNXEdit.db")
+
+    common.GNXEDIT_CONFIG_FILE = os.path.join(common.GNXEDIT_CONFIG_PATH , "GNXEdit.json")
+    common.GNXEDIT_DATABASE_FILE = os.path.join(common.GNXEDIT_CONFIG_PATH , "GNXEdit.db")
+
+    # first time installation
+    if not os.path.exists(common.GNXEDIT_CONFIG_PATH ):
+        os.makedirs(common.GNXEDIT_CONFIG_PATH )
+        shutil.copy2(source_settings, common.GNXEDIT_CONFIG_PATH )
+        shutil.copy2(source_library, common.GNXEDIT_CONFIG_PATH )
+
+    # check for existence of settings and database
+    # settings
+    if not os.path.isfile(common.GNXEDIT_CONFIG_FILE):
+        shutil.copy2(source_settings, common.GNXEDIT_CONFIG_PATH )
+    else:
+        # check version
+        current_settings = get_settings(common.GNXEDIT_CONFIG_FILE)
+        if current_settings["version"] != common.APP_VERSION:
+            # do settings file update here
+            pass
+
+    # database
+    if not os.path.isfile(common.GNXEDIT_DATABASE_FILE):
+        shutil.copy2(source_library, common.GNXEDIT_CONFIG_PATH)
+    else:
+        #check version
+        db = gnxDB()
+        if db.conn == None:
+            return
+    
+        cur = db.conn.cursor()
+        cur.execute("SELECT version FROM app")
+        rc = cur.fetchone()
+        if rc[0] != common.APP_VERSION:
+            # do database file version update here
+            pass
+        db.conn.close()
+    # load up settings into global variable
+    common.GNXEDIT_CONFIG = get_settings()
+
+def get_settings(file = None):
+    config = None
+    if file == None:
+        file = common.GNXEDIT_CONFIG_FILE
     try:
-        f = open(GNXEDIT_CONFIG_FILE, "r")
-        GNXEDIT_CONFIG = json.loads(f.read())
-        if GNXEDIT_CONFIG["midi"]["lockchannel"] != None:
-            GNXEDIT_CONFIG["midi"]["channel"] = GNXEDIT_CONFIG["midi"]["lockchannel"]
+        f = open(file, "r")
+        config = json.loads(f.read())
+        if config["midi"]["lockchannel"] != None:
+            config["midi"]["channel"] = config["midi"]["lockchannel"]
         f.close()
     except Exception as e:
         print(f"Failed to load settings {e}")
-        GNXEDIT_CONFIG = {}
+        raise Exception(f"Failed to load settings.\n{e}")
 
-def save_settings():
-    global GNXEDIT_CONFIG, GNXEDIT_CONFIG_FILE
+    return config
+
+def save_settings(file = None):
+    if file == None:
+        file = common.GNXEDIT_CONFIG_FILE
     try:
-        if GNXEDIT_CONFIG["midi"]["lockchannel"] != None:
-            GNXEDIT_CONFIG["midi"]["channel"] = GNXEDIT_CONFIG["midi"]["lockchannel"]
-        f = open(GNXEDIT_CONFIG_FILE, "wt")
-        f.write(json.dumps(GNXEDIT_CONFIG))
+        if common.GNXEDIT_CONFIG["midi"]["lockchannel"] != None:
+            common.GNXEDIT_CONFIG["midi"]["channel"] = common.GNXEDIT_CONFIG["midi"]["lockchannel"]
+        f = open(file, "wt")
+        f.write(json.dumps(common.GNXEDIT_CONFIG))
         f.close()
     except Exception as e:
         print(f"Settings not saved {e}")
+        raise Exception(f"Failed to save settings.\n{e}")
