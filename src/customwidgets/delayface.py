@@ -1,6 +1,6 @@
 # delayface.py
 #
-# GNX Edit Delay widget for Digitech GNX1
+# GNXEdit Delay widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

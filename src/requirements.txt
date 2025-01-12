@@ -1,1 +1,6 @@
+appdirs
+PyQt6
 PySide6
+PySide6_Addons
+PySide6_Essentials
+python-rtmidi

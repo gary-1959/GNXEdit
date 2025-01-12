@@ -1,7 +1,7 @@
 
 # help.py
 #
-# GNX Edit menu handler
+# GNXEdit menu handler
 #
 # Copyright 2024 gary-1959
 #
@@ -38,7 +38,7 @@ def get_help():
         f.close()
         # substitute {globals}
         for s in subs:
-            regex = r"\{" + s + "\}"
+            regex = r"{" + s + "}"
             help = re.sub(regex, getattr(common, s), help, 0, re.MULTILINE)
 
         

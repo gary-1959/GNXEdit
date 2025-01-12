@@ -1,6 +1,6 @@
 # menu.py
 #
-# GNX Edit menu handler
+# GNXEdit menu handler
 #
 # Copyright 2024 gary-1959
 #

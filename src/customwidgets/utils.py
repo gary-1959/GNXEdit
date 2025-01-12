@@ -1,6 +1,6 @@
 # utils.py
 #
-# GNX Edit general utilities for Digitech GNX1
+# GNXEdit general utilities for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

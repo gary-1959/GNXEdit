@@ -1,6 +1,6 @@
 # gateface.py
 #
-# GNX Edit Noise Gate widget for Digitech GNX1
+# GNXEdit Noise Gate widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

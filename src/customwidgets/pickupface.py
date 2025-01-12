@@ -1,6 +1,6 @@
 # pickupface.py
 #
-# GNX Edit Pickup widget for Digitech GNX1
+# GNXEdit Pickup widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

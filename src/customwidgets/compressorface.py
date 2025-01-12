@@ -1,6 +1,6 @@
 # compressorface.py
 #
-# GNX Edit Compressor widget for Digitech GNX1
+# GNXEdit Compressor widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

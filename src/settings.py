@@ -1,6 +1,6 @@
 # settings.py
 #
-# GNX Edit settings file
+# GNXEdit settings file
 #
 # Copyright 2024 gary-1959
 #

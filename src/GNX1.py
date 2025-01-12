@@ -1,6 +1,6 @@
 # GNX1.py
 #
-# GNX Edit MIDI Handler for Digitech GNX1
+# GNXEdit MIDI Handler for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

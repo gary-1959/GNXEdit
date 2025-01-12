@@ -1,6 +1,6 @@
 # factory.py
 #
-# GNX Edit factory custom widget items for Digitech GNX1
+# GNXEdit factory custom widget items for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

@@ -1,6 +1,6 @@
 # statusbar.py
 #
-# GNX Edit treeview handler
+# GNXEdit treeview handler
 #
 # Copyright 2024 gary-1959
 #

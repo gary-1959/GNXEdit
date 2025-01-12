@@ -1,6 +1,6 @@
 # common.py
 #
-# GNX Edit common file
+# GNXEdit common file
 #
 # Copyright 2024 gary-1959
 #

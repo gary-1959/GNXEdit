@@ -1,6 +1,6 @@
 # cabface.py
 #
-# GNX Edit Cabinet widget for Digitech GNX1
+# GNXEdit Cabinet widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

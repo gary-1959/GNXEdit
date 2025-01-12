@@ -1,6 +1,6 @@
 # lfoface.py
 #
-# GNX Edit LFO widget for Digitech GNX1
+# GNXEdit LFO widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

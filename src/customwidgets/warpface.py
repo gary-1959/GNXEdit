@@ -1,6 +1,6 @@
 # warpface.py
 #
-# GNX Edit Warp widget for Digitech GNX1
+# GNXEdit Warp widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

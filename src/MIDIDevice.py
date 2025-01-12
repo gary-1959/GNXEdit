@@ -1,6 +1,6 @@
 # MIDIDevice.py
 #
-# GNX Edit MIDI Device Base Class
+# GNXEdit MIDI Device Base Class
 #
 # Copyright 2024 gary-1959
 #

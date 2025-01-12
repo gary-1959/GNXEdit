@@ -1,6 +1,6 @@
 # wahface.py
 #
-# GNX Edit Wah widget for Digitech GNX1
+# GNXEdit Wah widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

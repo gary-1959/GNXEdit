@@ -1,6 +1,6 @@
 # MIDIControl.py
 #
-# GNX Edit MIDI Handler
+# GNXEdit MIDI Handler
 #
 # Copyright 2024 gary-1959
 #

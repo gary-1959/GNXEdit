@@ -1,6 +1,6 @@
 # statusbar.py
 #
-# GNX Edit status bar handler
+# GNXEdit status bar handler
 #
 # Copyright 2024 gary-1959
 #

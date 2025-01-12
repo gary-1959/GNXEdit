@@ -1,6 +1,6 @@
 # expface.py
 #
-# GNX Edit Expression widget for Digitech GNX1
+# GNXEdit Expression widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #

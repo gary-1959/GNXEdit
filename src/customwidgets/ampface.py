@@ -1,6 +1,6 @@
 # ampface.py
 #
-# GNX Edit Amp widget for Digitech GNX1
+# GNXEdit Amp widget for Digitech GNX1
 #
 # Copyright 2024 gary-1959
 #
