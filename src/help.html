@@ -56,7 +56,7 @@
 <ol>
     <li>Download and install Python (minimum version 13.2) if not already installed from 
         <a href="https://www.python.org/downloads/windows">https://www.python.org/downloads/windows</a></a></li>
-    <li>If you are familiar with GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
+    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
       If not,
     download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
     This folder can be located anywhere in your system.</li>
@@ -66,11 +66,38 @@
         <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
     <li>Activate the Python environment with the following command (note the dot before venv):<code>.venv\Scripts\activate</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
     <li>Install the dependant libraries with the command <code>pip install -r src\requirements.txt</code></li>
-    <li>Deactivate the Python environment with the command <code>deactivate</code></li>
+    <li>Check the program runs with the command: <code>src\main.py</code></li>
+    <li>To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon.
+    To create a desktop icon:
+      <ol type="a">
+        <li>Open File Explorer and navigate to the GNXEdit src folder. Right-click on the file named <em><strong>GNXEdit.bat</strong></em> and select <em><strong><br>
+        Send to &gt; Desktop (create shortcut)</strong></em>.    </li>
+        <li>Close File Explorer then right-click on the newly created desktop icon.and select <strong><em>Properties.</em></strong> <br>
+        Click <em><strong>Change Icon...</strong></em> followed by <em><strong>OK</strong></em> . </li>
+        <li>Click the <em><strong>Browse..</strong></em> option in the dialog that opens then navigate to the GNXEdit src folder where you will find a GNXEdit.ico file. Select this file, click <em><strong>OK</strong></em> (then <em><strong>OK</strong></em> again), to exit the Properties dialog. The desktop icon will now be set.        </li>
+    </ol>    
+    <li>This completes the Windows installation. The most convenient way to update the program to new versions is through the GitHub Desktop program, or download the zip file from the repository then extract and overwrite the program files. Your library data and configuration is stored in your home folder and will be preserved.
+    <li>To uninstall the program simply delete the GNXEdit folder containing the program files. To remove your library and configuration data as well, navigate to your home folder. Locate the AppData\Local\GNXEdit folder and delete it.
 </ol>
 
-<h4>Linux</h4>
-<p>You are on your own here</p>
+<h4>Linux (Ubuntu)</h4>
+<ol>
+  <li>Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g: <code>sudo apt install python</code></li>
+  <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
+If not,
+    download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
+  This folder can be located anywhere in your system.</li>
+  <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
+  <li>Python works best when applications are run in their own dedicated environment. A Python environment
+    is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+  <li>Activate the Python environment with the following command (note the dot before venv):<code>.venv/</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
+  <li>Install the dependant libraries with the command <code>pip install -r src/requirements.txt</code></li>
+  <li>Check the program runs with the command: <code>src/main.py</code></li>
+  <li>To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon.
+    To create a desktop icon:
+  <li></li>
+</ol>
+<p>&nbsp;</p>
 
 </body>
 </html>
