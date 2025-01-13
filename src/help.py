@@ -39,8 +39,7 @@ def get_help():
         f.close()
         # substitute {globals}
         for s in subs:
-            regex = r"{" + s + "}"
-            help = re.sub(regex, getattr(common, s), help, 0, re.MULTILINE)
+            help = help.replace("{" + s + "}", getattr(common, s))
 
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../tmp/", "help.html"))
         f = open(path, "w")

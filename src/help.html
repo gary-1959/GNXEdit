@@ -6,145 +6,265 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GNXEdit Help File</title>
 <style>
-    * {
-        background-color: palegoldenrod;
-        font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
-        color: black;
-    }
-    code {
-        display: block;
-        font-family:'Courier New', Courier, monospace;
-        font-weight: bold;
-        margin: 1.0em;
-        color: rgb(151, 12, 12);
-    }
-    li {
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+* {
+	background-color: palegoldenrod;
+	font-family: Arial, Helvetica, 'Liberation Sans', sans-serif;
+	color: black;
+	text-align: justify;
+}
+code {
+	display: block;
+	font-family:'Courier New', Courier, monospace;
+	font-weight: bold;
+	margin: 1.0em;
+	color: rgb(151, 12, 12);
+}
+li {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+h3 {
+	background-color: blue;
+	color: white;
+	padding: 4px 4px;
+}
+h4 {
+	color:   #900;
+}
+h5 {
+	color: #90C;
+	font-size: 1.0em;
+	text-decoration: underline;
+	font-style: italic;
+	font-weight: bold;
+}
+.caution {
+	color: #F00;
+}
+.toc, .toc ul {
+	font-size: 1.0em;
+	list-style-type: none;
+}
+.toc a {
+	text-decoration: none; 
+	color:blue;
+}
+.toc a:hover {
+	text-decoration: underline; 
+}
+.btt {
+    font-style: italic;
+    float: right;
+    margin-top: -2.6em;
+    margin-right: 0.5em;
+	background-color: transparent;
+}
+.btt a {
+	background-color: transparent;
+	text-decoration: none;
+	color: white;
+}
+.btt a:hover {
+	text-decoration: underline; 
+}
 </style>
 </head>
 <body>
 <h1>{APP_TITLE}</h1>
 <h2>{APP_SUBTITLE}</h2>
 <h2>Application Help File</h2>
-<h3>Information</h3>
-<p>{APP_VERSION_TEXT}</p>
-<p>{APP_COPYRIGHT}</p>
-<p>{APP_LICENSE}</p>
-<p>More details at: {APP_LICENSE_LINK}</p>
-<p>Source Code: {APP_GITHUB_LINK}</p>
-
-<h3>Introduction</h3>
-<p>GNXEdit is an editor and librarian program for use with the DigiTech GNX1 guitar effects processor.</p>
-<p>The functionality of the program is similar to the DigiTech GENEdit program for Windows, 
+<p><u><a name="toc"></a><strong>TABLE OF CONTENTS</strong></u></p>
+<ul class="toc">
+  <li><a href="#information">Information</a></li>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#system_exclusive">System Exclusive</a></li>
+  <li><a href="#installation">Installation</a>
+    <ul>
+      <li><a href="#installation_windows">Windows</a></li>
+      <li><a href="#installation_linux">Linux (Ubuntu)</a></li>
+    </ul>
+  </li>
+  <li><a href="#getting_started">Getting Started</a></li>
+  <li><a href="#status_indication">Status Indication</a>
+    <ul>
+      <li><a href="#status_indication_current_patch">Current Patch</a></li>
+      <li><a href="#status_indication_connected_indicator">Connected Indicator</a></li>
+      <li><a href="#status_indication_midi_channel">MIDI Channel</a></li>
+      <li><a href="#status_indication_watchdog">Watchdog</a></li>
+      <li><a href="#status_indication_resync">Resync</a></li>
+      <li><a href="#status_indication_uploading">Uploading</a></li>
+    </ul>
+  </li>
+  <li><a href="#library_functions">Library Functions</a>
+    <ul>
+      <li><a href="#library_functions_gnx_patch_selection">GNX Patch Selection</a></li>
+      <li><a href="#library_functions_creating_library_categories">Creating Library Categories</a></li>
+      <li><a href="saving_patches_to_library_categories">Saving Patches To Library Categories</a></li>
+      <li><a href="#library_functions_saving_patches_to_gnx1">Saving Patches To GNX1</a></li>
+    </ul>
+  </li>
+  <li><a href="#resync">Resync</a><br>
+</li>
+</ul>
+<h3><a name="information"></a>Information</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>{APP_VERSION_TEXT}</p>
+  <p>{APP_COPYRIGHT}</p>
+  <p>{APP_LICENSE}</p>
+  <p>More details at: {APP_LICENSE_LINK}</p>
+  <p>Source Code: {APP_GITHUB_LINK}</p>
+</blockquote>
+<h3><a name="introduction"></a>Introduction</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>GNXEdit is an editor and librarian program for use with the DigiTech GNX1 guitar effects processor.</p>
+  <p>The functionality of the program is similar to the DigiTech GENEdit program for Windows, 
     but includes enhanced library functionality and is cross-platform (Windows and Linux).</p>
-<p>The program is written in Python and leverages the QT GUI framework. It iscompletely open source and freely
+  <p>The program is written in Python and leverages the QT GUI framework. It iscompletely open source and freely
     available at {APP_GITHUB_LINK}.</p>
-<p>A detailed description of the operation of the Digitech GNX1 is beyond the scope of this HELP page,
-  but a good understanding of how it works is essential for gaining maximum benefit from GNXEdit. 
-  A copy of the user manual is available by 
-  <a href="file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf" target = "_blank">clicking here</a>.
-</p>
-
-<h3>System Exclusive</h3>
-<p>There was no information available from DigiTech detailing the System Exclusive commands, so to write
+  <p>A detailed description of the operation of the Digitech GNX1 is beyond the scope of this HELP page,
+    but a good understanding of how it works is essential for gaining maximum benefit from GNXEdit. 
+    A copy of the user manual is available by 
+    <a href="file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf" target = "_blank">clicking here</a>.
+  </p>
+</blockquote>
+<h3><a name="system_exclusive"></a>System Exclusive</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>There was no information available from DigiTech detailing the System Exclusive commands, so to write
     the program the System Exclusive protocol had to be reverse engineered by snooping on communications 
     between the GENEdit program and a GNX1 device. This work has been documented separately
     and is available in another GitHub repository: <a href="https://github.com/gary-1959/Digitech-GNX1-System-Exclusive" 
     target="_blank">https://github.com/gary-1959/Digitech-GNX1-System-Exclusive</a>.</p>
-<p>There are gaps in this knowledge and any contribution to filling these gaps (or errors) will be
+  <p>There are gaps in this knowledge and any contribution to filling these gaps (or errors) will be
     most gratefully received and incorporated imto the document.</p>
-
-<h3>Installation</h3>
-<h4>Windows</h4>
-<ol>
+</blockquote>
+<h3><a name="installation"></a>Installation</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <h4><a name="installation_windows"></a>Windows</h4>
+  <ol>
     <li>Download and install Python (minimum version 13.2) if not already installed from 
-        <a href="https://www.python.org/downloads/windows">https://www.python.org/downloads/windows</a></a></li>
+      <a href="https://www.python.org/downloads/windows">https://www.python.org/downloads/windows</a></a></li>
     <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
       If not,
-    download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
-    This folder can be located anywhere in your system.</li>
+      download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
+      This folder can be located anywhere in your system.</li>
     <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
     <li>Python works best when applications are run in their own dedicated environment. A Python environment
-        is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command:
-        <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+      is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command:
+      <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
     <li>Activate the Python environment with the following command (note the dot before venv):<code>.venv\Scripts\activate</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
     <li>Install the dependant libraries with the command <code>pip install -r src\requirements.txt</code></li>
     <li>Check the program runs with the command: <code>src\main.py</code></li>
     <li>To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon.
-    To create a desktop icon:
-      <ol type="a">
+      To create a desktop icon:
+      <ol>
         <li>Open File Explorer and navigate to the GNXEdit src folder. Right-click on the file named <em><strong>GNXEdit.bat</strong></em> and select <em><strong><br>
-        Send to &gt; Desktop (create shortcut)</strong></em>.    </li>
+          Send to &gt; Desktop (create shortcut)</strong></em>.    </li>
         <li>Close File Explorer then right-click on the newly created desktop icon.and select <strong><em>Properties.</em></strong> <br>
-        Click <em><strong>Change Icon...</strong></em> followed by <em><strong>OK</strong></em> . </li>
+          Click <em><strong>Change Icon...</strong></em> followed by <em><strong>OK</strong></em> . </li>
         <li>Click the <em><strong>Browse..</strong></em> option in the dialog that opens then navigate to the GNXEdit src folder where you will find a GNXEdit.ico file. Select this file, click <em><strong>OK</strong></em> (then <em><strong>OK</strong></em> again), to exit the Properties dialog. The desktop icon will now be set.        </li>
-    </ol>    
+      </ol>
+    </li>
     <li>This completes the Windows installation. The most convenient way to update the program to new versions is through the GitHub Desktop program, or download the zip file from the repository then extract and overwrite the program files. Your library data and configuration is stored in your home folder and will be preserved.
+    </li>
     <li>To uninstall the program simply delete the GNXEdit folder containing the program files. To remove your library and configuration data as well, navigate to your home folder. Locate the AppData\Local\GNXEdit folder and delete it.
-</ol>
+    </li>
+  </ol>
+  <h4><a name="installation_linux"></a>Linux (Ubuntu)</h4>
+  <ol>
+    <li>Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g: <code>sudo apt install python</code></li>
+    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
+      If not,
+      download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
+      This folder can be located anywhere in your system.</li>
+    <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
+    <li>Python works best when applications are run in their own dedicated environment. A Python environment
+      is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: <code>python3 -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+    <li>Activate the Python environment with the following command (note the dot before venv):<code>source .venv/bin/activate</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
+    <li>Install the dependant libraries with the command <code>pip install -r src/requirements.txt</code></li>
+    <li>Check the program runs with the command: <code>python src/main.py</code></li>
+    <li>Deactivate the environment with the command <code>deactivate</code></li>
+    <li>To run the program from the command line in its correct environment:<code>cd &lt;path to your GNXEdit folder&gt;; .venv/bin/python src/main.py</code></li>
+    <li>It is far easier to launch the program from a desktop icon. A prototype desktop icon (for Ubuntu/Gnome Desktop systems) is available in the GNXEdit src folder called GNXEdit.desktop.
+      Copy this file to your desktop and edit with the text editor of your choice and insert the correct paths in the lines hightlighted in the file, and save it.</li>
+    <li>On the desktop, right-click on the file icon and click <em><strong>Allow Launching</strong></em>.</li>
+    <li>Right-click the icon again, select <em><strong>Properties</strong></em> then click <em><strong>Executable as Program</strong></em> on.</li>
+    <li>The icon should change to the GNXEdit icon. If not, check the path names are correct.</li>
+    <li>Double-click the icon to check the program runs.</li>
+    <li>For Linux systems other than Ubuntu/Gnome Desktop please check the procedure for creating desktop icons.</li>
+  </ol>
+</blockquote>
+<h3><a name="getting_started"></a>Getting Started</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this 
+    HELP page but is well covered in the User Manual. A copy of the user manual is available by 
+    <a href="file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf" target = "_blank">clicking here</a>.
+  </p>
+  <p>Getting started with GNXEdit involves connecting the GNX1 device to your computer via MIDI, then setting GNXEdit to use the same MIDI ports.</p>
+  <ol>
+    <li>Make sure the GNX1 device is turned off and connect up your MIDI interface and cables.</li>
+    <li>Start up GNXEdit and from the menu select <em><strong>MIDI Interface</strong></em>.</li>
+    <li>Select the MIDI input and output ports which the GNX1 is connected to.</li>
+    <li>GNXEdit will find the MIDI channel which your GNX1 is using automatically, but if you want to specify a specific
+      channel for any reason select it under <em><strong>Lock to Channel</strong></em>.</li>
+    <li>Click <em><strong>OK</strong></em> to close the dialog.</li>
+    <li>Turn on your GNX1 device and after a few seconds, all being well, GNXEdit will synchronise to the currently selected patch.
+      You may see a spurious System Exclusive error. Clear this by clicking <em><strong>OK</strong> in the error message box.</em>
+    </li>
+    <li>Begin editing the patch by adjusting parameters on the screen.</li>
+  </ol>
+</blockquote>
+<h3><a name="status_indication"></a>Status Indication</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>The status bar at the foot of the screen gives information about the current status of GNXEdit:</p>
+  <h5><a name="status_indication_current_patch"></a>Current Patch</h5>
+  <p>Contains details of the current patch name, bank (USER or FACTORY) and patch number. This will be synchronised
+    to your GNX1 device</p>
+  <h5><a name="status_indication_connected_indicator"></a>Connected Indicator</h5>
+  <p>A green disc indicates that GNXEdit is connected to a GNX1 device. A red disc indicates no nonnection</p>
+  <h5><a name="status_indication_midi_channel"></a>MIDI Channel</h5>
+  <p>The current MIDI channel is indicated (1 - 16)</p>
+  <h5><a name="status_indication_watchdog"></a>Watchdog</h5>
+  <p>GNXEdit has an internal watchdog which repeatedly checks the connection status. This will be grayed out during
+    normal operation. If the GNX1 device becomes disconnected, the watchdog will "bite", turning th WATCHDOG legend red,
+    and GNXEdit will initiate a rerconnection protocol.</p>
+  <h5><a name="status_indication_resync"></a>Resync</h5>
+  <p>The status bar RESYNC indicator is normally grayed out, but will turn green when a GNXEdit is trying to synchronise withyour GNX1.</p>
+  <h5><a name="status_indication_uploading"></a>Uploading</h5>
+  <p>The process of uploading a patch from the GNXEdit library to the connected device is indicated with the UPLOADING indicator.
+    Normally grayed out, when an upload is in progress this indicator will turn green and also indicate the stage number of 
+    the upload process.</p>
+</blockquote>
+<h3><a name="library_functions"></a>Library Functions</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>The GNXEdit left-hand panel is an expandable tree which displays all the patches available in the GNX1 device user and factory banks and custom patches which arer held in a database.
+  </p>
+  <p>Patches can be organised into separate folders and sub-folders (categories). Patches can be transferred on an individual basis between the library and your GNX1 device.
+  </p>
+  <h5><a name="library_functionsgnx_patch_selection"></a>GNX Patch Section</h5>
+  <p>To expand the GNX section click on the adjacent arrow in the library pane. To view the factory or usr patches click their adjacent arrow. Patches are selected by simply clicking the patch name, which will automatically change the patch on your GNX1 device. </p>
+  <p><strong class="caution">CAUTION</strong>: this will erase any edits you may have made to the previously selected patch in your GNX1, so be sure to save any edits.</p>
+  <h5><a name="library_functions_creating_library_categories"></a>Creating Library Categories</h5>
+  <p>To create your first library category right-click the LIBRARY header in the left hand pane. Select <em><strong>Add Category</strong></em> from the menu and enter a name for the category in the dialog box. Click <em><strong>OK</strong></em>. This will add your category to the library root level. Further categories can be created at the same level, or sub-categories can be added to those you have created to create a tree structure. Category names can be any length.</p>
+  <h5><a name="library_functions_saving_patches_to_library_categories"></a>Saving Patches To Library Categories</h5>
+  <p>Once you have ceated a new patch which you would like to add to your library select <em><strong>Device&gt;Save Patch to Library</strong></em> from the GNXEdit main menu. In the dialog select the location from the library tree where you want to save your patch. You can enter a new name and add a description or tags. Click on <em><strong>OK</strong></em> to save the patch. Note that names are limited to 6 characters. </p>
+  <p><strong class="caution">CAUTION</strong>: this will save the patch with the new name in the GNX1 location you were editing.</p>
+  <h5><a name="library_functions_saving_patches_to_gnx1"></a>Saving Patches To GNX1</h5>
+  <p>When you are happy with your new patch you can save it into any one of the GNX1 user memory locations (1 - 48) by selecting <em><strong>Device&gt;Save Patch</strong></em> to User Bank from the GNXEdit main menu. Select the patch location in the dialog, and change the name if you want to. Names are limited to 6 characters. Click on <em><strong>OK</strong></em> to confirm.</p>
+  <p><strong class="caution">CAUTION</strong>: this will overwrite the patch in the location you selected.</p>
+</blockquote>
+<h3><a name="resync"></a>Resync</h3>
+<div class="btt"><a href="#toc">Back to Top</a></div>
+<blockquote>
+  <p>If you find GNXEdit is out of sync with your GNX1 click <em><strong>Device&gt;Resync</strong></em> in the GNXEdit main menu. GNXEdit will now correctly match the contents of the GNX1 edit buffer.</p>
+</blockquote>
 
-<h4>Linux (Ubuntu)</h4>
-<ol>
-  <li>Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g: <code>sudo apt install python</code></li>
-  <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
-If not,
-    download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
-  This folder can be located anywhere in your system.</li>
-  <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
-  <li>Python works best when applications are run in their own dedicated environment. A Python environment
-    is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: <code>python3 -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
-  <li>Activate the Python environment with the following command (note the dot before venv):<code>source .venv/bin/activate</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
-  <li>Install the dependant libraries with the command <code>pip install -r src/requirements.txt</code></li>
-  <li>Check the program runs with the command: <code>python src/main.py</code></li>
-  <li>Deactivate the environment with the command <code>deactivate</code></li>
-  <li>To run the program from the command line in its correct environment:<code>cd &lt;path to your GNXEdit folder&gt;; .venv/bin/python src/main.py</code></li>
-  <li>It is far easier to launch the program from a desktop icon. A prototype desktop icon (for Ubuntu/Gnome Desktop systems) is available in the GNXEdit src folder called GNXEdit.desktop.
-    Copy this file to your desktop and edit with the text editor of your choice and insert the correct paths in the lines hightlighted in the file, and save it.</li>
-  <li>On the desktop, right-click on the file icon and click <em><strong>Allow Launching</strong></em>.</li>
-  <li>Right-click the icon again, select <em><strong>Properties</em></strong> then click <em><strong>Executable as Program</strong></em> on.</li>
-  <li>The icon should change to the GNXEdit icon. If not, check the path names are correct.</li>
-  <li>Double-click the icon to check the program runs.</li>
-  <li>For Linux systems other than Ubuntu/Gnome Desktop please check the procedure for creating desktop icons.</li>
-</ol>
-<h3>Getting Started</h3>
-<p>Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this 
-  HELP page but is well covered in the User Manual. A copy of the user manual is available by 
-  <a href="file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf" target = "_blank">clicking here</a>.
-</p>
-<p>Getting started with GNXEdit involves connecting the GNX1 device to your computer via MIDI, then setting GNXEdit to use the same MIDI ports.</p>
-<ol>
-<li>Make sure the GNX1 device is turned off and connect up your MIDI interface and cables.</li>
-<li>Start up GNXEdit and from the menu select <em><strong>MIDI Interface</strong></em>.</li>
-<li>Select the MIDI input and output ports which the GNX1 is connected to.</li>
-<li>GNXEdit will find the MIDI channel which your GNX1 is using automatically, but if you want to specify a specific
-  channel for any reason select it under <em><strong>Lock to Channel</strong></em>.</li>
-<li>Click <em><strong>OK</strong></em> to close the dialog.</li>
-<li>Turn on your GNX1 device and after a few seconds, all being well, GNXEdit will synchronise to the currently selected patch.
-  You may see a spurious System Exclusive error. Clear this by clicking <em><strong>OK</strong> in the error message box.</em>
-</li>
-<li>Begin editing the patch by adjusting parameters on the screen.</li>
-</ol>
-<h3>Status Indication</h3>
-<p>The status bar at the foot of the screen gives information about the current status of GNXEdit:</p>
-<h4>Current Patch</h4>
-<p>Contains details of the current patch name, bank (USER or FACTORY) and patch number. This will be synchronised
-  to your GNX1 device</p>
-<h4>Connected Indicator</h4>
-<p>A green disc indicates that GNXEdit is connected to a GNX1 device. A red disc indicates no nonnection</p>
-<h4>MIDI Channel</h4>
-<p>The current MIDI channel is indicated (1 - 16)</p>
-<h4>Watchdog</h4>
-<p>GNXEdit has an internal watchdog which repeatedly checks the connection status. This will be grayed out during
-  normal operation. If the GNX1 device becomes disconnected, the watchdog will "bite", turning th WATCHDOG legend red,
-  and GNXEdit will initiate a rerconnection protocol.</p>
-<h4>Resync</h4>
-The status bar RESYNC indicator is normally grayed out, but will turn green when a GNXEdit is trying to synchronise withyour GNX1.
-<h4>Uploading</h4>
-The process of uploading a patch from the GNXEdit library to the connected device is indicated with the UPLOADING indicator.
-Normally grayed out, when an upload is in progress this indicator will turn green and also indicate the stage number of 
-the upload process.
 
 </body>
 </html>
