@@ -17,10 +17,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 def init():
     global GNXEDIT_CONFIG, GNXEDIT_CONFIG_PATH, GNXEDIT_CONFIG_FILE, GNXEDIT_DATABASE_FILE, APP_VERSION, \
             APP_LICENSE, APP_LICENSE_LINK, APP_COPYRIGHT, APP_HELP_LINK, ABOUT_TEXT, APP_VERSION_TEXT, \
-            APP_WINDOW, APP_TITLE, APP_GITHUB_LINK, APP_SUBTITLE
+            APP_WINDOW, APP_TITLE, APP_GITHUB_LINK, APP_SUBTITLE, APP_DOC_PATH
 
     GNXEDIT_CONFIG = None
     GNXEDIT_CONFIG_FILE = None
@@ -44,3 +46,4 @@ def init():
                         f"<p>Source Code: {APP_GITHUB_LINK}</p>"
     
     APP_WINDOW = None
+    APP_DOC_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../documents"))

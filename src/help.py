@@ -22,6 +22,7 @@ import common
 import re
 import os
 from exceptions import GNXError
+import webbrowser
 
 from PySide6.QtWidgets import QMessageBox, QMainWindow
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -29,7 +30,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 def get_help():
 
     subs = ["APP_TITLE", "APP_VERSION", "APP_LICENSE", "APP_LICENSE_LINK", "APP_COPYRIGHT", 
-            "APP_VERSION_TEXT", "APP_GITHUB_LINK", "APP_SUBTITLE"]
+            "APP_VERSION_TEXT", "APP_GITHUB_LINK", "APP_SUBTITLE", "APP_DOC_PATH"]
 
     try:
         path = os.path.join(os.path.dirname(__file__), "help.html")
@@ -41,14 +42,13 @@ def get_help():
             regex = r"{" + s + "}"
             help = re.sub(regex, getattr(common, s), help, 0, re.MULTILINE)
 
-        
-        window = QMainWindow(common.APP_WINDOW)
-        window.setWindowTitle("GNXEdit Help")
-        window.resize(1025, 750)
-        view = QWebEngineView(window)
-        view.setHtml(help)
-        window.setCentralWidget(view)
-        window.show()
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../tmp/", "help.html"))
+        f = open(path, "w")
+        f.write(help)
+        f.close()
+
+        webbrowser.open(f"file://{path}", new=1, autoraise = True)
+
 
     except Exception as e:
         e = GNXError(icon = QMessageBox.Critical, title = "Help File Error", \
