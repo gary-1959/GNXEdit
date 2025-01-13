@@ -1,0 +1,15 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=GNXEdit
+###################################################################
+# Edit the line below with <your path name> to your GNXEdit folder
+Path=/<your path name>/GNXEdit
+###################################################################
+# Edit the line below with <your path name> to your GNXEdit folder
+Icon=/<your path name>/GNXEdit/src/GNXEdit.png
+###################################################################
+Exec=.venv/bin/python3 src/main.py
+StartupWMClass=GNXEdit
