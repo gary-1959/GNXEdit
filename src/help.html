@@ -90,11 +90,18 @@ If not,
   <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
   <li>Python works best when applications are run in their own dedicated environment. A Python environment
     is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
-  <li>Activate the Python environment with the following command (note the dot before venv):<code>.venv/</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
+  <li>Activate the Python environment with the following command (note the dot before venv):<code>.venv/bin/activate</code>You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
   <li>Install the dependant libraries with the command <code>pip install -r src/requirements.txt</code></li>
   <li>Check the program runs with the command: <code>src/main.py</code></li>
   <li>To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon.
     To create a desktop icon:
+    <ol type="a">
+      <li>Open File Explorer and navigate to the GNXEdit src folder. Right-click on the file named <em><strong>GNXEdit.sh</strong></em> and select <em><strong><br>
+        Send to &gt; Desktop (create shortcut)</strong></em>. </li>
+      <li>Close File Explorer then right-click on the newly created desktop icon.and select <strong><em>Properties.</em></strong> <br>
+        Click <em><strong>Change Icon...</strong></em> followed by <em><strong>OK</strong></em> . </li>
+      <li>Click the <em><strong>Browse..</strong></em> option in the dialog that opens then navigate to the GNXEdit src folder where you will find a GNXEdit.ico file. Select this file, click <em><strong>OK</strong></em> (then <em><strong>OK</strong></em> again), to exit the Properties dialog. The desktop icon will now be set.</li>
+    </ol>
   <li></li>
 </ol>
 <p>&nbsp;</p>
