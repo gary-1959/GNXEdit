@@ -28,7 +28,8 @@ Application Help File
     *   [Creating Library Categories](#library_functions_creating_library_categories)
     *   [Saving Patches To Library Categories](saving_patches_to_library_categories)
     *   [Saving Patches To GNX1](#library_functions_saving_patches_to_gnx1)
-*   [Resync](#resync)  
+*   [Resync](#resync)
+*   [GNXEdit Rack Image](#gnxedit_rack_image) 
     
 
 ### Information
@@ -188,3 +189,7 @@ Application Help File
 [Back to Top](#toc)
 
 > If you find GNXEdit is out of sync with your GNX1 click _**Device>Resync**_ in the GNXEdit main menu. GNXEdit will now correctly match the contents of the GNX1 edit buffer.
+### GNXEdit Rack Image
+<img src="https://github.com/gary-1959/GNXEdit/blob/main/documents/GNXEdit_Rack.png" title="GNXEdit rack" alt="GNXEdit Rack"/>
+
+[Back to Top](#toc)
