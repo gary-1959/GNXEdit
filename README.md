@@ -1,5 +1,3 @@
-   GNXEdit Help File \* { background-color: palegoldenrod; font-family: Arial, Helvetica, 'Liberation Sans', sans-serif; color: black; text-align: justify; } code { display: block; font-family:'Courier New', Courier, monospace; font-weight: bold; margin: 1.0em; color: rgb(151, 12, 12); } li { margin-top: 10px; margin-bottom: 10px; } h3 { background-color: blue; color: white; padding: 4px 4px; } h4 { color: #900; } h5 { color: #90C; font-size: 1.0em; text-decoration: underline; font-style: italic; font-weight: bold; } .caution { color: #F00; } .toc, .toc ul { font-size: 1.0em; list-style-type: none; } .toc a { text-decoration: none; color:blue; } .toc a:hover { text-decoration: underline; } .btt { font-style: italic; float: right; margin-top: -2.6em; margin-right: 0.5em; background-color: transparent; } .btt a { background-color: transparent; text-decoration: none; color: white; } .btt a:hover { text-decoration: underline; }
-
 GNXEdit
 =======
 
