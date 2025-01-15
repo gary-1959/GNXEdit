@@ -59,7 +59,12 @@ class GNX1(QObject):
     resyncChanged = Signal(bool)
     uploadChanged = Signal(int)
     patch_added_to_library = Signal(int, int, str, str, str)
-    gnxPatchNamesUpdated = Signal(int, list)
+    gnxPatchNamesUpdated = Signal(int, list)   
+    patchNameChanged = Signal(str, int, int)
+    midiChannelChanged = Signal(int)
+    midiPatchChange = Signal(int)      # MIDI patch change 0xCn
+    deviceConnectedChanged = Signal(bool)
+
     watchDogBite = Signal(bool)
 
     midi_watchdog = None
@@ -1683,8 +1688,6 @@ class GNX1(QObject):
         return device
 
     # MAIN CLASS CODE
-
-    midiPatchChange = Signal(int)      # MIDI patch change 0xCn
    
     def __init__(self, ui = None, midicontrol = None):
         super().__init__()
@@ -1757,6 +1760,13 @@ class GNX1(QObject):
         self.setUploading(None)
         self.setResync(None)
 
+        self.patchNameChanged.connect(self.updatePatchName) # update name in list
+
+    @Slot()
+    def updatePatchName(self, name, bank, patch):
+        if bank == 1:        #user
+            self.user_patch_names[patch] = name
+
     def setUploading(self, uploading):
         changed = self.uploading != uploading
         self.uploading = uploading
@@ -1776,7 +1786,7 @@ class GNX1(QObject):
         self.setResync(True)
         self.enquire_device()
 
-    deviceConnectedChanged = Signal(bool)
+    
     def setDeviceConnected(self, connected):
         self.device_connected = connected
         self.deviceConnectedChanged.emit(connected)
@@ -1809,7 +1819,6 @@ class GNX1(QObject):
         self.midicontrol.send_message(msg)
         pass
 
-    patchNameChanged = Signal(str, int, int)    
     def setPatchName(self, name):
         if name != None:
             if self.current_patch_name != name or True:
@@ -1819,7 +1828,6 @@ class GNX1(QObject):
             else:
                 pass
 
-    midiChannelChanged = Signal(int)
     def set_midi_channel(self, channel):
         common.GNXEDIT_CONFIG["midi"]["channel"] = channel
         settings.save_settings()
@@ -2027,11 +2035,11 @@ class GNX1(QObject):
                                     case 0x28:                  # CODE 28: ???
                                         self.decode28(msg)
 
-                                    case 0x2C:                  # CODE 2C: Parameters
-                                        self.decode2C(msg)
-
                                     case 0x2A:                  # CODE 2A: Custom Amps and Cabs
                                         self.decode2A(msg)
+
+                                    case 0x2C:                  # CODE 2C: Parameters
+                                        self.decode2C(msg)
 
                                     case 0x2D:                  # CODE 2D: Current patch number
                                         self.decode2D(msg)
@@ -2061,6 +2069,11 @@ class GNX1(QObject):
                                         self.gnxAlert.emit(e)
                     
                             else:       # device not connected
+
+                                # ignore spurious codes when not (technically) connected 
+                                if msg[6] in [0x06, 0x08, 0x0A, 0x13, 0x21, 0x22, 0x24, 0x26, 0x28, 0x2C, 0x2D, 0x2E]:
+                                    return
+                                
                                 match msg[6]:
                                     case 0x02:                  # CODE 02: Device Response
                                         self.decode02(msg)
@@ -2259,7 +2272,7 @@ class GNX1(QObject):
         pint = msg[7:-1]
         unpacked = self.unpack(pint[:-1])       # chop off final 00 to avoid extra array element
 
-        self.user_patch_names = "".join(map(chr, unpacked[2:])).split('\x00')
+        self.user_patch_names = "".join(map(chr, unpacked[2:-1])).split('\x00')
 
         self.gnxPatchNamesUpdated.emit(self.requested_patch_bank, self.user_patch_names)
 
@@ -2572,6 +2585,21 @@ class GNX1(QObject):
         pass
 
     def save_patch_to_gnx(self):
+
+        def accepted():
+            patch = targetCB.currentIndex()
+            bank = 1 # user
+            name = inputName.text().upper()
+            
+            # save patch
+            self.current_patch_bank = bank
+            self.current_patch_number = patch
+            self.save_patch(name, 0x02, 0x00, bank, patch)
+            self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+        def rejected():
+            pass
+
         ui_file_name = "src/ui/savepatchtognxdialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
@@ -2581,10 +2609,10 @@ class GNX1(QObject):
             return
 
         loader = QUiLoader()
-        self.save_patch_to_gnx_dialog = loader.load(ui_file)
+        dialog = loader.load(ui_file)
 
         ui_file.close()
-        targetCB = self.save_patch_to_gnx_dialog.findChild(QComboBox, "targetComboBox")
+        targetCB = dialog.findChild(QComboBox, "targetComboBox")
 
         p = 0
         for  n in self.user_patch_names:
@@ -2593,31 +2621,62 @@ class GNX1(QObject):
                     targetCB.setCurrentIndex(p)
             p += 1
 
-        inputName = self.save_patch_to_gnx_dialog.findChild(QLineEdit, "inputName")
+        inputName = dialog.findChild(QLineEdit, "inputName")
         inputName.setText(self.current_patch_name)
 
-        self.save_patch_to_gnx_dialog.accepted.connect(self.save_patch_to_gnx_dialog_accepted)
-        self.save_patch_to_gnx_dialog.rejected.connect(self.save_patch_to_gnx_dialog_rejected)
-        self.save_patch_to_gnx_dialog.setParent(self.ui, Qt.Dialog)
-        self.save_patch_to_gnx_dialog.show()
-
-    def save_patch_to_gnx_dialog_accepted(self):
-        targetCB = self.save_patch_to_gnx_dialog.findChild(QComboBox, "targetComboBox")
-        inputName = self.save_patch_to_gnx_dialog.findChild(QLineEdit, "inputName")
-        patch = targetCB.currentIndex()
-        bank = 1 # user
-        name = inputName.text().upper()
-        
-        # save patch
-        self.current_patch_bank = bank
-        self.current_patch_number = patch
-        self.save_patch(name, 0x02, 0x00, bank, patch)
-        self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
-
-    def save_patch_to_gnx_dialog_rejected(self):
-        pass
+        dialog.accepted.connect(accepted)
+        dialog.rejected.connect(rejected)
+        dialog.setParent(self.ui, Qt.Dialog)
+        dialog.show()
 
     def save_patch_to_library(self):
+
+        def accepted():
+
+            selection_model = treeView.selectionModel()
+            selected = selection_model.selectedIndexes()
+            if len(selected) == 0:
+                e = GNXError(icon = QMessageBox.Warning, title = "Save Patch To Library Error", \
+                                            text = f"No category selected", \
+                                            buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e) 
+            else:
+                cat = selected[0].data(Qt.UserRole)
+                category = cat["category"]
+                name = inputName.text().upper()
+                description = inputDescription.toPlainText().upper()
+                tags = inputTags.toPlainText().upper()
+            
+                # save patch if in user space
+                #if self.current_patch_bank == 1:
+                #    self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
+                #    self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+                # save to library
+                data = self.serialise_to_file()
+
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                    [category, name, description, tags, data["24"], data["26"],
+                                    data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
+                    db.conn.commit()
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
+                                                            text = f"Unable to add patch to database.\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()     
+
+                self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
+
+        def rejected():
+            pass
 
         if not self.has_patch():
             e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
@@ -2635,10 +2694,14 @@ class GNX1(QObject):
             return
 
         loader = QUiLoader()
-        self.save_patch_to_library_dialog = loader.load(ui_file)
+        dialog = loader.load(ui_file)
 
         ui_file.close()
-        treeView = self.save_patch_to_library_dialog.findChild(QTreeView, "treeView")
+        treeView = dialog.findChild(QTreeView, "treeView")
+        inputName = dialog.findChild(QLineEdit, "inputName")
+        inputDescription = dialog.findChild(QPlainTextEdit, "inputDescription")
+        inputTags = dialog.findChild(QPlainTextEdit, "inputTags")
+
         treeView.setHeaderHidden(True)
         model = QStandardItemModel(0, 2)
         rootNode = model.invisibleRootItem()
@@ -2667,76 +2730,22 @@ class GNX1(QObject):
                 data = {"role": "header", "type": "library", "category": c["parent"]} # look for parent
                 pcat = findByData(libHeader, data)
                 add_category_to_tree(treeView, model, pcat, c["id"], c["name"], True)
-            pass
 
         except Exception as e:
             e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
-                                                    text = f"Unable to add category to tree {e}", \
+                                                    text = f"Unable to add category to tree.\n{e}", \
                                                     buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e) 
             return
 
-        inputName = self.save_patch_to_library_dialog.findChild(QLineEdit, "inputName")
         inputName.setText(self.current_patch_name)
 
-        self.save_patch_to_library_dialog.accepted.connect(self.save_patch_to_library_dialog_accepted)
-        self.save_patch_to_library_dialog.rejected.connect(self.save_patch_to_library_dialog_rejected)
-        self.save_patch_to_library_dialog.setParent(self.ui, Qt.Dialog)
-        self.save_patch_to_library_dialog.show()
+        dialog.accepted.connect(accepted)
+        dialog.rejected.connect(rejected)
+        dialog.setParent(self.ui, Qt.Dialog)
+        dialog.show()
 
         db.conn.close()
-
-    def save_patch_to_library_dialog_accepted(self):
-
-        treeView = self.save_patch_to_library_dialog.findChild(QTreeView, "treeView")
-        inputName = self.save_patch_to_library_dialog.findChild(QLineEdit, "inputName")
-        inputDescription = self.save_patch_to_library_dialog.findChild(QPlainTextEdit, "inputDescription")
-        inputTags = self.save_patch_to_library_dialog.findChild(QPlainTextEdit, "inputTags")
-
-        selection_model = treeView.selectionModel()
-        selected = selection_model.selectedIndexes()
-        if len(selected) == 0:
-            e = GNXError(icon = QMessageBox.Warning, title = "Save Patch To Library Error", \
-                                        text = f"No category selected", \
-                                        buttons = QMessageBox.Ok)
-            self.gnxAlert.emit(e) 
-        else:
-            cat = selected[0].data(Qt.UserRole)
-            category = cat["category"]
-            name = inputName.text().upper()
-            description = inputDescription.toPlainText().upper()
-            tags = inputTags.toPlainText().upper()
-        
-            # save patch if in user space
-            if self.current_patch_bank == 1:
-                self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
-                self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
-
-            # save to library
-            data = self.serialise_to_file()
-
-            try:
-                db = gnxDB()
-                if db.conn == None:
-                    return
-
-                cur = db.conn.cursor()
-                cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                                [category, name, description, tags, data["24"], data["26"],
-                                data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
-                db.conn.commit()
-            except Exception as e:
-                e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
-                                                        text = f"Unable to add patch to database {e}", \
-                                                        buttons = QMessageBox.Ok)
-                self.gnxAlert.emit(e)     
-            db.conn.close()     
-
-            self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
-
-    def save_patch_to_library_dialog_rejected(self):
-        pass
     
     def print_remainder(self, n, unpacked, text):
         print(text)

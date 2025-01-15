@@ -146,5 +146,5 @@ class StatusControl(QObject):
 
     @Slot()
     def patchNameChanged(self, name, bank, patch):
-        banks = {0: "FACTORY", 1: "USER"}
+        banks = {0: "FACTORY", 1: "USER", 2: "BUFFER"}
         self.patch_label.setText(f"Current Patch: {name} [{banks[bank]}:{(patch + 1):02.0f}]")

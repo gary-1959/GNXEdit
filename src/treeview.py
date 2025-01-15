@@ -24,7 +24,7 @@ import sqlite3
 from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem, QTreeView, QAbstractItemView, QMenu, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, QAbstractItemView, QMenu, QLineEdit, QMessageBox
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
 
@@ -64,8 +64,9 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
     # add to tree
     if parent != None:     
         cat = QStandardItem(name)
+        cat.setForeground(Qt.magenta)
         cat.setEnabled(enabled)
-        cat.setData({"role": "header", "type": "library", "category": cid}, Qt.UserRole)
+        cat.setData({"role": "header", "type": "library", "category": cid, "name": name}, Qt.UserRole)
         
         parent.appendRow(cat)
         ctx = model.indexFromItem(cat)
@@ -80,9 +81,10 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
                                patch_id = None, name = "", description = "", tags = "" ):
     if type == "library":
         w1 = QStandardItem(name)
+        w1.setForeground(Qt.green)
         w1.setEnabled(True)
         w1.setEditable(True)   # library patch name is editable
-        w1.setData({"role": "patch", "type": "library", "bank": None, "patch": patch_id,
+        w1.setData({"role": "patch", "type": "library", "bank": None, "patch": patch_id, "name": name,
                     "description": description, "tags": tags}, Qt.UserRole)
         parent.appendRow([w1])
         ctx = model.indexFromItem(w1)
@@ -96,6 +98,10 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w1.setEnabled(True)
         if w2 != None:
             w2.setEditable(bank == 1)   # only user bank is editable
+
+        color = Qt.red if bank == 0 else Qt.green
+        w1.setForeground(color)
+        w2.setForeground(color)
 
         data = {"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}
         w1.setData(data, Qt.UserRole)
@@ -143,7 +149,6 @@ class TreeHandler(QObject):
         self.gnxHeader.appendRow(self.userHeader)
         self.userHeader.setData({"role": "header", "type": "user"}, Qt.UserRole)
 
-
         self.libHeader = QStandardItem("LIBRARY")
         self.libHeader.setEnabled(True)
         self.rootNode.appendRow(self.libHeader)
@@ -155,6 +160,7 @@ class TreeHandler(QObject):
         self.selection.selectionChanged.connect(self.selectionChangedEvent)
 
         self.tree.model().dataChanged.connect(self.dataChanged)
+        self.tree.model().itemChanged.connect(self.itemChanged)
 
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
@@ -279,6 +285,64 @@ class TreeHandler(QObject):
         sender = self.sender()
         data = sender.data()
 
+        def accepted():
+
+            name = inputName.text().upper()
+            description = inputDescription.toPlainText().upper()
+            tags = inputTags.toPlainText().upper()
+
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+
+                cur = db.conn.cursor()
+                cur.execute("UPDATE patches SET name = ?, description = ?, tags = ? WHERE id = ?", [name, description, tags, data["patch"]])
+                db.conn.commit()
+                db.conn.close()
+
+                patch = findByData(self.libHeader, data)
+                data["name"] = name
+                data["description"] = description
+                data["tags"] = tags
+                patch.setData(data, Qt.UserRole)
+                patch.setData(name, Qt.DisplayRole)
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Error", \
+                                                        text = f"Unable to update patch in database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)     
+            
+
+        def rejected():
+            pass
+
+        ui_file_name = "src/ui/editlibrarypatchdialog.ui"
+        ui_file = QFile(ui_file_name)
+        if not ui_file.open(QIODevice.ReadOnly):
+            e = GNXError(icon = QMessageBox.Alert, title = "Edit Patch Error", \
+                        text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+            return
+
+        loader = QUiLoader()
+        dialog = loader.load(ui_file)
+
+        ui_file.close()
+        inputName = dialog.findChild(QLineEdit, "inputName")
+        inputDescription = dialog.findChild(QPlainTextEdit, "inputDescription")
+        inputTags = dialog.findChild(QPlainTextEdit, "inputTags")
+
+        inputName.setText(data["name"])
+        inputDescription.setPlainText(data["description"])
+        inputTags.setPlainText(data["tags"])
+
+        dialog.accepted.connect(accepted)
+        dialog.rejected.connect(rejected)
+        dialog.setParent(self.window, Qt.Dialog)
+        dialog.show()
+
     @Slot()
     def deletePatch(self):
         sender = self.sender()
@@ -313,71 +377,92 @@ class TreeHandler(QObject):
 
     @Slot()
     def addCategory(self):
-        def add_category_dialog_accepted():
-            data = getattr(add_category_dialog, "gnxdata")
-            inputName = add_category_dialog.findChild(QLineEdit, "inputName")
-            name = inputName.text().upper()
+        sender = self.sender()
 
+        self.categoryDialog(sender = sender, edit = False)
+
+    @Slot()
+    def editCategory(self):
+        sender = self.sender()
+        self.categoryDialog(sender = sender, edit = True)
+
+    def categoryDialog(self, sender = None, edit = False):
+        def accepted():
+
+            name = inputName.text().upper()
             name = name.strip()
             if name != None and name != "":
                 try:
                     db = gnxDB()
                     if db.conn == None:
                         return
-                
                     cur = db.conn.cursor()
-                    cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [data["category"], name])
-                    db.conn.commit()
 
-                    # add to tree
-                    pcat = findByData(self.libHeader, data)
-                    add_category_to_tree(self.tree, self.model, pcat, cur.lastrowid, name, True)
+                    if edit:
+                        cur.execute("UPDATE categories SET name = ? WHERE id = ?", [name, data["category"]])
+                        db.conn.commit()
 
-                except Exception as e:
-                    e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
-                                                            text = f"Unable to add category to database\n{e}", \
+                        # update tree
+                        pcat = findByData(self.libHeader, data)
+                        data["name"] = name
+                        pcat.setData(data, Qt.UserRole)
+                        pcat.setData(name, Qt.DisplayRole)
+
+                    else:
+                        cur.execute("INSERT INTO categories (parent, name) VALUES (?, ?)", [data["category"], name])
+                        db.conn.commit()
+
+                        # add to tree
+                        pcat = findByData(self.libHeader, data)
+                        add_category_to_tree(self.tree, self.model, pcat, cur.lastrowid, name, True)
+
+                except Exception as ex:
+                    dtext = ["Edit Category Error", f"Unable to update category in database\n{ex}"] \
+                                if edit else ["Add Category Error", f"Unable to add category to database\n{ex}"]
+                    e = GNXError(icon = QMessageBox.Critical, title = dtext[0], \
+                                                            text = dtext[1], \
                                                             buttons = QMessageBox.Ok)
                     self.gnxAlert.emit(e)     
                 db.conn.close()           
 
             else:
-                e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+                e = GNXError(icon = QMessageBox.Critical, title = f"{title} Category Error", \
                                                         text = f"Empty category name not permitted", \
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)
 
-        def add_category_dialog_rejected(self):
+        def rejected():
             pass
 
-        sender = self.sender()
         data = sender.data()
+
+        title = "Edit" if edit else "Add"
 
         ui_file_name = "src/ui/addcategorydialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
-            e = GNXError(icon = QMessageBox.Critical, title = "Add Category Error", \
+            e = GNXError(icon = QMessageBox.Critical, title = f"{title} Category Error", \
                                         text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", \
                                         buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e) 
             return
 
         loader = QUiLoader()
-        add_category_dialog = loader.load(ui_file)
+        dialog = loader.load(ui_file)
 
         ui_file.close()
-        inputName = add_category_dialog.findChild(QLineEdit, "inputName")
-        inputName.setText("NEW CATEGORY")
+        inputName = dialog.findChild(QLineEdit, "inputName")
+        if edit:
+            inputName.setText(data["name"])
+        else:
+            inputName.setText("NEW CATEGORY")
 
-        setattr(add_category_dialog, "gnxdata", data)
-        add_category_dialog.accepted.connect(add_category_dialog_accepted)
-        add_category_dialog.rejected.connect(add_category_dialog_rejected)
-        add_category_dialog.setParent(self.window, Qt.Dialog)
-        add_category_dialog.show()
-
-    @Slot()
-    def editCategory(self):
-        sender = self.sender()
-        data = sender.data()
+        setattr(dialog, "gnxdata", data)
+        dialog.accepted.connect(accepted)
+        dialog.rejected.connect(rejected)
+        dialog.setParent(self.window, Qt.Dialog)
+        dialog.setWindowTitle(f"{title} Category")
+        dialog.show()
 
     @Slot()
     def cutBranch(self):
@@ -623,22 +708,59 @@ class TreeHandler(QObject):
                             name = name, description = description, tags = tags)
 
     @Slot()
+    def itemChanged(self):
+        pass
+
+    @Slot()
     def dataChanged(self, topleft, bottomright, roles):
         if Qt.EditRole in roles:
             text = topleft.data(Qt.EditRole)
-            if len(text) > 6:
-                text = text[0:6]
             data = topleft.data(Qt.UserRole)
             if data["role"] == "patch" and data["type"] == "user":
+
+                if len(text) > 6:
+                    text = text[0:6]
+            
                 bank = data["bank"]
                 patch = data["patch"]
-            
 
-            #model = topleft.model()
-            #item = model.itemFromIndex(topleft)
-            #item.setData(text, Qt.DisplayRole)
+                self.gnx.save_patch(text, bank, patch, bank, patch)
 
-            self.gnx.save_patch(text, bank, patch, bank, patch)
+            elif data["role"] == "patch" and data["type"] == "library":
+                if len(text) > 6:
+                    text = text[0:6]
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+                    db.conn.row_factory = sqlite3.Row
+                    cur = db.conn.cursor()
+                    cur.execute("UPDATE patches SET name=? WHERE id = ?", [text, data["patch"]])
+                    db.conn.commit()
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Rename Patch Error", \
+                                                            text = f"Unable to rename patch in database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+
+            elif data["role"] == "header" and data["type"] == "library":
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+                    db.conn.row_factory = sqlite3.Row
+                    cur = db.conn.cursor()
+                    cur.execute("UPDATE categories SET name=? WHERE id = ?", [text, data["category"]])
+                    db.conn.commit()
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Rename Category Error", \
+                                                            text = f"Unable to rename category in database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+
+
 
     @Slot()
     def midiPatchChange(self, parameter):
