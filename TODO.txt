@@ -5,15 +5,18 @@ GNXEdit Things to do
 5. Colour differentiate category (purple), factory patch (red), user/library patch (green), amp (orange)
 8. Edit category dialog - error naming, dialog title
 1. Edit library entry (name, description, tags)
+10. resolve itemChanged in treeview - limit patch names to 6 characters
+7. Limit patch name length to 6 characters in tree double-click.
 
 -------------------------------------------------------------------------------------
-10. resolve itemChanged in treeview - limit patch names to 6 characters
+12. Patch saving - seems to work then revert to saved - resync?
+11. Check save to library is in sync before saving
 2. Display description and tags in library
 3. Search name, description, tags in library
 5. Save amps to GNX1 user area
 6. Save amps to library
 
-7. Limit patch name length to 6 characters in tree double-click.
+
 
 9. Scrollbar colours
 

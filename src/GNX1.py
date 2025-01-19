@@ -73,6 +73,7 @@ class GNX1(QObject):
     midi_watchdog_bite_count_limit = 5 # number of timeouts before biting
 
     resyncing = False   # not resyncing
+    resync_callback = None
     uploading = 0       # not uploading
     midicontrol = None
     mnfr_id = [0x00, 0x00, 0x10]
@@ -1777,6 +1778,7 @@ class GNX1(QObject):
         changed = self.resyncing != resync
         if resync:
             self.setUploading(0)
+
         self.resyncing = resync
         if changed:
             self.resyncChanged.emit(resync)
@@ -2641,39 +2643,54 @@ class GNX1(QObject):
                                             buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e) 
             else:
-                cat = selected[0].data(Qt.UserRole)
-                category = cat["category"]
-                name = inputName.text().upper()
-                description = inputDescription.toPlainText().upper()
-                tags = inputTags.toPlainText().upper()
-            
-                # save patch if in user space
-                #if self.current_patch_bank == 1:
-                #    self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
-                #    self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+                # initiate resync with callback
+                self.setDeviceConnected(False)
+                self.setResync(True)
+                self.resyncChanged.connect(callback)
+                self.enquire_device()
 
-                # save to library
-                data = self.serialise_to_file()
+        def callback(resync):
+                print("Callback save_patch_to_library")
+                # if true, it's another job
+                self.resyncChanged.disconnect(callback)
+                if resync:
+                    return
+                else:
+                    selection_model = treeView.selectionModel()
+                    selected = selection_model.selectedIndexes()
+                    cat = selected[0].data(Qt.UserRole)
+                    category = cat["category"]
+                    name = inputName.text().upper()
+                    description = inputDescription.toPlainText().upper()
+                    tags = inputTags.toPlainText().upper()
+                
+                    # save patch if in user space
+                    #if self.current_patch_bank == 1:
+                    #    self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
+                    #    self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
 
-                try:
-                    db = gnxDB()
-                    if db.conn == None:
-                        return
+                    # save to library
+                    data = self.serialise_to_file()
 
-                    cur = db.conn.cursor()
-                    cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                                    [category, name, description, tags, data["24"], data["26"],
-                                    data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
-                    db.conn.commit()
-                except Exception as e:
-                    e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
-                                                            text = f"Unable to add patch to database.\n{e}", \
-                                                            buttons = QMessageBox.Ok)
-                    self.gnxAlert.emit(e)     
-                db.conn.close()     
+                    try:
+                        db = gnxDB()
+                        if db.conn == None:
+                            return
 
-                self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
+                        cur = db.conn.cursor()
+                        cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                        [category, name, description, tags, data["24"], data["26"],
+                                        data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
+                        db.conn.commit()
+                    except Exception as e:
+                        e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
+                                                                text = f"Unable to add patch to database.\n{e}", \
+                                                                buttons = QMessageBox.Ok)
+                        self.gnxAlert.emit(e)     
+                    db.conn.close()     
+
+                    self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
 
         def rejected():
             pass

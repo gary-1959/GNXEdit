@@ -24,9 +24,63 @@ import sqlite3
 from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QComboBox, QLabel, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, QAbstractItemView, QMenu, QLineEdit, QMessageBox
-from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
+from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, \
+            QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem
+from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator
+
+class CustomDelegate(QStyledItemDelegate):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
+        # Custom painting of items
+        #painter.save()
+        #value = index.data(Qt.DisplayRole)
+        #if value:
+        #    painter.setPen(Qt.red)
+        #    painter.drawText(option.rect, Qt.AlignLeft, f"Custom: {value}")
+        #painter.restore()
+        super().paint(painter, option, index)
+
+    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
+        # Custom editor widget
+        self.editor = QLineEdit(parent)
+        # Set data from model to editor
+        data = index.data(Qt.UserRole)
+        if data["role"] == "patch":
+            rx = QRegularExpression(r".{3, 6}+")
+            validator = QRegularExpressionValidator(rx)
+            self.editor.setValidator(validator)
+            self.editor.setMaxLength(6)
+            self.editor.setPlaceholderText(f"2-6 characters")
+        else:
+            rx = QRegularExpression(r".{3, 32}")
+            validator = QRegularExpressionValidator(rx)
+            self.editor.setValidator(validator)
+            self.editor.setMaxLength(32)
+            self.editor.setPlaceholderText(f"2-32 characters")
+
+        self.editor.textChanged.connect(self.textChanged)
+
+        return self.editor
+    
+    def textChanged(self):
+        if self.editor.hasAcceptableInput():
+            self.editor.setStyleSheet("background-color: white")
+        else:
+            self.editor.setStyleSheet("background-color: palegoldenrod")
+        
+    def setEditorData(self, editor: QWidget, index: QModelIndex):
+        
+        value = index.data(Qt.EditRole) or index.data(Qt.DisplayRole)
+        if isinstance(editor, QLineEdit):
+            editor.setText(value)
+
+    def setModelData(self, editor: QWidget, model, index: QModelIndex):
+        # Save data from editor back to model
+        if isinstance(editor, QLineEdit):
+            model.setData(index, editor.text(), Qt.EditRole)
 
 # all rows with children will span columns
 def findByData(parent, data):
@@ -70,6 +124,7 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
         
         parent.appendRow(cat)
         ctx = model.indexFromItem(cat)
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
         tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
         tree.setExpanded(model.indexFromItem(parent), True)
         model.layoutChanged
@@ -88,14 +143,16 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
                     "description": description, "tags": tags}, Qt.UserRole)
         parent.appendRow([w1])
         ctx = model.indexFromItem(w1)
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
         tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
         tree.setExpanded(model.indexFromItem(parent), True)
         w2 = None
-
+        
     else:
         w1 = QStandardItem(f"{(patch_num + 1):02.0f}:")
         w2 = QStandardItem(name)
         w1.setEnabled(True)
+        w1.setEditable(False)
         if w2 != None:
             w2.setEditable(bank == 1)   # only user bank is editable
 
@@ -107,6 +164,8 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w1.setData(data, Qt.UserRole)
         w2.setData(data, Qt.UserRole)
         parent.appendRow([w1, w2])
+        ctx = model.indexFromItem(w2)
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
 
     model.layoutChanged
     return w1, w2
@@ -130,6 +189,7 @@ class TreeHandler(QObject):
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.contextMenu)
         self.tree.setHeaderHidden(True)
+        
         self.model = QStandardItemModel(0, 2)
         self.rootNode = self.model.invisibleRootItem()
 
@@ -139,10 +199,8 @@ class TreeHandler(QObject):
         self.gnxHeader.setData({"role": "header", "type": "gnx"}, Qt.UserRole)
 
         self.factoryHeader = QStandardItem("FACTORY")
-        self.factoryHeader.setEnabled(False)
         self.gnxHeader.appendRow(self.factoryHeader)
         self.factoryHeader.setData({"role": "header", "type": "factory"}, Qt.UserRole)
-
 
         self.userHeader = QStandardItem("USER")
         self.userHeader.setEnabled(False)
@@ -151,6 +209,7 @@ class TreeHandler(QObject):
 
         self.libHeader = QStandardItem("LIBRARY")
         self.libHeader.setEnabled(True)
+        self.libHeader.setEditable(False)
         self.rootNode.appendRow(self.libHeader)
         self.libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
 
@@ -640,7 +699,6 @@ class TreeHandler(QObject):
                     self.gnxAlert.emit(e)     
                 db.conn.close()
 
-
     @Slot()
     def deleteCategory(self):
         sender = self.sender()
@@ -706,7 +764,6 @@ class TreeHandler(QObject):
         pcat = findByData(self.libHeader, data)
         add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
                             name = name, description = description, tags = tags)
-
     @Slot()
     def itemChanged(self):
         pass
@@ -759,8 +816,6 @@ class TreeHandler(QObject):
                                                             buttons = QMessageBox.Ok)
                     self.gnxAlert.emit(e)     
                 db.conn.close()
-
-
 
     @Slot()
     def midiPatchChange(self, parameter):
@@ -868,6 +923,5 @@ class TreeHandler(QObject):
 
             if parent.child(row, 0).hasChildren():
                 self.setHeaderSpanned(parent.child(row, 0))
-
-
+    
     
