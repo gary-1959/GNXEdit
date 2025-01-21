@@ -56,8 +56,8 @@ from treeview import findByData, add_category_to_tree
 class GNX1(QObject):
 
     gnxAlert = Signal(GNXError)
-    resyncChanged = Signal(bool)
-    uploadChanged = Signal(int)
+    commsModeChanged = Signal(int, int)     # old value, new value
+    commsPhaseChanged = Signal(int, int)     # old value, new value
     patch_added_to_library = Signal(int, int, str, str, str)
     gnxPatchNamesUpdated = Signal(int, list)   
     patchNameChanged = Signal(str, int, int)
@@ -72,9 +72,9 @@ class GNX1(QObject):
     midi_watchdog_bite_count = 0    # count timeouts before biting
     midi_watchdog_bite_count_limit = 5 # number of timeouts before biting
 
-    resyncing = False   # not resyncing
+    commsMode = None
+    commsPhase = None
     resync_callback = None
-    uploading = 0       # not uploading
     midicontrol = None
     mnfr_id = [0x00, 0x00, 0x10]
     device_id = 0x56
@@ -807,8 +807,8 @@ class GNX1(QObject):
             self.set_values(type = type, gain = gain, bass_freq = bass_freq, bass_level = bass_level, mid_freq = mid_freq, mid_level = mid_level,
                             treble_freq = treble_freq, treble_level = treble_level, level = level )
             
-            #print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
-            #    type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
+            print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
+                type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
             return n
 
         # extract amp values from data string
@@ -839,9 +839,9 @@ class GNX1(QObject):
             n += 1
             level = unpacked[n]
             n += 1
-
-            self.set_values(name = name.lower(), gain = gain, level = level, bass_freq = bass_freq, bass_level = bass_level,
-                            mid_freq = mid_freq, mid_level = mid_level, treble_freq = treble_freq, treble_level = treble_level)
+            # these are the default amp values - do not use, patch settings override
+            #self.set_values(name = name.lower(), gain = gain, level = level, bass_freq = bass_freq, bass_level = bass_level,
+            #                mid_freq = mid_freq, mid_level = mid_level, treble_freq = treble_freq, treble_level = treble_level)
 
         # from ui_device
         def amp_style_changed(self, value):
@@ -1758,8 +1758,7 @@ class GNX1(QObject):
         self.ui.ampGreen.setAmpStyle(0)
         self.ui.ampRed.setAmpStyle(0)
 
-        self.setUploading(None)
-        self.setResync(None)
+        self.setCommsMode(common.COMMS_MODE_NONE)
 
         self.patchNameChanged.connect(self.updatePatchName) # update name in list
 
@@ -1768,27 +1767,30 @@ class GNX1(QObject):
         if bank == 1:        #user
             self.user_patch_names[patch] = name
 
-    def setUploading(self, uploading):
-        changed = self.uploading != uploading
-        self.uploading = uploading
+    def setCommsPhase(self, newphase):
+        changed = self.commsPhase != newphase
+        oldphase = self.commsPhase
+        self.commsPhase = newphase
         if changed:
-            self.uploadChanged.emit(uploading)
+            self.commsPhaseChanged.emit(oldphase, newphase)
 
-    def setResync(self, resync):
-        changed = self.resyncing != resync
-        if resync:
-            self.setUploading(0)
-
-        self.resyncing = resync
+    def setCommsMode(self, newmode, phase = None):
+        if phase == None:
+            phase = 0
+        changed = self.commsMode != newmode
+        oldmode = self.commsMode
+        self.commsMode = newmode
         if changed:
-            self.resyncChanged.emit(resync)
+            self.commsModeChanged.emit(oldmode, newmode)
+            self.setCommsPhase(phase)
 
     def midi_resync(self):
         self.setDeviceConnected(False)
-        self.setResync(True)
-        self.enquire_device()
+        if self.commsMode == common.COMMS_MODE_SYNC:
+            self.setCommsMode(common.COMMS_MODE_NONE)
+        self.setCommsMode(common.COMMS_MODE_SYNC)
+        self.sync_control()
 
-    
     def setDeviceConnected(self, connected):
         self.device_connected = connected
         self.deviceConnectedChanged.emit(connected)
@@ -1837,9 +1839,7 @@ class GNX1(QObject):
         #(f"GNX1 MIDI Channel: {channel:02X}")
 
     def ports_open(self):
-        self.setDeviceConnected(False)
-        self.setResync(True)
-        self.enquire_device()
+        self.midi_resync()
         self.midi_watchdog = self.watchdog(timeout = self.midi_watchdog_time, userHandler = self.midi_watchdog_bite)
         self.midi_watchdog.start()
 
@@ -1847,8 +1847,7 @@ class GNX1(QObject):
         if self.midi_watchdog != None:
             self.midi_watchdog.stop()
         self.setDeviceConnected(False)
-        self.setResync(False)
-        self.setUploading(0)
+        self.setCommsMode(common.COMMS_MODE_NONE)
 
     # syncing: 
     # enquire_device -> 7E -> request_status (0x05) -> decode06 -> request_patch_names(0x12, 0) -> decode13 -> request_patch_names(0x12, 1) -> decode13 -> 
@@ -1859,27 +1858,31 @@ class GNX1(QObject):
         #print("Enquiring")
         self.midicontrol.send_message([0xF0, 0x00, 0x00, 0x10, 0x7E, 0x7F, 0x01, 0x00, 0x01, 0x00, 0x00, 0x11, 0xF7])
 
+    # send code 0x05 request
     def request_status(self):
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x05, 0x00, 0x01])
         self.midicontrol.send_message(msg)
 
+    # send code 0x12 request
     def request_patch_names(self, bank):        # 0: factory, 1: user
         self.requested_patch_bank = bank
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x12, 0x00, 0x01, bank, 0x00])
         self.midicontrol.send_message(msg)
 
-    # send code 07 request
+    # send code 0x07 request
     def request_ampcab_names(self, subcode):
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x07, 0x00, 0x01, subcode])
         self.midicontrol.send_message(msg)
 
+    # send code 0x20 request
     def request_current_patch_name(self):
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x20, 0x00, 0x01, 0x02, 0x00, 0x1F])
         self.midicontrol.send_message(msg)
 
     def send_keep_alive(self):
-        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x76, 0x20, 0x01, 0x7F])
-        self.midicontrol.send_message(msg)
+        if self.commsMode == common.COMMS_MODE_NONE:
+            msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x76, 0x20, 0x01, 0x7F])
+            self.midicontrol.send_message(msg)
 
     def acknowledge_current_patch_name(self):
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x7E, 0x00, 0x01, 0x21])
@@ -1977,7 +1980,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -1992,6 +1995,7 @@ class GNX1(QObject):
                                         case 0x02:                  # CODE 02: Device Response
                                             self.decode02(msg)
                                             self.midi_watchdog_bite_count = 0
+                                            self.sync_control()
                                             #self.midi_watchdog.reset()
                                         case _:
                                             e = GNXError(icon = QMessageBox.Warning, title = "System Exclusive Error", \
@@ -2009,36 +2013,46 @@ class GNX1(QObject):
                                 match msg[6]:
                                     case 0x02:                  # CODE 02: Device Response
                                         self.decode02(msg)
+                                        self.sync_control()
                                     
                                     case 0x06:                  # CODE 06: Status Response
                                         self.decode06(msg)
+                                        self.sync_control()
                                     
                                     case 0x08:                  # CODE 08: Amp/Cab Names
                                         self.decode08(msg)
+                                        self.sync_control()
 
-                                    case 0x0A:                  # CODE 0A: Devide Status
+                                    case 0x0A:                  # CODE 0A: Device Status
                                         self.decode0A(msg)
 
                                     case 0x13:                  # CODE 13: Patch Names
                                         self.decode13(msg)
+                                        self.sync_control()
 
                                     case 0x21:                  # CODE 21: Current Patch Name
                                         self.decode21(msg)
+                                        self.sync_control()
 
                                     case 0x22:                  # CODE 22: End of Patch Dump
                                         self.decode22(msg)
+                                        self.sync_control()
 
                                     case 0x24:
                                         self.decode24(msg)      # CODE 24: Patch Dump
+                                        self.sync_control()
 
                                     case 0x26:                  # CODE 26: LFO and Expression Pedals
                                         self.decode26(msg)
+                                        self.sync_control()
 
                                     case 0x28:                  # CODE 28: ???
                                         self.decode28(msg)
+                                        self.sync_control()
 
                                     case 0x2A:                  # CODE 2A: Custom Amps and Cabs
                                         self.decode2A(msg)
+                                        self.sync_control()
 
                                     case 0x2C:                  # CODE 2C: Parameters
                                         self.decode2C(msg)
@@ -2054,8 +2068,7 @@ class GNX1(QObject):
                                         pass                    # acknowledged
 
                                     case 0x7F:                  # checksum error
-                                        self.setResync(False)
-                                        self.setUploading(0)
+                                        self.setCommsMode(common.COMMS_MODE_NONE)
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Error code received {msg}",\
                                                 buttons = QMessageBox.Ok)
@@ -2063,8 +2076,7 @@ class GNX1(QObject):
 
 
                                     case _:
-                                        self.setResync(False)
-                                        self.setUploading(0)
+                                        self.setCommsMode(common.COMMS_MODE_NONE)
                                         e = GNXError(icon = QMessageBox.Warning, title = "GNX System Exclusive Error", \
                                                 text = f"Message[{msg[6]}] code not recognised {msg}",\
                                                 buttons = QMessageBox.Ok)
@@ -2079,9 +2091,11 @@ class GNX1(QObject):
                                 match msg[6]:
                                     case 0x02:                  # CODE 02: Device Response
                                         self.decode02(msg)
+                                        self.sync_control()
                                                                        
                                     case 0x7E:
                                         self.decode7E(msg)
+                                        self.sync_control()
                                         pass                    # acknowledged
 
                                     case 0x7F:                  # checksum error
@@ -2189,8 +2203,6 @@ class GNX1(QObject):
             
             self.setDeviceConnected(True)
 
-            # resync
-            self.request_status()
 
     # CODE 06: Device Status
     def decode06(self, msg):
@@ -2206,9 +2218,6 @@ class GNX1(QObject):
         #print("CODE 06: Setting Patch")
         self.setPatchName(None)
 
-        if self.resyncing:
-            self.requested_patch_bank = 0
-            self.request_patch_names(self.requested_patch_bank)     # factory patch names
 
     # CODE 08: Amp/Cab Names
     def decode08(self, msg):
@@ -2256,8 +2265,7 @@ class GNX1(QObject):
 
         #print("AMP/CAB NAMES:", amp_names, cab_names)
 
-        if self.resyncing:
-            self.request_current_patch_name()
+
 
     # CODE 0A: Device Status
     def decode0A(self, msg):
@@ -2277,13 +2285,7 @@ class GNX1(QObject):
         self.user_patch_names = "".join(map(chr, unpacked[2:-1])).split('\x00')
 
         self.gnxPatchNamesUpdated.emit(self.requested_patch_bank, self.user_patch_names)
-
-        if self.resyncing:
-            if self.requested_patch_bank == 0:
-                self.requested_patch_bank = 1
-                self.request_patch_names(self.requested_patch_bank)     # user
-            else:
-                self.request_ampcab_names(0x01)
+               
         
     # CODE 21: Current Patch Name
     def decode21(self, msg):
@@ -2296,17 +2298,12 @@ class GNX1(QObject):
         #print("CODE 21: Setting Patch Name")
         self.setPatchName("".join(map(chr, unpacked[3:])).split('\x00')[0])       # "".join(map(chr, unpacked[3: 9]))
 
-        if self.resyncing:
-            self.acknowledge_current_patch_name()
 
     # CODE 22: End of patch dump
     def decode22(self, msg):
 
         if not self.device_connected or msg[self.midi_channel_offset] != common.GNXEDIT_CONFIG["midi"]["channel"]:
             return
-        
-        if self.resyncing:
-            self.setResync(False)
 
     # CODE 24: Patch Dump
     def decode24(self, msg):
@@ -2514,9 +2511,9 @@ class GNX1(QObject):
         self.current_patch_bank = bank
         self.current_patch_number = patch
 
-        # resync
-        self.setResync(True)
-        self.request_current_patch_name()
+        # get patch data
+        self.setCommsMode(common.COMMS_MODE_SYNC, phase = 5)
+        self.sync_control()
 
     # CODE 2E: Patch name changed (saved)
     def decode2E(self, msg):
@@ -2573,8 +2570,8 @@ class GNX1(QObject):
 
         elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
             # patch change acknowledged - get patch dump
-            self.setResync(True)
-            self.request_current_patch_name()
+            self.setCommsMode(common.COMMS_MODE_SYNC, phase = 5)
+            self.sync_control()
 
         elif compare_array(unpacked, [0x01, 0x2E, 0x00]):
             # patch name change acknowledged
@@ -2644,53 +2641,51 @@ class GNX1(QObject):
                 self.gnxAlert.emit(e) 
             else:
                 # initiate resync with callback
-                self.setDeviceConnected(False)
-                self.setResync(True)
-                self.resyncChanged.connect(callback)
-                self.enquire_device()
+                #self.setDeviceConnected(False)
+                self.setCommsMode(common.COMMS_MODE_SYNC, phase = 5)
+                self.commsModeChanged.connect(callback)     # connect for one-shot
+                self.sync_control()
 
-        def callback(resync):
-                print("Callback save_patch_to_library")
-                # if true, it's another job
-                self.resyncChanged.disconnect(callback)
-                if resync:
-                    return
-                else:
-                    selection_model = treeView.selectionModel()
-                    selected = selection_model.selectedIndexes()
-                    cat = selected[0].data(Qt.UserRole)
-                    category = cat["category"]
-                    name = inputName.text().upper()
-                    description = inputDescription.toPlainText().upper()
-                    tags = inputTags.toPlainText().upper()
-                
-                    # save patch if in user space
-                    #if self.current_patch_bank == 1:
-                    #    self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
-                    #    self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+        def callback(oldmode, mode):
+            print("Callback save_patch_to_library")
+            # if true, it's another job
+            self.commsModeChanged.disconnect(callback)
+            if oldmode == common.COMMS_MODE_SYNC and mode == common.COMMS_MODE_NONE:    # sync has finished
+                selection_model = treeView.selectionModel()
+                selected = selection_model.selectedIndexes()
+                cat = selected[0].data(Qt.UserRole)
+                category = cat["category"]
+                name = inputName.text().upper()
+                description = inputDescription.toPlainText().upper()
+                tags = inputTags.toPlainText().upper()
+            
+                # save patch if in user space
+                #if self.current_patch_bank == 1:
+                #    self.save_patch(name, 0x02, 0x00, self.current_patch_bank, self.current_patch_number)
+                #    self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
 
-                    # save to library
-                    data = self.serialise_to_file()
+                # save to library
+                data = self.serialise_to_file()
 
-                    try:
-                        db = gnxDB()
-                        if db.conn == None:
-                            return
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
 
-                        cur = db.conn.cursor()
-                        cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                                        [category, name, description, tags, data["24"], data["26"],
-                                        data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
-                        db.conn.commit()
-                    except Exception as e:
-                        e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
-                                                                text = f"Unable to add patch to database.\n{e}", \
-                                                                buttons = QMessageBox.Ok)
-                        self.gnxAlert.emit(e)     
-                    db.conn.close()     
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                    [category, name, description, tags, data["24"], data["26"],
+                                    data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
+                    db.conn.commit()
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
+                                                            text = f"Unable to add patch to database.\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()     
 
-                    self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
+                self.patch_added_to_library.emit(category, cur.lastrowid, name, description, tags)
 
         def rejected():
             pass
@@ -2867,8 +2862,8 @@ class GNX1(QObject):
             msg6 = self.blob2msg(data["C28"])
             self.code28data = msg6
 
-            self.setResync(False)
-            self.setUploading(1)      # indicates upload phase
+            self.setCommsMode(common.COMMS_MODE_UPLOADING)
+            self.setCommsPhase(1)
 
             # send patch name to buffer
 
@@ -2884,35 +2879,82 @@ class GNX1(QObject):
 
     # uploading state machine called after acknowledge received
     def upload_control(self):
-
-        match self.uploading:
+        if self.commsMode != common.COMMS_MODE_UPLOADING:
+            return
+        
+        match self.commsPhase:
             case 0:
                 return
             case 1:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code24data)
             case 2:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code2Adata["3C06"])
             case 3:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code2Adata["3D07"])
             case 4:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code2Adata["3C08"])
             case 5:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code2Adata["3D09"])
             case 6:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code26data)
             case 7:
-                self.setUploading(self.uploading + 1)
+                self.setCommsPhase(self.commsPhase + 1)
                 self.midicontrol.send_message(self.code28data)
             case 8:
-                self.setUploading(0)  # finished
+                self.setCommsMode(common.COMMS_MODE_NONE)  # finished
                 self.sendcode22message()
                 self.midi_resync()
+
+    # synching state machine
+    def sync_control(self):
+        if self.commsMode != common.COMMS_MODE_SYNC:
+            return
+        
+        match self.commsPhase:
+            case 0:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.enquire_device()       # send code 0x01, receives 0x02
+            case 1:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.request_status()       # send code 0x05, receives 0x06
+            case 2:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.request_ampcab_names(0x01)    # code 0x07 amp/cab names , receives 0x08
+            case 3:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.request_patch_names(0x00)     # code 0x12 factory patch names, receives 0x13
+            case 4:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.request_patch_names(0x01)     # code 0x12 user patch names, receives 0x13
+            
+            # start here for getting current patch details
+            case 5:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.request_current_patch_name()  # code 0x20 current patch name, receives 0x21
+            case 6:
+                self.setCommsPhase(self.commsPhase + 1)
+                self.acknowledge_current_patch_name()   # code 0x7E, triggers dump starting code 0x24
+            case 7:
+                self.setCommsPhase(self.commsPhase + 1) # 0x24 data received, expect 0x2A green amp data
+            case 8:
+                self.setCommsPhase(self.commsPhase + 1) # expect 0x2A green cab data
+            case 9:
+                self.setCommsPhase(self.commsPhase + 1) # expect 0x2A red amp data
+            case 10:
+                self.setCommsPhase(self.commsPhase + 1) # expect 0x26 expression & lfo
+            case 11:
+                self.setCommsPhase(self.commsPhase + 1) # 0x26 data received, expect 0x28 ???
+            case 12:
+                self.setCommsPhase(self.commsPhase + 1) # 0x28 data received, expect 0x22 end of data
+            case 13:                    
+                self.setCommsMode(common.COMMS_MODE_NONE)  # 0x22 received, end of message
+
 
     def has_patch(self):
         return not (self.code24data == None or self.code2Adata["3C06"] == None or self.code2Adata["3D07"] == None or self.code2Adata["3C08"] == None \

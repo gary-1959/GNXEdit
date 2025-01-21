@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from PySide6.QtWidgets import QWidget,  QWidget, QMenu, QMessageBox
+from PySide6.QtWidgets import QWidget,  QWidget, QMenu, QMessageBox, QLabel, QWidgetAction
 from PySide6.QtCore import Qt, QRect, Property, Slot, Signal
 from PySide6.QtGui import QPainter, QImage, QAction, QColor, QPen, QFont
 
@@ -173,11 +173,12 @@ class CabFace(QWidget):
         # Create the context menu
         context_menu = QMenu(self)
 
-        action = QAction("SELECT CABINET")
-        action.setProperty("class", "context-menu-title")
-        action.setDisabled(True)
-        action.triggered.connect(self.contextMenuClicked)
-        context_menu.addAction(action)
+        label = QLabel("SELECT CABINET")
+        label.setProperty("cssClass", "context-menu-title")
+        widget = QWidgetAction(context_menu)
+        widget.setDefaultWidget(label)
+        context_menu.addAction(widget)
+
         x = context_menu.actions()
         context_menu.addSeparator()
 

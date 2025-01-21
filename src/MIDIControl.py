@@ -199,7 +199,7 @@ class MIDIControl:
     def send_message(self, msg):
         if self.port_out != None:
             if self.port_out.is_port_open():
-                # print("Sending", msg)
+                #print("Sending", msg)
                 self.port_out.send_message(msg)
                
             else:

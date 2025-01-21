@@ -278,6 +278,43 @@ QScrollBar::right-arrow {
 QTitleBar {
    background: green;
 }
+QLabel[cssClass='context-menu-title'] {
+   color: black;
+   font-weight: bold;
+   padding-left: 12px;
+}
+#patchDetailsGroupBox {
+	color: red;
+	font-weight: bold;
+}
+#patchDetailsGroupBox QLabel {
+   color: white;
+}
+#patchDetailsGroupBox QPushButton {
+   background-color: palegoldenrod;
+}
+#patchDetailsGroupBox QPushButton:pressed {
+   background-color: goldenrod;
+}
+
+QPushButton#patchSearchButton { 
+   background-color: palegoldenrod; 
+   image: url('./src/ui/tree/search.png');
+   border-style: outset;
+   border-width: 1px;
+}
+
+QPushButton#patchSearchButton:pressed { 
+   background-color: goldenrod; 
+   image: url('./src/ui/tree/search-pressed.png');
+   border-style: inset;
+   border-width: 1px;
+} 
+
+QLineEdit#patchSearchText: {
+   margin: 0px;
+}
+
 
 </string>
   </property>
@@ -375,6 +412,77 @@ QTitleBar {
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
+          <widget class="QWidget" name="widget" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="patchSearchText">
+              <property name="placeholderText">
+               <string>Search...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="patchSearchButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>26</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>26</width>
+                <height>26</height>
+               </size>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
           <widget class="QTreeView" name="treeView">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -391,6 +499,95 @@ QTitleBar {
            <property name="headerHidden">
             <bool>true</bool>
            </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="patchDetailsGroupBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Patch Details</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Description</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="patchDescription">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>60</height>
+               </size>
+              </property>
+              <property name="tabChangesFocus">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Tags</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPlainTextEdit" name="patchTags">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="tabChangesFocus">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="patchDescriptionUpdateButton">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Update</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -450,7 +647,7 @@ QTitleBar {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="AmpFace" name="ampGreen">
+             <widget class="AmpFace" name="ampGreen" native="true">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -511,7 +708,7 @@ QTitleBar {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <widget class="CabFace" name="cabGreen">
+                <widget class="CabFace" name="cabGreen" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -539,7 +736,7 @@ QTitleBar {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <widget class="WarpFace" name="warpFace">
+                <widget class="WarpFace" name="warpFace" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -570,7 +767,7 @@ QTitleBar {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
-                <widget class="CabFace" name="cabRed">
+                <widget class="CabFace" name="cabRed" native="true">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -610,7 +807,7 @@ QTitleBar {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="AmpFace" name="ampRed">
+             <widget class="AmpFace" name="ampRed" native="true">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -638,7 +835,7 @@ QTitleBar {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">
             <item>
-             <widget class="PickupFace" name="pickupFace">
+             <widget class="PickupFace" name="pickupFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -654,7 +851,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="WahFace" name="wahFace">
+             <widget class="WahFace" name="wahFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -670,7 +867,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="CompressorFace" name="compressorFace">
+             <widget class="CompressorFace" name="compressorFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -686,7 +883,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="WhammyFace" name="whammyFace">
+             <widget class="WhammyFace" name="whammyFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -705,7 +902,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="GateFace" name="gateFace">
+             <widget class="GateFace" name="gateFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -724,7 +921,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="ModFace" name="modFace">
+             <widget class="ModFace" name="modFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -743,7 +940,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="DelayFace" name="delayFace">
+             <widget class="DelayFace" name="delayFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -759,7 +956,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="ReverbFace" name="reverbFace">
+             <widget class="ReverbFace" name="reverbFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -775,7 +972,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="ExpFace" name="expFace">
+             <widget class="ExpFace" name="expFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -794,7 +991,7 @@ QTitleBar {
              </widget>
             </item>
             <item>
-             <widget class="LFOFace" name="lfoFace">
+             <widget class="LFOFace" name="lfoFace" native="true">
               <property name="minimumSize">
                <size>
                 <width>1000</width>

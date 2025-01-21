@@ -25,7 +25,7 @@ from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, \
-            QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem
+            QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem, QLabel, QWidgetAction, QPushButton
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator
 
@@ -223,6 +223,15 @@ class TreeHandler(QObject):
 
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
+        self.patchDescription = self.window.findChild(QPlainTextEdit, "patchDescription")
+        self.patchTags = self.window.findChild(QPlainTextEdit, "patchTags")
+        self.patchUpdateButton = self.window.findChild(QPushButton, "patchDescriptionUpdateButton")
+        self.patchUpdateButton.clicked.connect(self.patchUpdateButtonClicked)
+
+        self.patchSearchText = self.window.findChild(QPushButton, "patchSearchText")
+        self.patchSearchButton = self.window.findChild(QPushButton, "patchSearchButton")
+        self.patchSearchButton.clicked.connect(self.searchButtonClicked)
+
         # add library data
         
         try:
@@ -308,12 +317,14 @@ class TreeHandler(QObject):
 
             if actions != None:
                 cm = QMenu(self.tree)
+                cm.setProperty("cssClass", "context-menu")
                 if title != None:
-                    action = QAction(title)
-                    action.setProperty("class", "context-menu-title")
-                    action.setDisabled(True)
-                    action.triggered.connect(self.noAction)
-                    cm.addAction(action)
+                    label = QLabel(title)
+                    label.setProperty("cssClass", "context-menu-title")
+                    widget = QWidgetAction(cm)
+                    widget.setDefaultWidget(label)
+                    cm.addAction(widget)
+
                     x = cm.actions()
                     cm.addSeparator()
                 for a in actions:
@@ -366,6 +377,8 @@ class TreeHandler(QObject):
                 data["tags"] = tags
                 patch.setData(data, Qt.UserRole)
                 patch.setData(name, Qt.DisplayRole)
+
+                self.setDescriptionAndTags(data)
 
             except Exception as e:
                 e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Error", \
@@ -825,6 +838,7 @@ class TreeHandler(QObject):
 
     @Slot()
     def selectionChangedEvent(self):
+
         for x in self.selection.selectedIndexes():
 
             if x.data() == None:    # click on LIBRARY chucks this out
@@ -841,9 +855,66 @@ class TreeHandler(QObject):
                         # TODO: what to do when library patch clicked
                         # send to GNX1 - needs confirmation
                         pass
-                pass
+
+            self.setDescriptionAndTags(data)
         pass
         self.model.layoutChanged
+
+    def setDescriptionAndTags(self, data):
+
+        # set description and tags panels
+        if data["role"] == "patch":
+            if  data["type"] == "library":
+                self.patchDescription.setPlainText(data["description"])
+                self.patchTags.setPlainText(data["tags"])
+                self.patchDescription.setEnabled(True)
+                self.patchTags.setEnabled(True)
+                self.patchUpdateButton.setEnabled(True)
+            else:
+                self.patchDescription.setPlainText("[No description]")
+                self.patchTags.setPlainText("[No tags]")
+                self.patchDescription.setEnabled(False)
+                self.patchTags.setEnabled(False)
+                self.patchUpdateButton.setEnabled(False)
+        else:
+            self.patchDescription.setPlainText("[No description]")
+            self.patchTags.setPlainText("[No tags]")
+            self.patchDescription.setEnabled(False)
+            self.patchTags.setEnabled(False)
+            self.patchUpdateButton.setEnabled(False)
+
+        setattr(self.patchUpdateButton, "patchData", data)
+
+    @Slot()
+    def patchUpdateButtonClicked(self):
+        sender = self.sender()
+        data = getattr(sender, "patchData")
+
+        description =  self.patchDescription.toPlainText()
+        tags =  self.patchTags.toPlainText()
+
+        try:
+            db = gnxDB()
+            if db.conn == None:
+                return
+
+            cur = db.conn.cursor()
+            cur.execute("UPDATE patches SET description = ?, tags = ? WHERE id = ?", [description, tags, data["patch"]])
+            db.conn.commit()
+            db.conn.close()
+
+            patch = findByData(self.libHeader, data)
+            data["description"] = description
+            data["tags"] = tags
+            patch.setData(data, Qt.UserRole)
+
+            self.setDescriptionAndTags(data)
+
+        except Exception as e:
+            e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Error", \
+                                                    text = f"Unable to update patch in database\n{e}", \
+                                                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)     
 
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
@@ -924,4 +995,8 @@ class TreeHandler(QObject):
             if parent.child(row, 0).hasChildren():
                 self.setHeaderSpanned(parent.child(row, 0))
     
-    
+    def searchButtonClicked(self):
+        text = self.patchSearchText.text()
+        if len(text) == 0:
+            return
+        
