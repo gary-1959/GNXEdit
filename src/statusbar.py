@@ -111,7 +111,6 @@ class StatusControl(QObject):
 
     @Slot()
     def setCommsPhase(self, oldphase, newphase):
-        print(f"Mode {self.commsMode} phase {newphase}")
         if self.commsMode == common.COMMS_MODE_UPLOADING and newphase > 0:
             self.uploading_label.setText(f"UPLOADING [{newphase:02.0f}]")
             self.uploading_label.setStyleSheet("color: green;")

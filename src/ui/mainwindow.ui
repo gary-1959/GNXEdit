@@ -21,7 +21,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">
-QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight,  QScrollArea, QTreeView {
+QMainWindow#MainWindow, QSplitter, QWidget#scrollPaneLeft, QWidget#scrollPaneRight, QScrollArea, QTreeView {
    font-family: 'Arial';
    font-size: 12px; 
    color: white; 
@@ -283,17 +283,20 @@ QLabel[cssClass='context-menu-title'] {
    font-weight: bold;
    padding-left: 12px;
 }
-#patchDetailsGroupBox {
+#patchDetailsGroupBox, #searchResultsGroupBox {
 	color: red;
 	font-weight: bold;
 }
-#patchDetailsGroupBox QLabel {
+#patchDetailsGroupBox QLabel,
+#searchResultsGroupBox QLabel {
    color: white;
 }
-#patchDetailsGroupBox QPushButton {
+#patchDetailsGroupBox QPushButton,
+#searchResultsGroupBox QPushButton {
    background-color: palegoldenrod;
 }
-#patchDetailsGroupBox QPushButton:pressed {
+#patchDetailsGroupBox QPushButton:pressed,
+#searchResultsGroupBox QPushButton:pressed {
    background-color: goldenrod;
 }
 
@@ -314,7 +317,6 @@ QPushButton#patchSearchButton:pressed {
 QLineEdit#patchSearchText: {
    margin: 0px;
 }
-
 
 </string>
   </property>
@@ -513,13 +515,40 @@ QLineEdit#patchSearchText: {
             <string>Patch Details</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_6">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QLabel" name="label">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>18</height>
+               </size>
               </property>
               <property name="text">
                <string>Description</string>
@@ -529,10 +558,16 @@ QLineEdit#patchSearchText: {
             <item>
              <widget class="QPlainTextEdit" name="patchDescription">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>60</height>
+               </size>
               </property>
               <property name="maximumSize">
                <size>
@@ -548,10 +583,22 @@ QLineEdit#patchSearchText: {
             <item>
              <widget class="QLabel" name="label_2">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>18</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>18</height>
+               </size>
               </property>
               <property name="text">
                <string>Tags</string>
@@ -561,10 +608,16 @@ QLineEdit#patchSearchText: {
             <item>
              <widget class="QPlainTextEdit" name="patchTags">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>40</height>
+               </size>
               </property>
               <property name="maximumSize">
                <size>
@@ -579,11 +632,106 @@ QLineEdit#patchSearchText: {
             </item>
             <item>
              <widget class="QPushButton" name="patchDescriptionUpdateButton">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>28</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>28</height>
+               </size>
+              </property>
               <property name="cursor">
                <cursorShape>PointingHandCursor</cursorShape>
               </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
               <property name="text">
                <string>Update</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="searchResultsGroupBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Search Results</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <property name="spacing">
+             <number>4</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="SearchResults" name="searchResults" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>200</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>200</height>
+               </size>
+              </property>
+              <property name="readOnly" stdset="0">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="searchResultsHideButton">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>28</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>28</height>
+               </size>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Hide</string>
               </property>
              </widget>
             </item>
@@ -1061,6 +1209,9 @@ QLineEdit#patchSearchText: {
      <string>Device</string>
     </property>
     <addaction name="actionResync"/>
+    <addaction name="separator"/>
+    <addaction name="actionSaveAmp"/>
+    <addaction name="separator"/>
     <addaction name="actionSavePatch"/>
     <addaction name="actionSavePatchToLibrary"/>
    </widget>
@@ -1135,6 +1286,11 @@ QLineEdit#patchSearchText: {
     <string>Save Patch to Library</string>
    </property>
   </action>
+  <action name="actionSaveAmp">
+   <property name="text">
+    <string>Save Amp to User Amps</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -1201,6 +1357,11 @@ QLineEdit#patchSearchText: {
    <class>LFOFace</class>
    <extends>QWidget</extends>
    <header>lfoface</header>
+  </customwidget>
+  <customwidget>
+   <class>SearchResults</class>
+   <extends>QWidget</extends>
+   <header>searchresults.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

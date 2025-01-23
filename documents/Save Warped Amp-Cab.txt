@@ -1,0 +1,46 @@
+**** SAVE AMP/CAB TO USER 1
+--------------PACKED-----------------
+TRANSMIT  2E
+01 02 00 03 00 4E 65 77  . . . . . N e w
+41 6D 70 00 00           A m p . .
+Input length  15  Output length:  13
+RECEIVED ACKNOWLEDGE 7E
+01 2E 00                 . . .
+Input length  4  Output length:  3
+--------------PACKED-----------------
+TRANSMIT  2E
+01 02 00 04 00 4E 65 77  . . . . . N e w
+41 6D 70 00 00           A m p . .
+Input length  15  Output length:  13
+RECEIVED ACKNOWLEDGE 7E
+01 2E 00                 . . .
+Input length  4  Output length:  3
+
+
+SAVE AMP/CAB TO USER 2
+--------------PACKED-----------------
+TRANSMIT  2E
+01 02 00 03 01 4E 65 77  . . . . . N e w
+41 6D 70 00 00           A m p . .
+Input length  15  Output length:  13
+RECEIVED ACKNOWLEDGE 7E
+01 2E 00                 . . .
+Input length  4  Output length:  3
+--------------PACKED-----------------
+TRANSMIT  2E
+01 02 00 04 01 4E 65 77  . . . . . N e w
+41 6D 70 00 00           A m p . .
+Input length  15  Output length:  13
+RECEIVED ACKNOWLEDGE 7E
+01 2E 00                 . . .
+Input length  4  Output length:  3
+
+SAVE PATCH TO USER 3
+
+TRANSMIT  2E
+01 02 00 01 02 48 59 42  . . . . . H Y B
+52 49 44 00 FF           R I D . .
+Input length  15  Output length:  13
+RECEIVED ACKNOWLEDGE 7E
+01 2E 00                 . . .
+Input length  4  Output length:  3

@@ -18,16 +18,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import settings
-import time
+import types
+import re
 from exceptions import GNXError
 import sqlite3
 from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, \
-            QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem, QLabel, QWidgetAction, QPushButton
-from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator
+            QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem, QLabel, QWidgetAction, QPushButton, QGroupBox, QTextEdit
+from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer, \
+            QPropertyAnimation, QRect, QSequentialAnimationGroup
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator, QColor
 
 class CustomDelegate(QStyledItemDelegate):
     def __init__(self, parent):
@@ -120,7 +122,8 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
         cat = QStandardItem(name)
         cat.setForeground(Qt.magenta)
         cat.setEnabled(enabled)
-        cat.setData({"role": "header", "type": "library", "category": cid, "name": name}, Qt.UserRole)
+        data = {"role": "header", "type": "library", "category": cid, "name": name}
+        cat.setData(data, Qt.UserRole)
         
         parent.appendRow(cat)
         ctx = model.indexFromItem(cat)
@@ -139,8 +142,9 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w1.setForeground(Qt.green)
         w1.setEnabled(True)
         w1.setEditable(True)   # library patch name is editable
-        w1.setData({"role": "patch", "type": "library", "bank": None, "patch": patch_id, "name": name,
-                    "description": description, "tags": tags}, Qt.UserRole)
+        data = {"role": "patch", "type": "library", "bank": None, "patch": patch_id, "name": name,
+                    "description": description, "tags": tags}
+        w1.setData(data, Qt.UserRole)
         parent.appendRow([w1])
         ctx = model.indexFromItem(w1)
         tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
@@ -160,7 +164,7 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w1.setForeground(color)
         w2.setForeground(color)
 
-        data = {"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num}
+        data = {"role": "patch", "type": "factory" if bank == 0 else "user", "bank": bank, "patch": patch_num, "name": name}
         w1.setData(data, Qt.UserRole)
         w2.setData(data, Qt.UserRole)
         parent.appendRow([w1, w2])
@@ -199,6 +203,7 @@ class TreeHandler(QObject):
         self.gnxHeader.setData({"role": "header", "type": "gnx"}, Qt.UserRole)
 
         self.factoryHeader = QStandardItem("FACTORY")
+        self.factoryHeader.setEnabled(False)
         self.gnxHeader.appendRow(self.factoryHeader)
         self.factoryHeader.setData({"role": "header", "type": "factory"}, Qt.UserRole)
 
@@ -223,12 +228,52 @@ class TreeHandler(QObject):
 
         self.setHeaderSpanned(self.tree.model().invisibleRootItem())
 
+        # patch details box
+
+        self.patchDetailsGroupBox = self.window.findChild(QGroupBox, "patchDetailsGroupBox")
         self.patchDescription = self.window.findChild(QPlainTextEdit, "patchDescription")
         self.patchTags = self.window.findChild(QPlainTextEdit, "patchTags")
         self.patchUpdateButton = self.window.findChild(QPushButton, "patchDescriptionUpdateButton")
         self.patchUpdateButton.clicked.connect(self.patchUpdateButtonClicked)
+        
+        # animation for show/hide patch details box
+        self.patchDetailsAnimationShow = QPropertyAnimation(self.patchDetailsGroupBox, b"maximumHeight")
+        self.patchDetailsAnimationShow.setDuration(500)
+        rect = self.patchDetailsGroupBox.geometry()
+        self.patchDetailsAnimationShow.setStartValue(0)
+        self.patchDetailsAnimationShow.setEndValue(rect.height())
+        
+        self.patchDetailsAnimationHide = QPropertyAnimation(self.patchDetailsGroupBox, b"maximumHeight")
+        self.patchDetailsAnimationHide.setDuration(500)
+        self.patchDetailsAnimationHide.setStartValue(rect.height())
+        self.patchDetailsAnimationHide.setEndValue(0)
 
-        self.patchSearchText = self.window.findChild(QPushButton, "patchSearchText")
+        self.patchDetailsGroupBox.setMaximumHeight(0)
+
+        # search results box
+
+        self.searchResults = self.window.findChild(QTextEdit, "searchResults")
+        self.searchResults.setOwner(self)
+        self.searchResultsGroupBox = self.window.findChild(QGroupBox, "searchResultsGroupBox")
+        self.searchResultsHideButton = self.window.findChild(QPushButton, "searchResultsHideButton")
+
+        # animation for show/hide search results box
+        self.searchResultsAnimationShow = QPropertyAnimation(self.searchResultsGroupBox, b"maximumHeight")
+        self.searchResultsAnimationShow.setDuration(500)
+        rect = self.searchResultsGroupBox.geometry()
+        self.searchResultsAnimationShow.setStartValue(0)
+        self.searchResultsAnimationShow.setEndValue(rect.height())
+        
+        self.searchResultsAnimationHide = QPropertyAnimation(self.searchResultsGroupBox, b"maximumHeight")
+        self.searchResultsAnimationHide.setDuration(500)
+        self.searchResultsAnimationHide.setStartValue(rect.height())
+        self.searchResultsAnimationHide.setEndValue(0)
+
+        self.searchResultsHideButton.clicked.connect(self.searchResultsAnimationHide.start)
+        self.searchResultsGroupBox.setMaximumHeight(0)
+
+        # search input
+        self.patchSearchText = self.window.findChild(QLineEdit, "patchSearchText")
         self.patchSearchButton = self.window.findChild(QPushButton, "patchSearchButton")
         self.patchSearchButton.clicked.connect(self.searchButtonClicked)
 
@@ -794,6 +839,12 @@ class TreeHandler(QObject):
                 bank = data["bank"]
                 patch = data["patch"]
 
+                w2 = self.model.itemFromIndex(topleft)
+                w1 = self.model.itemFromIndex(topleft.siblingAtColumn(0))
+                data["name"] = text
+                w1.setData(data, Qt.UserRole)
+                w2.setData(data, Qt.UserRole)
+
                 self.gnx.save_patch(text, bank, patch, bank, patch)
 
             elif data["role"] == "patch" and data["type"] == "library":
@@ -814,6 +865,10 @@ class TreeHandler(QObject):
                     self.gnxAlert.emit(e)     
                 db.conn.close()
 
+                w1 = self.model.itemFromIndex(topleft)
+                data["name"] = text
+                w1.setData(data, Qt.UserRole)
+
             elif data["role"] == "header" and data["type"] == "library":
                 try:
                     db = gnxDB()
@@ -829,6 +884,9 @@ class TreeHandler(QObject):
                                                             buttons = QMessageBox.Ok)
                     self.gnxAlert.emit(e)     
                 db.conn.close()
+
+                data["name"] = text
+                topleft.setData(data, Qt.UserRole)
 
     @Slot()
     def midiPatchChange(self, parameter):
@@ -851,13 +909,18 @@ class TreeHandler(QObject):
                 if not self.blockPatchChange:
                     if data["type"] == "factory" or data["type"] == "user":
                         self.gnx.send_patch_change(bank, patch)
+                        if self.patchDetailsGroupBox.height() > 0:
+                            self.patchDetailsAnimationHide.start()
                     else:
-                        # TODO: what to do when library patch clicked
-                        # send to GNX1 - needs confirmation
-                        pass
+                        if self.patchDetailsGroupBox.height() == 0:
+                            self.patchDetailsAnimationShow.start()
+                        self.setDescriptionAndTags(data)
+            else:
+                if self.patchDetailsGroupBox.height() > 0:
+                    self.patchDetailsAnimationHide.start()
+                pass
+            break
 
-            self.setDescriptionAndTags(data)
-        pass
         self.model.layoutChanged
 
     def setDescriptionAndTags(self, data):
@@ -997,6 +1060,124 @@ class TreeHandler(QObject):
     
     def searchButtonClicked(self):
         text = self.patchSearchText.text()
-        if len(text) == 0:
-            return
+
+        self.searchResults.clear()
+        if len(text) > 0:
+            groupAnimation = QSequentialAnimationGroup(self)
+            if self.patchDetailsGroupBox.height() > 0:
+                groupAnimation.addAnimation(self.patchDetailsAnimationHide)
+            if self.searchResultsGroupBox.height() == 0:
+                groupAnimation.addAnimation(self.searchResultsAnimationShow)
+            
+            groupAnimation.start()
+
+            try:
+                # search factory
+                if self.factoryHeader.hasChildren():
+                    for r in range(self.factoryHeader.rowCount()):
+                        data = self.factoryHeader.child(r, 0).data(Qt.UserRole)
+                        x = re.search(re.escape(text), data["name"], re.IGNORECASE)
+                        if x:
+                            self.searchResults.addPathLink("FACTORY>" + data["name"], f"0>{data["patch"]}")
+
+                # search user
+                if self.userHeader.hasChildren():
+                    for r in range(self.userHeader.rowCount()):
+                        data = self.userHeader.child(r, 0).data(Qt.UserRole)
+                        x = re.search(re.escape(text), data["name"], re.IGNORECASE)
+                        if x:
+                            self.searchResults.addPathLink("USER>" + data["name"], f"1>{data["patch"]}")
+
+
+                # search library
+                db = gnxDB()
+                if db.conn == None:
+                    return
+                db.conn.row_factory = sqlite3.Row
+                wc = f"%{text}%"
+                cur = db.conn.cursor()
+                cur.execute("SELECT id, category, name FROM patches WHERE \
+                                    name LIKE ? OR \
+                                    description LIKE ? OR \
+                                    tags LIKE ?", [wc, wc, wc])
+                rc = cur.fetchall()
+                prows = [dict(row) for row in rc]
+                
+                for p in prows:
+                    # find parents
+                    path, pathlink = self.getPatchPath(db, p["category"])
+                    self.searchResults.addPathLink(f"LIBRARY>{path}{p["name"]}", f"2>{pathlink}{p["id"]}")
+
+                db.conn.close()
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Search Error", \
+                                                        text = f"Unable to search patches\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+
+        if self.searchResults.document().isEmpty():
+            self.searchResults.setText("No matching results for this search.")
         
+    def getPatchPath(self, db, id, path = "", pathlink = ""):
+        if id == 0:
+            return path, pathlink
+
+        try:
+            db = gnxDB()
+            if db.conn == None:
+                return
+
+            db.conn.row_factory = sqlite3.Row
+            cur = db.conn.cursor()
+            cur.execute("SELECT parent, name FROM categories WHERE id = ?", [id])
+            rc = cur.fetchone()
+            if rc:
+                path = f"{rc[1]}>{path}"
+                pathlink = f"{id}>{pathlink}" 
+                return self.getPatchPath(db, rc[0], path, pathlink)
+            else:
+                return path, pathlink
+        except Exception as e:
+            raise e
+                
+    def findAnchorInTree(self, anchor):
+        self.tree.collapseAll()
+        idx = self.gnxHeader.index()
+        self.tree.expand(idx)
+
+        path = anchor.split(">")
+
+        if int(path[0]) == 0 or int(path[0]) == 1:    # factory or user
+            idx = self.factoryHeader.index() if int(path[0]) == 0 else self.userHeader.index() 
+            self.tree.expand(idx)
+            patchid = int(path[1])
+
+        elif int(path[0]) == 2:    # library
+            idx = self.libHeader.index()
+            self.tree.expand(idx)
+            for cat in range(1, len(path) - 1):
+                data = {"role": "header", "type": "library", "category": int(path[cat])}
+                pitem = findByData(self.libHeader, data)
+                idx = pitem.index()
+                self.tree.expand(idx)
+
+            patchid = int(path[-1])
+
+        types = ["factory", "user", "library"]
+        headers = [self.factoryHeader, self.userHeader, self.libHeader]
+        data = {"role": "patch", "type": types[int(path[0])], "patch": patchid}
+        pitem = findByData(headers[int(path[0])], data)
+        if int(path[0]) in [0, 1]:
+            patch = pitem.index().siblingAtColumn(1)
+        else:
+            patch = pitem.index()
+        self.blockPatchChange = True
+        self.tree.selectionModel().clearSelection()
+        self.tree.selectionModel().clearCurrentIndex()
+        self.tree.selectionModel().select(patch, QItemSelectionModel.ClearAndSelect)
+        self.blockPatchChange = False
+
+        self.tree.scrollTo(patch)
+            
+        pass

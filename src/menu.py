@@ -92,6 +92,8 @@ class MenuHandler():
             match n:
                 case "actionResync":
                     a.triggered.connect(self.gnx.midi_resync)
+                case "actionSaveAmp":
+                    a.triggered.connect(self.gnx.save_amp_to_gnx)
                 case "actionSavePatch":
                     a.triggered.connect(self.gnx.save_patch_to_gnx)
                 case "actionSavePatchToLibrary":

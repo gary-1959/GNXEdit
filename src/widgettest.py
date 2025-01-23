@@ -15,10 +15,11 @@ from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout
 #from customwidgets.whammyface import WhammyFace
 #from customwidgets.gateface import GateFace
 #from customwidgets.modface import ModFace
-from customwidgets.delayface import DelayFace
+#from customwidgets.delayface import DelayFace
 #from customwidgets.reverbface import ReverbFace
 #from customwidgets.expface import ExpFace
 #from customwidgets.lfoface import LFOFace
+from customwidgets.searchresults import SearchResults
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     layout = QVBoxLayout()
     widget.setLayout(layout)
 
-    d1 = DelayFace()
+    d1 = SearchResults()
     layout.addWidget(d1)   
     d1.setGeometry(0, 0, 1000, 180)
     d1.setMaximumWidth(1000)

@@ -807,8 +807,8 @@ class GNX1(QObject):
             self.set_values(type = type, gain = gain, bass_freq = bass_freq, bass_level = bass_level, mid_freq = mid_freq, mid_level = mid_level,
                             treble_freq = treble_freq, treble_level = treble_level, level = level )
             
-            print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
-                type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
+            #print("AMP: Type: {0}, Gain: {1}, Bass Freq: {2}, Bass level: {3}, Mid Freq: {4}, Mid Level: {5}, Treble Freq: {6}, Treble Level: {7}, Level: {8}".format(
+            #    type, gain, bass_freq, bass_level, mid_freq, mid_level, treble_freq, treble_level, level))
             return n
 
         # extract amp values from data string
@@ -1904,6 +1904,20 @@ class GNX1(QObject):
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
 
+    # save amp/cab with patch name
+    def save_ampcab(self, name, targetpatch):
+        #self.setPatchName(name)
+
+        data = [0x01, 0x02, 0x00, 0x03, targetpatch] + [ord(c) for c in name] + [0x00, 0x00]
+        packed = pack_data(data)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
+        self.midicontrol.send_message(msg)
+
+        data = [0x01, 0x02, 0x00, 0x04, targetpatch] + [ord(c) for c in name] + [0x00, 0x00]
+        packed = pack_data(data)
+        msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, [0x2E] + packed)
+        self.midicontrol.send_message(msg)
+
     # send patch name
     def sendcode21message(self, name):
         data = [0x01, 0x02, 0x00] + [ord(c) for c in name] + [0x00, 0x00, 0x08, 0x09, 0x7C]
@@ -1980,7 +1994,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -2264,6 +2278,7 @@ class GNX1(QObject):
             k += 1
 
         #print("AMP/CAB NAMES:", amp_names, cab_names)
+        pass
 
 
 
@@ -2582,6 +2597,53 @@ class GNX1(QObject):
                 buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e)
         pass
+
+    def save_amp_to_gnx(self):
+
+        def accepted():
+            patch = targetCB.currentIndex()
+            bank = 1 # user
+            name = inputName.text().upper()
+            
+            # save patch
+            self.current_patch_bank = bank
+            self.current_patch_number = patch
+            self.save_patch(name, 0x02, 0x00, bank, patch)
+            self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+
+        def rejected():
+            pass
+
+        ui_file_name = "src/ui/saveamptognxdialog.ui"
+        ui_file = QFile(ui_file_name)
+        if not ui_file.open(QIODevice.ReadOnly):
+            e = GNXError(icon = QMessageBox.Alert, title = "Save Amp To GNX Error", \
+                           text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+            return
+
+        loader = QUiLoader()
+        dialog = loader.load(ui_file)
+
+        ui_file.close()
+        targetCB = dialog.findChild(QComboBox, "targetComboBox")
+
+        p = 0
+
+        for  n in self.user_patch_names:
+            targetCB.addItem(f"{(p + 1):02.0f}: {n}", p)                
+            if self.current_patch_number == p:
+                    targetCB.setCurrentIndex(p)
+            p += 1
+
+        inputName = dialog.findChild(QLineEdit, "inputName")
+        inputName.setText(self.current_patch_name)
+
+        dialog.accepted.connect(accepted)
+        dialog.rejected.connect(rejected)
+        dialog.setParent(self.ui, Qt.Dialog)
+        dialog.show()
+
 
     def save_patch_to_gnx(self):
 

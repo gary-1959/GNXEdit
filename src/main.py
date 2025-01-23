@@ -16,6 +16,7 @@ from menu import MenuHandler
 from statusbar import StatusControl
 from treeview import TreeHandler
 
+from customwidgets.searchresults import SearchResults
 from customwidgets.ampface import AmpFace
 from customwidgets.cabface import CabFace
 from customwidgets.compressorface import CompressorFace
@@ -55,6 +56,7 @@ if __name__ == "__main__":
 
         loader = QUiLoader()
 
+        loader.registerCustomWidget(SearchResults)
         loader.registerCustomWidget(AmpFace)
         loader.registerCustomWidget(CabFace)
         loader.registerCustomWidget(CompressorFace)
