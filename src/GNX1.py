@@ -28,9 +28,10 @@ import sqlite3
 import array
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit, QTreeView, QAbstractItemView, QPlainTextEdit
-from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction
+from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit, QTreeView, QAbstractItemView, \
+                QPlainTextEdit, QDialogButtonBox
+from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject, QRegularExpression
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QRegularExpressionValidator
 
 from customwidgets.styledial import StyleDial
 from customwidgets.ampface import AmpFace
@@ -85,6 +86,8 @@ class GNX1(QObject):
     current_patch_number = None
     current_patch_bank = None
     user_patch_names = []
+    amp_names = {}
+    cab_names = {}
 
     device_pickup = None
     device_wah = None
@@ -709,19 +712,6 @@ class GNX1(QObject):
                     case "name":
                         #print("Set amp style by name deprecated")
                         pass    # deprecated
-                        '''
-                        if isinstance(arg, int):
-                            if arg not in factory_amp_names.keys():
-                                arg = 0
-                            arg = .factory_amp_names[arg]
-                            
-                        if arg.upper() not in factory_amp_names.values():
-                            arg = "USER"
-                        
-                        arg = arg.strip()
-                        setattr(self, k, arg.lower())
-                        self.ui_device.setAmpStyle(arg.lower())
-                        '''
 
                     case "type":
                         if arg not in self.ui_device.AMP_STYLES.keys():
@@ -2245,20 +2235,26 @@ class GNX1(QObject):
         ntype = unpacked[1]                     # name type: 0 = basic, 1 = user
         ncount = unpacked[5]                    # number of names in list
 
-        amp_names = {}
-        cab_names = {}
+        self.user_amp_names = {}
+        self.user_cab_names = {}
 
         n = 6
         k = 0
         while k < ncount:
             idx = unpacked[n]
-            name = "".join(map(chr, unpacked[n + 1: n + 7]))
-            amp_names[idx] = name
+
+            n += 1
+            name = ""
+            while unpacked[n] != 0x00:
+                name += chr(unpacked[n])
+                n += 1
+
+            self.user_amp_names[idx] = name
 
             self.device_green_amp.ui_device.set_user_name(idx, name)
             self.device_red_amp.ui_device.set_user_name(idx, name)
 
-            n += 8
+            n += 1
             k += 1
 
         n += 2
@@ -2268,19 +2264,23 @@ class GNX1(QObject):
 
         while k < ncount:
             idx = unpacked[n]
-            name = "".join(map(chr, unpacked[n + 1: n + 7]))
-            cab_names[idx] = name
+
+            n += 1
+            name = ""
+            while unpacked[n] != 0x00:
+                name += chr(unpacked[n])
+                n += 1
+
+            self.user_cab_names[idx] = name
 
             self.device_green_cab.ui_device.set_user_name(idx, name)
             self.device_red_cab.ui_device.set_user_name(idx, name)
 
-            n += 8
+            n += 1
             k += 1
 
         #print("AMP/CAB NAMES:", amp_names, cab_names)
         pass
-
-
 
     # CODE 0A: Device Status
     def decode0A(self, msg):
@@ -2606,13 +2606,33 @@ class GNX1(QObject):
             name = inputName.text().upper()
             
             # save patch
-            self.current_patch_bank = bank
-            self.current_patch_number = patch
-            self.save_patch(name, 0x02, 0x00, bank, patch)
-            self.patchNameChanged.emit(name, self.current_patch_bank, self.current_patch_number)
+            self.save_ampcab(name, patch)
+
+            # update everywhere
+            self.user_amp_names[patch] = name
+            self.user_cab_names[patch] = name
+
+            self.device_green_amp.ui_device.set_user_name(patch, name)
+            self.device_red_amp.ui_device.set_user_name(patch, name)
+            self.device_green_cab.ui_device.set_user_name(patch, name)
+            self.device_red_cab.ui_device.set_user_name(patch, name)
 
         def rejected():
             pass
+
+        def patchChanged():
+            name = targetCB.currentText()
+            inputName.setText(name[4:])
+
+        def textChanged(self):
+            inputName.setText(inputName.text().upper())
+            ok = buttonBox.button(QDialogButtonBox.Ok)
+            if inputName.hasAcceptableInput():
+                inputName.setStyleSheet("background-color: white")
+                ok.setDisabled(False)
+            else:
+                inputName.setStyleSheet("background-color: pink")
+                ok.setDisabled(True)
 
         ui_file_name = "src/ui/saveamptognxdialog.ui"
         ui_file = QFile(ui_file_name)
@@ -2627,17 +2647,33 @@ class GNX1(QObject):
 
         ui_file.close()
         targetCB = dialog.findChild(QComboBox, "targetComboBox")
-
-        p = 0
-
-        for  n in self.user_patch_names:
-            targetCB.addItem(f"{(p + 1):02.0f}: {n}", p)                
-            if self.current_patch_number == p:
-                    targetCB.setCurrentIndex(p)
-            p += 1
+        targetCB.currentIndexChanged.connect(patchChanged)
 
         inputName = dialog.findChild(QLineEdit, "inputName")
-        inputName.setText(self.current_patch_name)
+        rx = QRegularExpression(r".{2, 6}+")
+        validator = QRegularExpressionValidator(rx)
+        inputName.setValidator(validator)
+        inputName.textChanged.connect(textChanged)
+        inputName.setPlaceholderText("Enter 2-6 characters...")
+
+        buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
+
+        for  k, n in self.user_amp_names.items():
+            targetCB.addItem(f"{(k + 1):02.0f}: {n}", k)           
+
+        k += 1
+        nextfree = k
+        while k < 9:
+            targetCB.addItem(f"{(k + 1):02.0f}: EMPTY{(k + 1):0.0f}", k)
+            k += 1
+
+        if nextfree < 9:
+            targetCB.setCurrentIndex(nextfree)
+        else:
+            targetCB.setCurrentIndex(0)
+
+        name = targetCB.currentText()
+        inputName.setText(name[4:])
 
         dialog.accepted.connect(accepted)
         dialog.rejected.connect(rejected)
@@ -2661,6 +2697,16 @@ class GNX1(QObject):
         def rejected():
             pass
 
+        def textChanged(self):
+            inputName.setText(inputName.text().upper())
+            ok = buttonBox.button(QDialogButtonBox.Ok)
+            if inputName.hasAcceptableInput():
+                inputName.setStyleSheet("background-color: white")
+                ok.setDisabled(False)
+            else:
+                inputName.setStyleSheet("background-color: pink")
+                ok.setDisabled(True)
+
         ui_file_name = "src/ui/savepatchtognxdialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
@@ -2674,6 +2720,14 @@ class GNX1(QObject):
 
         ui_file.close()
         targetCB = dialog.findChild(QComboBox, "targetComboBox")
+        inputName = dialog.findChild(QLineEdit, "inputName")
+        inputName.setText(self.current_patch_name)
+        rx = QRegularExpression(r".{2, 6}+")
+        validator = QRegularExpressionValidator(rx)
+        inputName.setValidator(validator)
+        inputName.textChanged.connect(textChanged)
+        inputName.setPlaceholderText("Enter 2-6 characters...")
+        buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
 
         p = 0
         for  n in self.user_patch_names:
@@ -2681,9 +2735,6 @@ class GNX1(QObject):
             if self.current_patch_number == p:
                     targetCB.setCurrentIndex(p)
             p += 1
-
-        inputName = dialog.findChild(QLineEdit, "inputName")
-        inputName.setText(self.current_patch_name)
 
         dialog.accepted.connect(accepted)
         dialog.rejected.connect(rejected)
@@ -2752,6 +2803,16 @@ class GNX1(QObject):
         def rejected():
             pass
 
+        def textChanged(self):
+            inputName.setText(inputName.text().upper())
+            ok = buttonBox.button(QDialogButtonBox.Ok)
+            if inputName.hasAcceptableInput():
+                inputName.setStyleSheet("background-color: white")
+                ok.setDisabled(False)
+            else:
+                inputName.setStyleSheet("background-color: pink")
+                ok.setDisabled(True)
+
         if not self.has_patch():
             e = GNXError(icon = QMessageBox.Critical, title = "Save Patch To Library Error", \
                                                     text = f"No or incomplete patch data.\nResync to GNX1 to acquire data.", \
@@ -2773,6 +2834,14 @@ class GNX1(QObject):
         ui_file.close()
         treeView = dialog.findChild(QTreeView, "treeView")
         inputName = dialog.findChild(QLineEdit, "inputName")
+        rx = QRegularExpression(r".{2, 6}+")
+        validator = QRegularExpressionValidator(rx)
+        inputName.setValidator(validator)
+        inputName.textChanged.connect(textChanged)
+        inputName.setPlaceholderText("Enter 2-6 characters...")
+
+        buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
+        
         inputDescription = dialog.findChild(QPlainTextEdit, "inputDescription")
         inputTags = dialog.findChild(QPlainTextEdit, "inputTags")
 

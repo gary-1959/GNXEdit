@@ -7,7 +7,7 @@ import os
 
 #from .tictactoe.tictactoeplugin import TicTacToePlugin
 #from .widget01plugin import Widget01Plugin
-#from customwidgets.searchresultsplugin import SearchResultsPlugin
+from customwidgets.searchresultsplugin import SearchResultsPlugin
 from customwidgets.styledialplugin import StyleDialPlugin
 from customwidgets.ampfaceplugin import AmpFacePlugin
 from customwidgets.cabfaceplugin import CabFacePlugin
@@ -27,11 +27,11 @@ from PySide6.QtDesigner import QPyDesignerCustomWidgetCollection
 
 # Set PYSIDE_DESIGNER_PLUGINS to point to this directory and load the plugin
 
-if __name__ == '__main__' or True:
+if __name__ == '__main__':
 
     #QPyDesignerCustomWidgetCollection.addCustomWidget(TicTacToePlugin())
     #QPyDesignerCustomWidgetCollection.addCustomWidget(Widget01Plugin())
-    #QPyDesignerCustomWidgetCollection.addCustomWidget(SearchResultsPlugin())
+    QPyDesignerCustomWidgetCollection.addCustomWidget(SearchResultsPlugin())
     QPyDesignerCustomWidgetCollection.addCustomWidget(StyleDialPlugin())
     QPyDesignerCustomWidgetCollection.addCustomWidget(AmpFacePlugin())
     QPyDesignerCustomWidgetCollection.addCustomWidget(CabFacePlugin())

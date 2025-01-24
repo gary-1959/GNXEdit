@@ -686,7 +686,7 @@ QLineEdit#patchSearchText: {
              <number>0</number>
             </property>
             <item>
-             <widget class="SearchResults" name="searchResults" native="true">
+             <widget class="SearchResults" name="searchResults">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -705,7 +705,7 @@ QLineEdit#patchSearchText: {
                 <height>200</height>
                </size>
               </property>
-              <property name="readOnly" stdset="0">
+              <property name="readOnly">
                <bool>true</bool>
               </property>
              </widget>
@@ -795,7 +795,7 @@ QLineEdit#patchSearchText: {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="AmpFace" name="ampGreen" native="true">
+             <widget class="AmpFace" name="ampGreen">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
                 <horstretch>0</horstretch>
@@ -856,7 +856,7 @@ QLineEdit#patchSearchText: {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <widget class="CabFace" name="cabGreen" native="true">
+                <widget class="CabFace" name="cabGreen">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -884,7 +884,7 @@ QLineEdit#patchSearchText: {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <widget class="WarpFace" name="warpFace" native="true">
+                <widget class="WarpFace" name="warpFace">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -915,7 +915,7 @@ QLineEdit#patchSearchText: {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
-                <widget class="CabFace" name="cabRed" native="true">
+                <widget class="CabFace" name="cabRed">
                  <property name="minimumSize">
                   <size>
                    <width>280</width>
@@ -955,7 +955,7 @@ QLineEdit#patchSearchText: {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <widget class="AmpFace" name="ampRed" native="true">
+             <widget class="AmpFace" name="ampRed">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -983,7 +983,7 @@ QLineEdit#patchSearchText: {
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">
             <item>
-             <widget class="PickupFace" name="pickupFace" native="true">
+             <widget class="PickupFace" name="pickupFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -999,7 +999,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="WahFace" name="wahFace" native="true">
+             <widget class="WahFace" name="wahFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1015,7 +1015,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="CompressorFace" name="compressorFace" native="true">
+             <widget class="CompressorFace" name="compressorFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1031,7 +1031,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="WhammyFace" name="whammyFace" native="true">
+             <widget class="WhammyFace" name="whammyFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1050,7 +1050,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="GateFace" name="gateFace" native="true">
+             <widget class="GateFace" name="gateFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1069,7 +1069,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="ModFace" name="modFace" native="true">
+             <widget class="ModFace" name="modFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1088,7 +1088,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="DelayFace" name="delayFace" native="true">
+             <widget class="DelayFace" name="delayFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1104,7 +1104,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="ReverbFace" name="reverbFace" native="true">
+             <widget class="ReverbFace" name="reverbFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1120,7 +1120,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="ExpFace" name="expFace" native="true">
+             <widget class="ExpFace" name="expFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1139,7 +1139,7 @@ QLineEdit#patchSearchText: {
              </widget>
             </item>
             <item>
-             <widget class="LFOFace" name="lfoFace" native="true">
+             <widget class="LFOFace" name="lfoFace">
               <property name="minimumSize">
                <size>
                 <width>1000</width>
@@ -1294,6 +1294,11 @@ QLineEdit#patchSearchText: {
  </widget>
  <customwidgets>
   <customwidget>
+   <class>SearchResults</class>
+   <extends>QTextEdit</extends>
+   <header>searchresults</header>
+  </customwidget>
+  <customwidget>
    <class>AmpFace</class>
    <extends>QWidget</extends>
    <header>ampface</header>
@@ -1357,11 +1362,6 @@ QLineEdit#patchSearchText: {
    <class>LFOFace</class>
    <extends>QWidget</extends>
    <header>lfoface</header>
-  </customwidget>
-  <customwidget>
-   <class>SearchResults</class>
-   <extends>QWidget</extends>
-   <header>searchresults.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

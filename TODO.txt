@@ -11,22 +11,18 @@ GNXEdit Things to do
 13. Context menu headers arre grey not black
 14. Resync to interrupt current sequence
 2. Display description and tags in library
-
+5. Save amps to GNX1 user area
+15. Add validation to name dialogs
+3. Search name, description, tags in library
 -------------------------------------------------------------------------------------
 
-
-3. Search name, description, tags in library
-5. Save amps to GNX1 user area
 6. Save amps to library
+
 11. Check save to library is in sync before saving
-
-
 
 9. Scrollbar colours
 
-
 99. Update help page per above
-
 
 
 Help Page Updates
@@ -34,3 +30,5 @@ Help Page Updates
 
 1. Save to Library only adds to library, does not send to GNX1
 2. Cut, copy & paste in library
+3. Search library
+4. Amp save to gnx and library

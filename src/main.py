@@ -7,7 +7,8 @@ from MIDIControl import MIDIControl
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMessageBox
-from PySide6.QtCore import QFile, QIODevice
+from PySide6.QtCore import QFile, QIODevice, QObject, QEvent, Qt
+from PySide6.QtGui import QKeyEvent
 
 import common
 import settings
@@ -36,14 +37,35 @@ from GNX1 import GNX1
 def showAlert(e):
     clicked = e.alert()
 
+class KeyPressEater(QObject):
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+
+
+    def eventFilter(self, ob, event):
+        if event.type() == QEvent.KeyRelease or event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Tab:
+                f = app.focusWidget()
+                # trap TAB key and issue RETURN on editing tree items
+                if hasattr(f, "isTreeItem"):
+                    event = QKeyEvent(event.type(), Qt.Key_Return, event.modifiers(), "\n", event.isAutoRepeat(), event.count())
+
+                    app.sendEvent(f, event)
+                    return True
+
+        return super().eventFilter(ob, event)
+
 if __name__ == "__main__":
 
     os.environ["QT_LOGGING_RULES"]='*.debug=false;qt.pysideplugin=false'     # stop pyside custom plugin errors
     print(os.getcwd())
     app = QApplication(sys.argv)
+    app.installEventFilter(KeyPressEater(app))
 
     try:
-        common.init()
+        common.init(app)
         settings.appconfig()
         
 

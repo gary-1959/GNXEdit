@@ -18,18 +18,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import settings
-import types
+import common
 import re
 from exceptions import GNXError
 import sqlite3
 from db import gnxDB
 
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, \
+from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, QDialogButtonBox, \
             QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem, QLabel, QWidgetAction, QPushButton, QGroupBox, QTextEdit
 from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer, \
-            QPropertyAnimation, QRect, QSequentialAnimationGroup
+            QPropertyAnimation, QRect, QSequentialAnimationGroup, QEvent
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator, QColor
+
 
 class CustomDelegate(QStyledItemDelegate):
     def __init__(self, parent):
@@ -51,27 +52,29 @@ class CustomDelegate(QStyledItemDelegate):
         # Set data from model to editor
         data = index.data(Qt.UserRole)
         if data["role"] == "patch":
-            rx = QRegularExpression(r".{3, 6}+")
+            rx = QRegularExpression(r".{2, 6}+")
             validator = QRegularExpressionValidator(rx)
             self.editor.setValidator(validator)
             self.editor.setMaxLength(6)
             self.editor.setPlaceholderText(f"2-6 characters")
         else:
-            rx = QRegularExpression(r".{3, 32}")
+            rx = QRegularExpression(r".{2, 32}")
             validator = QRegularExpressionValidator(rx)
             self.editor.setValidator(validator)
             self.editor.setMaxLength(32)
             self.editor.setPlaceholderText(f"2-32 characters")
 
         self.editor.textChanged.connect(self.textChanged)
+        setattr(self.editor, "isTreeItem", True)    # identify for key press eater in main.py
 
         return self.editor
     
     def textChanged(self):
+        self.editor.setText(self.editor.text().upper())
         if self.editor.hasAcceptableInput():
             self.editor.setStyleSheet("background-color: white")
         else:
-            self.editor.setStyleSheet("background-color: palegoldenrod")
+            self.editor.setStyleSheet("background-color: pink")
         
     def setEditorData(self, editor: QWidget, index: QModelIndex):
         
@@ -155,6 +158,7 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
     else:
         w1 = QStandardItem(f"{(patch_num + 1):02.0f}:")
         w2 = QStandardItem(name)
+
         w1.setEnabled(True)
         w1.setEditable(False)
         if w2 != None:
@@ -431,9 +435,18 @@ class TreeHandler(QObject):
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)     
             
-
         def rejected():
             pass
+
+        def textChanged(self):
+            inputName.setText(inputName.text().upper())
+            ok = buttonBox.button(QDialogButtonBox.Ok)
+            if inputName.hasAcceptableInput():
+                inputName.setStyleSheet("background-color: white")
+                ok.setDisabled(False)
+            else:
+                inputName.setStyleSheet("background-color: pink")
+                ok.setDisabled(True)
 
         ui_file_name = "src/ui/editlibrarypatchdialog.ui"
         ui_file = QFile(ui_file_name)
@@ -448,6 +461,14 @@ class TreeHandler(QObject):
 
         ui_file.close()
         inputName = dialog.findChild(QLineEdit, "inputName")
+        rx = QRegularExpression(r".{2, 6}+")
+        validator = QRegularExpressionValidator(rx)
+        inputName.setValidator(validator)
+        inputName.textChanged.connect(textChanged)
+        inputName.setPlaceholderText("Enter 2-6 characters...")
+
+        buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
+
         inputDescription = dialog.findChild(QPlainTextEdit, "inputDescription")
         inputTags = dialog.findChild(QPlainTextEdit, "inputTags")
 
