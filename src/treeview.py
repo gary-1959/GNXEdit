@@ -178,6 +178,26 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
     model.layoutChanged
     return w1, w2
 
+def add_amp_to_tree(tree = None, model = None, parent = None, type = "", bank = None, patch_num = None,
+                               patch_id = None, name = "", description = "", tags = "" ):
+    if type == "library":
+        w1 = QStandardItem(name)
+        w1.setForeground(Qt.yellow)
+        w1.setEnabled(True)
+        w1.setEditable(True)   # library patch name is editable
+        data = {"role": "amp", "type": "library", "bank": None, "patch": patch_id, "name": name,
+                    "description": description, "tags": tags}
+        w1.setData(data, Qt.UserRole)
+        parent.appendRow([w1])
+        ctx = model.indexFromItem(w1)
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
+        tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
+        tree.setExpanded(model.indexFromItem(parent), True)
+        w2 = None
+
+    model.layoutChanged
+    return w1, w2
+
 class TreeHandler(QObject):
 
     gnxAlert = Signal(GNXError)
@@ -290,10 +310,13 @@ class TreeHandler(QObject):
             db.conn.row_factory = sqlite3.Row
             cur = db.conn.cursor()
             cur.execute("SELECT c.parent AS cat_parent, c.id as cat_id, c.name as cat_name, \
-		                    p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags, \
+		                    p.type AS patch_type, p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags, \
                             c2.id AS parent_id \
 	                        FROM categories AS c \
-	                        LEFT JOIN patches AS p ON p.category = c.id \
+	                        LEFT JOIN \
+	                        	(SELECT 'patch' AS type, id, name, description, tags, category FROM patches \
+	                        		UNION SELECT 'amp' AS type, id, name, description, tags, category FROM amps) \
+	                        AS p ON p.category = c.id \
                             LEFT JOIN categories AS c2 on c.parent = c2.id \
                             WHERE cat_parent IS NOT NULL \
                             ORDER by cat_parent, cat_id, patch_name ASC")
@@ -312,8 +335,12 @@ class TreeHandler(QObject):
                         last_cat = c["cat_id"]
 
                 if c["patch_id"] != None:
-                    add_patch_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
-                        patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])
+                    if c["patch_type"] == "patch":
+                        add_patch_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
+                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])
+                    else:
+                        add_amp_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
+                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])                        
 
             db.conn.close()
 
@@ -364,6 +391,17 @@ class TreeHandler(QObject):
                            {"text": "Delete", "connect": self.deletePatch}
                 ]
 
+            elif d1 != None and d1["role"] == "amp" and d1["type"] == "library":
+                title = "AMP/CAB"
+                actions = [{"text": "Edit", "connect": self.editPatch},
+                           {"text": "Send Amp/Cab to GNX", "connect": self.sendPatch},
+                           {"text": "---", "connect": None},
+                           {"text": "Cut", "connect": self.cutBranch},
+                           {"text": "Copy", "connect": self.copyBranch},
+                           {"text": "---", "connect": None},
+                           {"text": "Delete", "connect": self.deletePatch}
+                ]
+
             if actions != None:
                 cm = QMenu(self.tree)
                 cm.setProperty("cssClass", "context-menu")
@@ -397,12 +435,15 @@ class TreeHandler(QObject):
     def sendPatch(self):
         sender = self.sender()
         data = sender.data()
-        self.gnx.send_to_device(data["patch"])
+        self.gnx.send_to_device(data)
 
     @Slot()
     def editPatch(self):
         sender = self.sender()
         data = sender.data()
+
+        type = data["role"] 
+        titleType = type.title()
 
         def accepted():
 
@@ -416,7 +457,10 @@ class TreeHandler(QObject):
                     return
 
                 cur = db.conn.cursor()
-                cur.execute("UPDATE patches SET name = ?, description = ?, tags = ? WHERE id = ?", [name, description, tags, data["patch"]])
+                if type == "patch":
+                    cur.execute("UPDATE patches SET name = ?, description = ?, tags = ? WHERE id = ?", [name, description, tags, data["patch"]])
+                else:
+                    cur.execute("UPDATE amps SET name = ?, description = ?, tags = ? WHERE id = ?", [name, description, tags, data["patch"]])
                 db.conn.commit()
                 db.conn.close()
 
@@ -430,8 +474,8 @@ class TreeHandler(QObject):
                 self.setDescriptionAndTags(data)
 
             except Exception as e:
-                e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Error", \
-                                                        text = f"Unable to update patch in database\n{e}", \
+                e = GNXError(icon = QMessageBox.Critical, title = f"Edit {titleType} Error", \
+                                                        text = f"Unable to update {type} in database\n{e}", \
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)     
             
@@ -451,7 +495,7 @@ class TreeHandler(QObject):
         ui_file_name = "src/ui/editlibrarypatchdialog.ui"
         ui_file = QFile(ui_file_name)
         if not ui_file.open(QIODevice.ReadOnly):
-            e = GNXError(icon = QMessageBox.Alert, title = "Edit Patch Error", \
+            e = GNXError(icon = QMessageBox.Alert, title = f"Edit {titleType} Error", \
                         text = f"Cannot open {ui_file_name}: {ui_file.errorString()}", buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e)
             return
@@ -485,9 +529,11 @@ class TreeHandler(QObject):
     def deletePatch(self):
         sender = self.sender()
         data = sender.data()
+        type = data["role"]
+        typeTitle = type.title()
 
-        result = QMessageBox.question(self.window, "Delete Patch", 
-                                      "This will permanently delete this patch.\nAre you sure you want to continue?", 
+        result = QMessageBox.question(self.window, f"Delete {typeTitle}", 
+                                      f"This will permanently delete this {type}.\nAre you sure you want to continue?", 
                                       QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
         if result == QMessageBox.Yes:
             try:
@@ -497,7 +543,10 @@ class TreeHandler(QObject):
             
                 cur = db.conn.cursor()
 
-                cur.execute("DELETE FROM patches WHERE id = ?", [data["patch"]])
+                if type == "patch":
+                    cur.execute("DELETE FROM patches WHERE id = ?", [data["patch"]])
+                else:
+                    cur.execute("DELETE FROM amps WHERE id = ?", [data["patch"]])
                 db.conn.commit()
 
                 # remove from tree
@@ -506,8 +555,8 @@ class TreeHandler(QObject):
                 self.model.removeRow(patch.index().row(), patch.index().parent())
 
             except Exception as e:
-                e = GNXError(icon = QMessageBox.Critical, title = "Delete Patch Error", \
-                                                        text = f"Unable to delete patch from database.\n{e}", \
+                e = GNXError(icon = QMessageBox.Critical, title = f"Delete {typeTitle} Error", \
+                                                        text = f"Unable to delete {type} from database.\n{e}", \
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)     
             db.conn.close() 
@@ -635,12 +684,34 @@ class TreeHandler(QObject):
                 row = [dict(row) for row in rc]
                 branch.append({"type": "patch", "mode": mode, "data": row[0]})
                 db.conn.close()
+
             except Exception as e:
                 e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
                                                         text = f"Unable to retrieve patch data from database\n{e}", \
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)
                 return
+            
+        elif data1["role"] == "amp":
+            try:
+                db = gnxDB()
+                if db.conn == None:
+                    return
+                db.conn.row_factory = sqlite3.Row
+                cur = db.conn.cursor()
+                cur.execute("SELECT * FROM amps WHERE id = ?", [data1["patch"]])
+                rc = cur.fetchall()
+                row = [dict(row) for row in rc]
+                branch.append({"type": "amp", "mode": mode, "data": row[0]})
+                db.conn.close()
+
+            except Exception as e:
+                e = GNXError(icon = QMessageBox.Critical, title = "Clipboard Error", \
+                                                        text = f"Unable to retrieve amp data from database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+                return
+            
         elif data1["role"] == "header":
             try:
                 db = gnxDB()
@@ -670,6 +741,13 @@ class TreeHandler(QObject):
     def pasteBranch(self):
         sender = self.sender()  # target
         data = sender.data()
+
+        if self.clipBoard == None or len(self.clipBoard) == 0:
+            e = GNXError(icon = QMessageBox.Warning, title = "Paste Error", \
+                    text = f"Clipboard is empty.", \
+                    buttons = QMessageBox.Ok)
+            self.gnxAlert.emit(e)
+            return
 
         # as categories are added, parent links need to be remapped.
         # create source/target stack starting with paste target which is unchanged
@@ -736,6 +814,50 @@ class TreeHandler(QObject):
                     self.gnxAlert.emit(e)     
                 db.conn.close()
 
+            elif clip["type"] == "amp":
+                clipdata = clip["data"]
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+
+                    # remap parent
+                    if clipdata["category"] not in parents:
+                        newparent = data["category"]
+                    else:
+                        newparent = parents[clipdata["category"]]
+                    
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO amps (category, name, description, tags, C3C06, C3D07, C3C08, C3D09) \
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+                                [newparent, clipdata["name"], clipdata["description"], clipdata["tags"],
+                                clipdata["C3C06"], clipdata["C3D07"], clipdata["C3C08"], clipdata["C3D09"]])
+                    db.conn.commit()
+
+                    # add to tree
+                    pcat = findByData(self.libHeader, {"role": "header", "type": "library", "category": newparent})
+                    id = cur.lastrowid
+                    add_amp_to_tree(tree = self.tree, model = self.model, parent = pcat, type="library", patch_id = id,
+                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"])
+                    
+                    if clip["mode"] == "cut":
+                        cur.execute("DELETE FROM amps WHERE id = ?", [clipdata["id"]])
+                        db.conn.commit()
+
+                        # remove from tree
+                        dpatch = {"role": "amp", "type": "library", "bank": None, "patch": clipdata["id"]}
+                        patch = findByData(self.libHeader, dpatch)
+                        if patch != None:   # already deleted, multiple pastes
+                            self.model.removeRow(patch.index().row(), patch.index().parent())        
+            
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Paste Patch Error", \
+                                                            text = f"Unable to add patch to database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+
+
             elif clip["type"] == "category":
                 clipdata = clip["data"]
 
@@ -784,7 +906,7 @@ class TreeHandler(QObject):
         data = sender.data()
 
         result = QMessageBox.question(self.window, "Delete Category", 
-                                      "This will permanently delete this category and its contents.\nAre you sure you want to continue?", 
+                                      f"This will permanently delete this category and its contents.\nAre you sure you want to continue?", 
                                       QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
         if result == QMessageBox.Yes:
             try:
@@ -838,11 +960,16 @@ class TreeHandler(QObject):
         self.gnx.patch_added_to_library.connect(self.patchAdded)
 
     @Slot()
-    def patchAdded(self, category, id, name, description, tags):          
+    def patchAdded(self, type, category, id, name, description, tags):          
         data = {"role": "header", "type": "library", "category": category} # look for parent category
         pcat = findByData(self.libHeader, data)
-        add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
-                            name = name, description = description, tags = tags)
+        if type == "patch":
+            add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
+                                name = name, description = description, tags = tags)
+        elif type == "amp":
+            add_amp_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
+                                name = name, description = description, tags = tags)            
+    
     @Slot()
     def itemChanged(self):
         pass
@@ -924,7 +1051,7 @@ class TreeHandler(QObject):
                 return
 
             data = x.data(Qt.UserRole)
-            if data["role"] == "patch":
+            if data["role"] == "patch" or data["role"] == "amp" :
                 bank = data["bank"]
                 patch = data["patch"]
                 if not self.blockPatchChange:
@@ -947,7 +1074,7 @@ class TreeHandler(QObject):
     def setDescriptionAndTags(self, data):
 
         # set description and tags panels
-        if data["role"] == "patch":
+        if data["role"] == "patch" or data["role"] == "amp":
             if  data["type"] == "library":
                 self.patchDescription.setPlainText(data["description"])
                 self.patchTags.setPlainText(data["tags"])
@@ -973,6 +1100,8 @@ class TreeHandler(QObject):
     def patchUpdateButtonClicked(self):
         sender = self.sender()
         data = getattr(sender, "patchData")
+        type = data["role"]
+        titleType = type.title()
 
         description =  self.patchDescription.toPlainText()
         tags =  self.patchTags.toPlainText()
@@ -983,7 +1112,10 @@ class TreeHandler(QObject):
                 return
 
             cur = db.conn.cursor()
-            cur.execute("UPDATE patches SET description = ?, tags = ? WHERE id = ?", [description, tags, data["patch"]])
+            if type == "patch":
+                cur.execute("UPDATE patches SET description = ?, tags = ? WHERE id = ?", [description, tags, data["patch"]])
+            else:
+                cur.execute("UPDATE amps SET description = ?, tags = ? WHERE id = ?", [description, tags, data["patch"]])
             db.conn.commit()
             db.conn.close()
 
@@ -995,8 +1127,8 @@ class TreeHandler(QObject):
             self.setDescriptionAndTags(data)
 
         except Exception as e:
-            e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Error", \
-                                                    text = f"Unable to update patch in database\n{e}", \
+            e = GNXError(icon = QMessageBox.Critical, title = f"Edit {titleType} Error", \
+                                                    text = f"Unable to update {type} in database\n{e}", \
                                                     buttons = QMessageBox.Ok)
             self.gnxAlert.emit(e)     
 

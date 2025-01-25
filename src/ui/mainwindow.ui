@@ -1211,6 +1211,7 @@ QLineEdit#patchSearchText: {
     <addaction name="actionResync"/>
     <addaction name="separator"/>
     <addaction name="actionSaveAmp"/>
+    <addaction name="actionSaveAmpToLibrary"/>
     <addaction name="separator"/>
     <addaction name="actionSavePatch"/>
     <addaction name="actionSavePatchToLibrary"/>
@@ -1289,6 +1290,11 @@ QLineEdit#patchSearchText: {
   <action name="actionSaveAmp">
    <property name="text">
     <string>Save Amp to User Amps</string>
+   </property>
+  </action>
+  <action name="actionSaveAmpToLibrary">
+   <property name="text">
+    <string>Save Amp to Library</string>
    </property>
   </action>
  </widget>

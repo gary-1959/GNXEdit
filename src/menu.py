@@ -42,7 +42,8 @@ class MenuHandler():
                 case "actionQuit":
                     a.triggered.connect(self.window.close)
                 case _:
-                    print(f"Unrecognised FILE menu option {n}")
+                    if not a.isSeparator():
+                         print(f"Unrecognised FILE menu option {n}")
             pass
 
         # MIDI menu       
@@ -53,7 +54,8 @@ class MenuHandler():
                 case "actionMIDIInterface":
                     a.triggered.connect(self.midicontrol.openMIDIDialog)
                 case _:
-                    print(f"Unrecognised MIDI menu option {n}")
+                    if not a.isSeparator():
+                        print(f"Unrecognised MIDI menu option {n}")
             pass
 
         # help menu       
@@ -66,7 +68,8 @@ class MenuHandler():
                 case "actionHelp":
                     a.triggered.connect(self.help)
                 case _:
-                    print(f"Unrecognised HELP menu option {n}")
+                    if not a.isSeparator():
+                        print(f"Unrecognised HELP menu option {n}")
             pass
 
         if gnx != None:
@@ -94,14 +97,23 @@ class MenuHandler():
                     a.triggered.connect(self.gnx.midi_resync)
                 case "actionSaveAmp":
                     a.triggered.connect(self.gnx.save_amp_to_gnx)
+                case "actionSaveAmpToLibrary":
+                    a.triggered.connect(self.saveAmpToLibrary)
                 case "actionSavePatch":
                     a.triggered.connect(self.gnx.save_patch_to_gnx)
                 case "actionSavePatchToLibrary":
-                    a.triggered.connect(self.gnx.save_patch_to_library)
+                    a.triggered.connect(self.savePatchToLibrary)
                 case _:
-                    print(f"Unrecognised menu option {n}")
+                    if not a.isSeparator():
+                        print(f"Unrecognised Device menu option {n}")
 
             pass
+
+    def savePatchToLibrary(self):
+        self.gnx.save_patch_to_library("patch")
+    
+    def saveAmpToLibrary(self):
+        self.gnx.save_patch_to_library("amp")
 
     def deviceMenuAboutToShow(self):
         device_menu = self.menubar.findChild(QMenu, "menuDevice")
