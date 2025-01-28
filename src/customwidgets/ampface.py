@@ -56,7 +56,7 @@ class AmpFace(QWidget):
         23 : {"name": "User 7",         "size": 60, "spacing": 104, "x": 103, "y": 31, "img": "user",   "start":45, "end": 315, "rotate": 180, "ds": 2, "color": QColor(0x88, 0x88, 0x88),  "ticks": True,  "marks": None},
         24 : {"name": "User 8",         "size": 60, "spacing": 104, "x": 103, "y": 31, "img": "user",   "start":45, "end": 315, "rotate": 180, "ds": 2, "color": QColor(0x88, 0x88, 0x88),  "ticks": True,  "marks": None},
         25 : {"name": "User 9",         "size": 60, "spacing": 104, "x": 103, "y": 31, "img": "user",   "start":45, "end": 315, "rotate": 180, "ds": 2, "color": QColor(0x88, 0x88, 0x88),  "ticks": True,  "marks": None },
-        26 : {"name": "Custom",         "size": 60, "spacing": 104, "x": 103, "y": 31, "img": "user",   "start":45, "end": 315, "rotate": 180, "ds": 2, "color": QColor(0x88, 0x88, 0x88),  "ticks": True,  "marks": None }
+        26 : {"name": "Custom",         "size": 60, "spacing": 104, "x": 103, "y": 31, "img": "user",   "start":45, "end": 315, "rotate": 180, "ds": 2, "color": QColor(0x00, 0x00, 0x00),  "ticks": True,  "marks": None }
     }   
 
     POTS = {
@@ -229,6 +229,19 @@ class AmpFace(QWidget):
         
         # Show the context menu at the position of the mouse click
         context_menu.exec_(event.globalPos())
+
+    # return object of amp settings
+    def getAmpSettings(self):
+        return {"type": self.ampStyle, 
+                "gain": self.pot_gain.value(), 
+                "bass_freq": self.pot_bass_freq.value(), 
+                "bass_level": self.pot_bass_level.value(),
+                "mid_freq": self.pot_mid_freq.value(), 
+                "mid_level": self.pot_mid_level.value(),
+                "treble_freq": self.pot_treble_freq.value(), 
+                "treble_level": self.pot_treble_level.value(),
+                "level": self.pot_level.value()
+        }
 
     # properties for QT Creator plugin
 

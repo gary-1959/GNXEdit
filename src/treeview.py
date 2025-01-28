@@ -51,7 +51,7 @@ class CustomDelegate(QStyledItemDelegate):
         self.editor = QLineEdit(parent)
         # Set data from model to editor
         data = index.data(Qt.UserRole)
-        if data["role"] == "patch":
+        if data["role"] == "patch" or data["role"] == "amp":
             rx = QRegularExpression(r".{2, 6}+")
             validator = QRegularExpressionValidator(rx)
             self.editor.setValidator(validator)
@@ -309,7 +309,13 @@ class TreeHandler(QObject):
                 return
             db.conn.row_factory = sqlite3.Row
             cur = db.conn.cursor()
-            cur.execute("SELECT c.parent AS cat_parent, c.id as cat_id, c.name as cat_name, \
+            cur.execute("SELECT NULL AS cat_parent, 0 AS cat_id, 'LIBRARY' AS cat_name, \
+		                    p.type AS patch_type, p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags, \
+                            0 AS parent_id FROM \
+	                        	(SELECT 'patch' AS type, id, name, description, tags, category FROM patches WHERE category = 0 \
+	                        		UNION SELECT 'amp' AS type, id, name, description, tags, category FROM amps WHERE category = 0) AS p \
+                        UNION \
+                        SELECT c.parent AS cat_parent, c.id AS cat_id, c.name AS cat_name, \
 		                    p.type AS patch_type, p.id AS patch_id, p.name AS patch_name, p.description AS patch_description, p.tags AS patch_tags, \
                             c2.id AS parent_id \
 	                        FROM categories AS c \
@@ -323,8 +329,8 @@ class TreeHandler(QObject):
             rc = cur.fetchall()
             crows = [dict(row) for row in rc]
 
-            last_cat = None
-            cat = None
+            last_cat = 0
+            cat = self.libHeader
 
             for c in crows:
                 if last_cat != c["cat_id"]:
@@ -935,6 +941,12 @@ class TreeHandler(QObject):
                                 (SELECT p.id AS id FROM patches AS p \
                                     LEFT JOIN categories AS c ON p.category = c.id \
                                     WHERE c.id IS NULL)")
+                
+                # delete all orphan amps
+                cur.execute("DELETE FROM amps WHERE id IN \
+                                (SELECT p.id AS id FROM amps AS p \
+                                    LEFT JOIN categories AS c ON p.category = c.id \
+                                    WHERE c.id IS NULL)")
                 db.conn.commit()
 
                 # remove from tree
@@ -1017,6 +1029,28 @@ class TreeHandler(QObject):
                 data["name"] = text
                 w1.setData(data, Qt.UserRole)
 
+            elif data["role"] == "amp" and data["type"] == "library":
+                if len(text) > 6:
+                    text = text[0:6]
+                try:
+                    db = gnxDB()
+                    if db.conn == None:
+                        return
+                    db.conn.row_factory = sqlite3.Row
+                    cur = db.conn.cursor()
+                    cur.execute("UPDATE amps SET name=? WHERE id = ?", [text, data["patch"]])
+                    db.conn.commit()
+                except Exception as e:
+                    e = GNXError(icon = QMessageBox.Critical, title = "Rename Amp/Cab Error", \
+                                                            text = f"Unable to rename amp/cab in database\n{e}", \
+                                                            buttons = QMessageBox.Ok)
+                    self.gnxAlert.emit(e)     
+                db.conn.close()
+
+                w1 = self.model.itemFromIndex(topleft)
+                data["name"] = text
+                w1.setData(data, Qt.UserRole)
+                
             elif data["role"] == "header" and data["type"] == "library":
                 try:
                     db = gnxDB()

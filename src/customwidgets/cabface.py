@@ -200,6 +200,12 @@ class CabFace(QWidget):
         # Show the context menu at the position of the mouse click
         context_menu.exec_(event.globalPos())
 
+    # return object of cab settings
+    def getCabSettings(self):
+        return {"type": self.cabStyle, 
+                "tuning": self.pot_tuning.value()
+        }
+
     # properties for QT Creator plugin
 
     cabStyle = Property(int, cabStyle, setCabStyle)

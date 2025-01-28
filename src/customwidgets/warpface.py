@@ -222,3 +222,12 @@ class WarpFace(QWidget):
     def contextMenuEvent(self, event):
         # Create the context menu
         pass
+    
+    # return object settings
+    def getWarpSettings(self):
+        return {"type": self._type, 
+                "amp_select": self._amp_select, 
+                "amp_warp": self._amp_warp, 
+                "cab_warp": self._cab_warp, 
+                "warpD": self._warpD
+                }

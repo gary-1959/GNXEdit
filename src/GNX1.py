@@ -26,11 +26,12 @@ from exceptions import GNXError
 from db import gnxDB
 import sqlite3
 import array
+import json
 
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QTabWidget, QWidget, QMessageBox, QComboBox, QLineEdit, QTreeView, QAbstractItemView, \
                 QPlainTextEdit, QDialogButtonBox
-from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject, QRegularExpression
+from PySide6.QtCore import Qt, QFile, QIODevice, QCoreApplication, QDir, Slot, Signal, QObject, QRegularExpression, QTime, QEventLoop
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QRegularExpressionValidator
 
 from customwidgets.styledial import StyleDial
@@ -607,8 +608,9 @@ class GNX1(QObject):
         def warp_changed(self, parameter, value):
             self.parent.send_parameter_change(section = 5, parameter = parameter, value = value)
 
-        # from GNX1
-        def set_values(self, **kwargs):
+        # from GNX1 and when sending amp to GNX1 (sendToGNX)
+        parameter_names = ["type", "amp_select", "amp_warp", "cab_warp", "warpD"]
+        def set_values(self, sendToGNX = False, **kwargs):
             for k, arg in kwargs.items():
                 match k:
                     case "type":
@@ -617,6 +619,9 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.setWarpFactor(type = arg)
+                            if sendToGNX:   # not implemented - crashes GNX1!!!
+                                #self.warp_changed(self.parameter_names.index(k), arg)
+                                pass
 
                     case "amp_select":
                         if arg < 0 or arg > 2:
@@ -624,6 +629,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)    
                         else:
                             self.ui_device.setWarpFactor(amp_select = arg)
+                            if sendToGNX:
+                                self.warp_changed(self.parameter_names.index(k), arg)
 
                     case "amp_warp":
                         if arg < 0 or arg > 99:
@@ -631,13 +638,17 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.setWarpFactor(amp_warp = arg)
+                            if sendToGNX:
+                                self.warp_changed(self.parameter_names.index(k), arg)
 
                     case "cab_warp":
                         if arg < 0 or arg > 99:
                             e = GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Error in Cab Warp ({arg})", buttons = QMessageBox.Ok)
                             self.parent.gnxAlert.emit(e)
                         else:
-                            self.ui_device.setWarpFactor(cab_warp = arg)         
+                            self.ui_device.setWarpFactor(cab_warp = arg)
+                            if sendToGNX:
+                                self.warp_changed(self.parameter_names.index(k), arg)         
 
                     case "warpD":
                         if arg < 0 or arg > 99:
@@ -645,6 +656,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:  
                             self.ui_device.setWarpFactor(warpD = arg)
+                            if sendToGNX:
+                                self.warp_changed(self.parameter_names.index(k), arg)
 
         # extract values from GNX1 data string and return next position
         def get_values(self, n, unpacked):
@@ -661,7 +674,7 @@ class GNX1(QObject):
             return n
         
         # individual parameter change from GNX1
-        parameter_names = ["type", "amp_select", "amp_warp", "cab_warp", "warpD"]
+
         def parameter_change(self, parameter, value):
             # parameter is an index
             name = self.parameter_names[parameter]
@@ -700,8 +713,8 @@ class GNX1(QObject):
 
             self.ampPotChanged.emit(self.section, parameter, pot, name)
 
-        # from GNX1
-        def set_values(self, **kwargs):
+        # from GNX1 and when sending amp to GNX1 (sendToGNX)
+        def set_values(self, sendToGNX = False, **kwargs):
 
             for k, arg in kwargs.items():
 
@@ -719,6 +732,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.setAmpStyle(arg)
+                            if sendToGNX:
+                                self.amp_style_changed(arg)
 
                     case "gain":
                         if arg < 0 or arg > 99:
@@ -726,6 +741,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_gain.setValue(arg)
+                            if sendToGNX:
+                                self.pot_gain_changed(arg)
                         
                     case "bass_freq":
                         if arg < 0 or arg > 250:
@@ -733,6 +750,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_bass_freq.setValue(arg)
+                            if sendToGNX:
+                                self.pot_bass_freq_changed(arg)
 
                     case "bass_level":
                         if arg < 0 or arg > 99:
@@ -740,6 +759,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_bass_level.setValue(arg)
+                            if sendToGNX:
+                                self.pot_bass_level_changed(arg)
 
                     case "mid_freq":
                         if arg < 0 or arg > 4700:
@@ -747,6 +768,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_mid_freq.setValue(arg)
+                            if sendToGNX:
+                                self.pot_mid_freq_changed(arg)
 
                     case "mid_level":
                         if arg < 0 or arg > 99:
@@ -754,6 +777,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_mid_level.setValue(arg)
+                            if sendToGNX:
+                                self.pot_mid_level_changed(arg)
 
                     case "treble_freq":
                         if arg < 0 or arg > 7500:
@@ -761,6 +786,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_treble_freq.setValue(arg)
+                            if sendToGNX:
+                                self.pot_treble_freq_changed(arg)
 
                     case "treble_level":
                         if arg < 0 or arg > 99:
@@ -768,6 +795,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_treble_level.setValue(arg)
+                            if sendToGNX:
+                                self.pot_treble_level_changed(arg)
 
                     case "level":
                         if arg < 0 or arg > 99:
@@ -775,6 +804,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_level.setValue(arg)
+                            if sendToGNX:
+                                self.pot_level_changed(arg)
 
                     case "_":
                         e = GNXError(icon = QMessageBox.Warning, title = "Parameter Error", text = f"Unrecognised amp parameter ({arg})", buttons = QMessageBox.Ok)
@@ -888,8 +919,8 @@ class GNX1(QObject):
             self.ui_device.cabStyleChanged.connect(self.cab_style_changed)
             self.ui_device.pot_tuning.valueChanged.connect(self.pot_tuning_changed)
        
-        # from GNX1
-        def set_values(self, **kwargs):
+        # from GNX1 and when sending amp to GNX1 (sendToGNX)
+        def set_values(self, sendToGNX = False, **kwargs):
             for k, arg in kwargs.items():
 
                 if arg == None:
@@ -902,6 +933,8 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.setCabStyle(arg)
+                            if sendToGNX:
+                                self.cab_style_changed(arg)
 
                     case "tuning":
                         if arg < 0 or arg > 48:
@@ -909,6 +942,9 @@ class GNX1(QObject):
                             self.parent.gnxAlert.emit(e)
                         else:
                             self.ui_device.pot_tuning.setValue(arg)
+                            if sendToGNX:
+                                self.pot_tuning_changed(arg)
+
 
         # extract values from GNX1 data string and return next position
         def get_values(self, n, unpacked):
@@ -1811,6 +1847,10 @@ class GNX1(QObject):
         msg = build_sysex(common.GNXEDIT_CONFIG["midi"]["channel"], self.mnfr_id, self.device_id, command + data)
         #print("Sending Message:", msg)
         self.midicontrol.send_message(msg)
+        dieTime= QTime.currentTime().addMSecs(50)
+        while QTime.currentTime() < dieTime:
+            QCoreApplication.processEvents(QEventLoop.AllEvents, 100)
+
         pass
 
     def setPatchName(self, name):
@@ -1984,7 +2024,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -2580,7 +2620,7 @@ class GNX1(QObject):
         elif compare_array(unpacked, [0x01, 0x2A, 0x00]):
             self.upload_control()
 
-        elif compare_array(unpacked, [0x01, 0x2C, 0x00]):
+        elif compare_array(unpacked, [0x01, 0x2C, 0x00]):       # parameter changed
             pass
 
         elif compare_array(unpacked, [0x01, 0x2D, 0x00]):
@@ -2759,7 +2799,6 @@ class GNX1(QObject):
                 self.sync_control()
 
         def callback(oldmode, mode):
-            print("Callback save_patch_to_library")
             # if true, it's another job
             self.commsModeChanged.disconnect(callback)
             if oldmode == common.COMMS_MODE_SYNC and mode == common.COMMS_MODE_NONE:    # sync has finished
@@ -2780,9 +2819,22 @@ class GNX1(QObject):
                         return
 
                     cur = db.conn.cursor()
-                    cur.execute("INSERT INTO amps (category, name, description, tags, C3C06, C3D07, C3C08, C3D09) \
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-                                    [category, name, description, tags, data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
+                    if type == "patch":
+                        cur.execute("INSERT INTO patches (category, name, description, tags, C24, C26, C28, C3C06, C3D07, C3C08, C3D09) \
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                    [category, name, description, tags, data["24"], data["26"],
+                                    data["28"], data["3C06"], data["3D07"], data["3C08"], data["3D09"]])
+                    else:
+
+                        green_amp = json.dumps(self.device_green_amp.ui_device.getAmpSettings())
+                        green_cab = json.dumps(self.device_green_cab.ui_device.getCabSettings())
+                        red_amp = json.dumps(self.device_red_amp.ui_device.getAmpSettings())
+                        red_cab = json.dumps(self.device_red_cab.ui_device.getCabSettings())
+                        warp = json.dumps(self.device_warp.ui_device.getWarpSettings())
+
+                        cur.execute("INSERT INTO amps (category, name, description, tags, green_amp, green_cab, red_amp, red_cab, warp) \
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                                    [category, name, description, tags, green_amp, green_cab, red_amp, red_cab, warp])
                     db.conn.commit()
                 except Exception as e:
                     e = GNXError(icon = QMessageBox.Critical, title = f"Save {titleType} To Library Error", \
@@ -2843,7 +2895,7 @@ class GNX1(QObject):
         model = QStandardItemModel(0, 2)
         rootNode = model.invisibleRootItem()
         libHeader = QStandardItem("LIBRARY")
-        libHeader.setEnabled(False)
+        libHeader.setEnabled(True)
         libHeader.setData({"role": "header", "type": "library", "category": 0}, Qt.UserRole)
         rootNode.appendRow(libHeader)
         treeView.setModel(model)
@@ -2976,37 +3028,50 @@ class GNX1(QObject):
             rc = cur.fetchall()
             row = [dict(row) for row in rc]
             if len(row) == 0:
-                raise
+                e = GNXError(icon = QMessageBox.Critical, title = "Send to Device Error", \
+                                                        text = f"No {type} data with id {id} in database\n{e}", \
+                                                        buttons = QMessageBox.Ok)
+                self.gnxAlert.emit(e)
+                return
             
             data = row[0]
+
             if type == "patch":
                 msg0 = self.blob2msg(data["C24"]) 
                 self.code24data = msg0
 
-            msg1 = self.blob2msg(data["C3C06"])
-            self.code2Adata["3C06"] = msg1
-            msg2 = self.blob2msg(data["C3D07"])
-            self.code2Adata["3D07"] = msg2
-            msg3 = self.blob2msg(data["C3C08"])
-            self.code2Adata["3C08"] = msg3
-            msg4 = self.blob2msg(data["C3D09"])
-            self.code2Adata["3D09"] = msg4
+                msg1 = self.blob2msg(data["C3C06"])
+                self.code2Adata["3C06"] = msg1
+                msg2 = self.blob2msg(data["C3D07"])
+                self.code2Adata["3D07"] = msg2
+                msg3 = self.blob2msg(data["C3C08"])
+                self.code2Adata["3C08"] = msg3
+                msg4 = self.blob2msg(data["C3D09"])
+                self.code2Adata["3D09"] = msg4
 
-            if type == "patch":
                 msg5 = self.blob2msg(data["C26"]) if type == "patch" else None
                 self.code26data = msg5
                 msg6 = self.blob2msg(data["C28"]) if type == "patch" else None
                 self.code28data = msg6
 
-            self.setCommsMode(common.COMMS_MODE_UPLOADING)
-            if type == "patch":
+                self.setCommsMode(common.COMMS_MODE_UPLOADING)
+
                 self.setCommsPhase(1)
                 # send patch name to buffer
                 self.sendcode21message(data["name"])    # acknowledgement will trigger next blocks
-            else:
-                self.setCommsPhase(21)
-                self.upload_control()
+            else:   # amp 
 
+                green_amp = json.loads(data["green_amp"])
+                self.device_green_amp.set_values(sendToGNX = True, **green_amp)
+                green_cab = json.loads(data["green_cab"])
+                self.device_green_cab.set_values(sendToGNX = True, **green_cab)
+                red_amp = json.loads(data["red_amp"])
+                self.device_red_amp.set_values(sendToGNX = True, **red_amp)
+                red_cab = json.loads(data["red_cab"])
+                self.device_red_cab.set_values(sendToGNX = True, **red_cab)
+                warp = json.loads(data["warp"])
+                self.device_warp.set_values(sendToGNX = True, **warp)
+                
             db.conn.close()
 
         except Exception as e:
@@ -3053,24 +3118,6 @@ class GNX1(QObject):
                 case 8:
                     self.setCommsMode(common.COMMS_MODE_NONE)  # finished
                     self.sendcode22message()
-                    self.midi_resync()
-
-                # amp upload
-
-                case 21:
-                    self.setCommsPhase(self.commsPhase + 1)
-                    self.midicontrol.send_message(self.code2Adata["3C06"])
-                case 22:
-                    self.setCommsPhase(self.commsPhase + 1)
-                    self.midicontrol.send_message(self.code2Adata["3D07"])
-                case 23:
-                    self.setCommsPhase(self.commsPhase + 1)
-                    self.midicontrol.send_message(self.code2Adata["3C08"])
-                case 24:
-                    self.setCommsPhase(self.commsPhase + 1)
-                    self.midicontrol.send_message(self.code2Adata["3D09"])
-                case 25:
-                    self.setCommsMode(common.COMMS_MODE_NONE)  # finished
                     self.midi_resync()
 
     # synching state machine

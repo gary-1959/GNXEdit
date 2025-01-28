@@ -1,10 +1,6 @@
 GNXEdit Things to do
 ====================
 
-6. Save amps to library title wrong, name is filled with patch name
-7. restore amp not quite working - goes to Custom
-
-9. Scrollbar colours
 
 99. Update help page per above
 
