@@ -48,7 +48,7 @@
       <item>
        <widget class="QLineEdit" name="inputName">
         <property name="maxLength">
-         <number>30</number>
+         <number>32</number>
         </property>
        </widget>
       </item>

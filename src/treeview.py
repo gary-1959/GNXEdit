@@ -31,10 +31,10 @@ from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIn
             QPropertyAnimation, QRect, QSequentialAnimationGroup, QEvent
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator, QColor
 
-
 class CustomDelegate(QStyledItemDelegate):
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, tree, treehandler):
+        super().__init__(tree)
+        self.treehandler = treehandler
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex):
         # Custom painting of items
@@ -51,18 +51,27 @@ class CustomDelegate(QStyledItemDelegate):
         self.editor = QLineEdit(parent)
         # Set data from model to editor
         data = index.data(Qt.UserRole)
-        if data["role"] == "patch" or data["role"] == "amp":
-            rx = QRegularExpression(r".{2, 6}+")
-            validator = QRegularExpressionValidator(rx)
-            self.editor.setValidator(validator)
-            self.editor.setMaxLength(6)
-            self.editor.setPlaceholderText(f"2-6 characters")
-        else:
-            rx = QRegularExpression(r".{2, 32}")
-            validator = QRegularExpressionValidator(rx)
-            self.editor.setValidator(validator)
+
+        # only applies to items in main treeview (not in dialog)
+        if self.treehandler and self.treehandler.current_patch_number != data["patch"] or self.treehandler.current_patch_bank != 1:
+            e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Name Error", \
+                                                    text = "You are trying to edit the name of a patch which has not been selected on the GNX device.\n" \
+                                                            "Right-Click to select the patch to edit it's name.\n",
+                                                    buttons = QMessageBox.Ok)
+            e.alert()  
+            return None
+
+        if data["type"] == "library":
+            rx = QRegularExpression(r".{2, 32}+")
             self.editor.setMaxLength(32)
             self.editor.setPlaceholderText(f"2-32 characters")
+        else:
+            rx = QRegularExpression(r".{2, 6}+")
+            self.editor.setMaxLength(6)
+            self.editor.setPlaceholderText(f"2-6 characters")
+
+        validator = QRegularExpressionValidator(rx)
+        self.editor.setValidator(validator)
 
         self.editor.textChanged.connect(self.textChanged)
         setattr(self.editor, "isTreeItem", True)    # identify for key press eater in main.py
@@ -79,6 +88,7 @@ class CustomDelegate(QStyledItemDelegate):
     def setEditorData(self, editor: QWidget, index: QModelIndex):
         
         value = index.data(Qt.EditRole) or index.data(Qt.DisplayRole)
+
         if isinstance(editor, QLineEdit):
             editor.setText(value)
 
@@ -119,7 +129,7 @@ def findByData(parent, data):
         return None
     return None
 
-def add_category_to_tree(tree, model, parent, cid, name, enabled):
+def add_category_to_tree(tree, model, parent, cid, name, enabled, handler = None):
     # add to tree
     if parent != None:     
         cat = QStandardItem(name)
@@ -130,7 +140,7 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
         
         parent.appendRow(cat)
         ctx = model.indexFromItem(cat)
-        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree, handler))
         tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
         tree.setExpanded(model.indexFromItem(parent), True)
         model.layoutChanged
@@ -139,7 +149,7 @@ def add_category_to_tree(tree, model, parent, cid, name, enabled):
         return None
 
 def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank = None, patch_num = None,
-                               patch_id = None, name = "", description = "", tags = "" ):
+                               patch_id = None, name = "", description = "", tags = "", handler = None):
     if type == "library":
         w1 = QStandardItem(name)
         w1.setForeground(Qt.green)
@@ -150,7 +160,7 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w1.setData(data, Qt.UserRole)
         parent.appendRow([w1])
         ctx = model.indexFromItem(w1)
-        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree, handler))
         tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
         tree.setExpanded(model.indexFromItem(parent), True)
         w2 = None
@@ -173,13 +183,13 @@ def add_patch_to_tree(tree = None, model = None, parent = None, type = "", bank 
         w2.setData(data, Qt.UserRole)
         parent.appendRow([w1, w2])
         ctx = model.indexFromItem(w2)
-        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree, handler))
 
     model.layoutChanged
     return w1, w2
 
 def add_amp_to_tree(tree = None, model = None, parent = None, type = "", bank = None, patch_num = None,
-                               patch_id = None, name = "", description = "", tags = "" ):
+                               patch_id = None, name = "", description = "", tags = "", handler = None ):
     if type == "library":
         w1 = QStandardItem(name)
         w1.setForeground(Qt.yellow)
@@ -190,7 +200,7 @@ def add_amp_to_tree(tree = None, model = None, parent = None, type = "", bank = 
         w1.setData(data, Qt.UserRole)
         parent.appendRow([w1])
         ctx = model.indexFromItem(w1)
-        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree))
+        tree.setItemDelegateForRow(ctx.row(), CustomDelegate(tree, handler))
         tree.setFirstColumnSpanned(ctx.row(), model.indexFromItem(parent), True)
         tree.setExpanded(model.indexFromItem(parent), True)
         w2 = None
@@ -201,6 +211,9 @@ def add_amp_to_tree(tree = None, model = None, parent = None, type = "", bank = 
 class TreeHandler(QObject):
 
     gnxAlert = Signal(GNXError)
+    current_patch_name = None
+    current_patch_bank = None
+    current_patch_number = None
 
     def __init__(self, window = None, gnx = None):
         super().__init__()
@@ -208,9 +221,7 @@ class TreeHandler(QObject):
         self.window = window
         self.gnx = gnx
         self.blockPatchChange = False
-        self.current_patch_name = None
-        self.current_patch_bank = None
-        self.current_patch_number = None
+
         self.clipBoard = None
 
         self.tree = self.window.findChild(QTreeView, "treeView")
@@ -343,10 +354,12 @@ class TreeHandler(QObject):
                 if c["patch_id"] != None:
                     if c["patch_type"] == "patch":
                         add_patch_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
-                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])
+                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"],
+                            handler = self)
                     else:
                         add_amp_to_tree(tree = self.tree, model = self.model, parent = cat, type = "library", 
-                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"])                        
+                            patch_id = c["patch_id"], name = c["patch_name"], description = c["patch_description"], tags = c["patch_tags"],
+                            handler = self)                        
 
             db.conn.close()
 
@@ -385,6 +398,11 @@ class TreeHandler(QObject):
                             {"text": "---", "connect": None},
                             {"text": "Delete", "connect": self.deleteCategory}
                     ]
+
+            elif d1 != None and d1["role"] == "patch" and (d1["type"] == "user" or d1["type"] == "factory"):
+                title = "PATCH"
+                actions = [{"text": "Select on GNX", "connect": self.sendPatchChange},
+                ]
 
             elif d1 != None and d1["role"] == "patch" and d1["type"] == "library":
                 title = "PATCH"
@@ -442,6 +460,18 @@ class TreeHandler(QObject):
         sender = self.sender()
         data = sender.data()
         self.gnx.send_to_device(data)
+
+    @Slot()
+    def sendPatchChange(self):
+        sender = self.sender()
+        data = sender.data()
+
+        result = QMessageBox.warning(self.window, f"Send Patch Change to Device", 
+                                "WARNING: This will OVERWRITE your current patch in the edit buffer. "
+                                "Are you sure you want to continue?", 
+                                QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
+        if result == QMessageBox.Yes:
+            self.gnx.send_patch_change(0 if data["type"] == "factory" else 1, data["patch"])
 
     @Slot()
     def editPatch(self):
@@ -511,11 +541,11 @@ class TreeHandler(QObject):
 
         ui_file.close()
         inputName = dialog.findChild(QLineEdit, "inputName")
-        rx = QRegularExpression(r".{2, 6}+")
+        rx = QRegularExpression(r".{2, 32}+")
         validator = QRegularExpressionValidator(rx)
         inputName.setValidator(validator)
         inputName.textChanged.connect(textChanged)
-        inputName.setPlaceholderText("Enter 2-6 characters...")
+        inputName.setPlaceholderText("Enter 2-32 characters...")
 
         buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
 
@@ -801,7 +831,8 @@ class TreeHandler(QObject):
                     pcat = findByData(self.libHeader, {"role": "header", "type": "library", "category": newparent})
                     id = cur.lastrowid
                     add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type="library", patch_id = id,
-                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"])
+                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"],
+                                    handler = self)
                     
                     if clip["mode"] == "cut":
                         cur.execute("DELETE FROM patches WHERE id = ?", [clipdata["id"]])
@@ -844,7 +875,8 @@ class TreeHandler(QObject):
                     pcat = findByData(self.libHeader, {"role": "header", "type": "library", "category": newparent})
                     id = cur.lastrowid
                     add_amp_to_tree(tree = self.tree, model = self.model, parent = pcat, type="library", patch_id = id,
-                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"])
+                                    name = clipdata["name"], description = clipdata["description"], tags = clipdata["tags"],
+                                    handler = self)
                     
                     if clip["mode"] == "cut":
                         cur.execute("DELETE FROM amps WHERE id = ?", [clipdata["id"]])
@@ -977,10 +1009,12 @@ class TreeHandler(QObject):
         pcat = findByData(self.libHeader, data)
         if type == "patch":
             add_patch_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
-                                name = name, description = description, tags = tags)
+                                name = name, description = description, tags = tags,
+                                handler = self)
         elif type == "amp":
             add_amp_to_tree(tree = self.tree, model = self.model, parent = pcat, type = "library", patch_id = id,
-                                name = name, description = description, tags = tags)            
+                                name = name, description = description, tags = tags,
+                                handler = self)            
     
     @Slot()
     def itemChanged(self):
@@ -995,7 +1029,7 @@ class TreeHandler(QObject):
 
                 if len(text) > 6:
                     text = text[0:6]
-            
+
                 bank = data["bank"]
                 patch = data["patch"]
 
@@ -1008,8 +1042,7 @@ class TreeHandler(QObject):
                 self.gnx.save_patch(text, bank, patch, bank, patch)
 
             elif data["role"] == "patch" and data["type"] == "library":
-                if len(text) > 6:
-                    text = text[0:6]
+
                 try:
                     db = gnxDB()
                     if db.conn == None:
@@ -1030,8 +1063,7 @@ class TreeHandler(QObject):
                 w1.setData(data, Qt.UserRole)
 
             elif data["role"] == "amp" and data["type"] == "library":
-                if len(text) > 6:
-                    text = text[0:6]
+
                 try:
                     db = gnxDB()
                     if db.conn == None:
@@ -1090,7 +1122,7 @@ class TreeHandler(QObject):
                 patch = data["patch"]
                 if not self.blockPatchChange:
                     if data["type"] == "factory" or data["type"] == "user":
-                        self.gnx.send_patch_change(bank, patch)
+                        #self.gnx.send_patch_change(bank, patch) #right-click to send patch
                         if self.patchDetailsGroupBox.height() > 0:
                             self.patchDetailsAnimationHide.start()
                     else:
@@ -1225,7 +1257,8 @@ class TreeHandler(QObject):
         k = 0
         for n in names:
             add_patch_to_tree(tree = self.tree, model = self.model, parent = h, type = "factory" if bank == 0 else "user",
-                               bank = bank, patch_num = k, name = n, description = None, tags = None)
+                               bank = bank, patch_num = k, name = n, description = None, tags = None,
+                               handler = self)
 
             k += 1
 

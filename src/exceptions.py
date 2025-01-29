@@ -19,6 +19,7 @@
 # 
 
 from PySide6.QtWidgets import QMessageBox
+import common
 
 class GNXError(Exception):
     def __init__(self, icon = QMessageBox.NoIcon, title = "GNX Edit Error", text = "An undefine error has occurred", buttons = None, clicked = None):
@@ -31,6 +32,8 @@ class GNXError(Exception):
         self.icon = icon
 
     def alert(self, parent = None):
+
+        parent = common.APP_WINDOW if parent == None else parent
         match self.icon:
             case QMessageBox.NoIcon:
                 f = QMessageBox.information

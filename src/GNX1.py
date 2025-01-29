@@ -2024,7 +2024,7 @@ class GNX1(QObject):
 
                 elif msg[0] == 0xF0:      # system exclusive
                     #print("Message ({:d}): {:d} bytes received".format(received_count, len(sbytes)) )
-                    print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
+                    #print("MNFR ID: {:02X} DEVICE ID: {:02X} COMMAND: {:02X}".format(msg[3], msg[5], msg[6]) )
 
                     if compare_array(msg[1:4], self.mnfr_id):             # mnfr code matches
                         if msg[4] == 0x7E:                  # non-realtime
@@ -2720,7 +2720,6 @@ class GNX1(QObject):
         dialog.setParent(self.ui, Qt.Dialog)
         dialog.show()
 
-
     def save_patch_to_gnx(self):
 
         def accepted():
@@ -2880,11 +2879,11 @@ class GNX1(QObject):
         ui_file.close()
         treeView = dialog.findChild(QTreeView, "treeView")
         inputName = dialog.findChild(QLineEdit, "inputName")
-        rx = QRegularExpression(r".{2, 6}+")
+        rx = QRegularExpression(r".{2, 32}+")
         validator = QRegularExpressionValidator(rx)
         inputName.setValidator(validator)
         inputName.textChanged.connect(textChanged)
-        inputName.setPlaceholderText("Enter 2-6 characters...")
+        inputName.setPlaceholderText("Enter 2-32 characters...")
 
         buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
         
@@ -3009,7 +3008,8 @@ class GNX1(QObject):
         titleType = type.title()
 
         result = QMessageBox.warning(self.ui, f"Send {titleType} to Device", 
-                                      "WARNING: This will OVERWRITE your current patch\nAre you sure you want to continue?", 
+                                      "WARNING: This will OVERWRITE your current patch in the edit buffer. "
+                                      "Are you sure you want to continue?", 
                                       QMessageBox.Cancel | QMessageBox.Yes, QMessageBox.Cancel)
         if result != QMessageBox.Yes:
             return
@@ -3029,7 +3029,7 @@ class GNX1(QObject):
             row = [dict(row) for row in rc]
             if len(row) == 0:
                 e = GNXError(icon = QMessageBox.Critical, title = "Send to Device Error", \
-                                                        text = f"No {type} data with id {id} in database\n{e}", \
+                                                        text = f"No {type} data with id {id} in database\n", \
                                                         buttons = QMessageBox.Ok)
                 self.gnxAlert.emit(e)
                 return
@@ -3058,7 +3058,9 @@ class GNX1(QObject):
 
                 self.setCommsPhase(1)
                 # send patch name to buffer
-                self.sendcode21message(data["name"])    # acknowledgement will trigger next blocks
+                #self.sendcode21message(data["name"])    # acknowledgement will trigger next blocks
+                self.sendcode21message(self.current_patch_name) 
+
             else:   # amp 
 
                 green_amp = json.loads(data["green_amp"])

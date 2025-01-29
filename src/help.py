@@ -27,19 +27,51 @@ import webbrowser
 from PySide6.QtWidgets import QMessageBox, QMainWindow
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
+hinclude = range(3, 10)     # include h3 to h9
+toc_count = 0
+tocs = {}
+
+def tocfunc(match):
+    global toc_count
+    g0 = match.group(0)
+    g1 = match.group(1)
+    g2 = match.group(2)
+    if int(g1) in hinclude:
+        a = f"<a name=\"a{toc_count}\"><h{g1}>{g2}</h{g1}></a>"
+        tocs[toc_count] = {"text": g2, "depth": g1, "href": f"a{toc_count}"}
+        toc_count += 1
+    else:
+        a = g0
+    return a
+
+
 def get_help():
 
     subs = ["APP_TITLE", "APP_VERSION", "APP_LICENSE", "APP_LICENSE_LINK", "APP_COPYRIGHT", 
-            "APP_VERSION_TEXT", "APP_GITHUB_LINK", "APP_SUBTITLE", "APP_DOC_PATH"]
+            "APP_VERSION_TEXT", "APP_GITHUB_LINK", "APP_SUBTITLE", "APP_DOC_PATH", "TOC"]
 
     try:
         path = os.path.join(os.path.dirname(__file__), "help.html")
         f = open(path, "r")
         help = f.read()
         f.close()
+
+        # build toc based on <h*> tags
+        regex = r"<h(\d)>(.+)<.+>"
+        help = re.sub(regex, tocfunc, help, 0, re.MULTILINE | re.IGNORECASE)
+        pass
+
+
+        TOC = "<ul class='toc'>\n"
+        for k, t in tocs.items():
+            TOC += f"<li><a href='#{t["href"]}'>{t["text"]}</a></li>\n"
+
+        TOC += "</ul>"
+        
         # substitute {globals}
         for s in subs:
-            help = help.replace("{" + s + "}", getattr(common, s))
+            help = help.replace("{" + s + "}", getattr(common, s) if hasattr(common, s) else eval(s))
+
 
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../tmp/", "help.html"))
         f = open(path, "w")
@@ -47,7 +79,6 @@ def get_help():
         f.close()
 
         webbrowser.open(f"file://{path}", new=1, autoraise = True)
-
 
     except Exception as e:
         e = GNXError(icon = QMessageBox.Critical, title = "Help File Error", \

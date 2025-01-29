@@ -1,14 +1,12 @@
 GNXEdit Things to do
 ====================
 
-
+1. UNION on search patches and amps
 99. Update help page per above
 
 
 Help Page Updates
 =================
 
-1. Save to Library only adds to library, does not send to GNX1
 2. Cut, copy & paste in library
 3. Search library
-4. Amp save to gnx and library
