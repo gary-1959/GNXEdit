@@ -1,9 +1,8 @@
 GNXEdit Things to do
 ====================
 
-1. UNION on search patches and amps
-99. Update help page per above
-
+1. enter on search should do search
+2. padding on tree entries
 
 Help Page Updates
 =================

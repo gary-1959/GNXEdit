@@ -1100,7 +1100,8 @@ class TreeHandler(QObject):
                 db.conn.close()
 
                 data["name"] = text
-                topleft.setData(data, Qt.UserRole)
+                w1 = self.model.itemFromIndex(topleft)
+                w1.setData(data, Qt.UserRole)
 
     @Slot()
     def midiPatchChange(self, parameter):
@@ -1319,7 +1320,12 @@ class TreeHandler(QObject):
                 cur.execute("SELECT id, category, name FROM patches WHERE \
                                     name LIKE ? OR \
                                     description LIKE ? OR \
-                                    tags LIKE ?", [wc, wc, wc])
+                                    tags LIKE ? \
+                             UNION \
+                             SELECT id, category, name FROM amps WHERE \
+                                    name LIKE ? OR \
+                                    description LIKE ? OR \
+                                    tags LIKE ?", [wc, wc, wc, wc, wc, wc])
                 rc = cur.fetchall()
                 prows = [dict(row) for row in rc]
                 

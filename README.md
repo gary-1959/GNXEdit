@@ -9,28 +9,36 @@ Application Help File
 
 **TABLE OF CONTENTS**
 
-*   [Information](#information)
-*   [Introduction](#introduction)
-*   [System Exclusive](#system_exclusive)
-*   [Installation](#installation)
-    *   [Windows](#installation_windows)
-    *   [Linux (Ubuntu)](#installation_linux)
-*   [Getting Started](#getting_started)
-*   [Status Indication](#status_indication)
-    *   [Current Patch](#status_indication_current_patch)
-    *   [Connected Indicator](#status_indication_connected_indicator)
-    *   [MIDI Channel](#status_indication_midi_channel)
-    *   [Watchdog](#status_indication_watchdog)
-    *   [Resync](#status_indication_resync)
-    *   [Uploading](#status_indication_uploading)
-*   [Library Functions](#library_functions)
-    *   [GNX Patch Selection](#library_functions_gnx_patch_selection)
-    *   [Creating Library Categories](#library_functions_creating_library_categories)
-    *   [Saving Patches To Library Categories](saving_patches_to_library_categories)
-    *   [Saving Patches To GNX1](#library_functions_saving_patches_to_gnx1)
-*   [Resync](#resync)
-*   [GNXEdit Rack Image](#gnxedit_rack_image) 
-    
+*   [Information](#a0)
+*   [Introduction](#a1)
+*   [System Exclusive](#a2)
+*   [Installation](#a3)
+*   [Windows](#a4)
+*   [Linux (Ubuntu)](#a5)
+*   [Getting Started](#a6)
+*   [Status Indication](#a7)
+*   [Current Patch](#a8)
+*   [Connected Indicator](#a9)
+*   [MIDI Channel](#a10)
+*   [Watchdog](#a11)
+*   [Resync](#a12)
+*   [Uploading](#a13)
+*   [Library Functions](#a14)
+*   [GNX Patch Section](#a15)
+*   [Creating Library Categories](#a16)
+*   [Saving Patches To Library Categories](#a17)
+*   [Saving Amp/Cab Configurations To Library Categories](#a18)
+*   [Saving Patches To GNX1](#a19)
+*   [Saving Amp/Cab Patches To GNX1](#a20)
+*   [Transferring Patches To GNX1 From The Library](#a21)
+*   [Changing Patch and Category Names](#a22)
+*   [Library Cut, Copy, Paste and Delete](#a23)
+*   [Search Library](#a24)
+*   [Editing Amps and Cabs](#a25)
+*   [Warping Amp And Cabinet Models](#a26)
+*   [Editing Effects](#a27)
+*   [Resync](#a28)
+*   [GNXEdit Rack Image](#a29)
 
 ### Information
 
@@ -54,9 +62,9 @@ Application Help File
 > 
 > The functionality of the program is similar to the DigiTech GENEdit program for Windows, but includes enhanced library functionality and is cross-platform (Windows and Linux).
 > 
-> The program is written in Python and leverages the QT GUI framework. It iscompletely open source and freely available at [https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit).
+> The program is written in Python and leverages the QT GUI framework. It is completely open source and freely available at [https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit).
 > 
-> A detailed description of the operation of the Digitech GNX1 is beyond the scope of this HELP page, but a good understanding of how it works is essential for gaining maximum benefit from GNXEdit. A copy of the user manual is available by [clicking here](file://C:\Users\garyb\Projects\GNXEdit\documents/digitech-gnx1-user-manual.pdf).
+> A detailed description of the operation of the DigiTech GNX1 is beyond the scope of this HELP page, but a good understanding of how it works is essential for gaining maximum benefit from GNXEdit. A copy of the user manual is available by [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf).
 
 ### System Exclusive
 
@@ -64,7 +72,7 @@ Application Help File
 
 > There was no information available from DigiTech detailing the System Exclusive commands, so to write the program the System Exclusive protocol had to be reverse engineered by snooping on communications between the GENEdit program and a GNX1 device. This work has been documented separately and is available in another GitHub repository: [https://github.com/gary-1959/Digitech-GNX1-System-Exclusive](https://github.com/gary-1959/Digitech-GNX1-System-Exclusive).
 > 
-> There are gaps in this knowledge and any contribution to filling these gaps (or errors) will be most gratefully received and incorporated imto the document.
+> There are gaps in this knowledge and any contribution to filling these gaps (or errors) will be most gratefully received and incorporated into the document.
 
 ### Installation
 
@@ -77,13 +85,13 @@ Application Help File
 >     If not, download the repository from [https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip](https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip) and unzip (extract) it into a location of your choice. This folder can be located anywhere in your system.
 > 3.  Open a command terminal and cd into this folder. You should see a folder named "src".
 > 4.  Python works best when applications are run in their own dedicated environment. A Python environment is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: `python -m venv .venv` Select the version 13.2 (or later) Python interpreter if prompted.
-> 5.  Activate the Python environment with the following command (note the dot before venv):`.venv\Scripts\activate`You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.
+> 5.  Activate the Python environment with the following command (note the dot before venv): `.venv\Scripts\activate` You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.
 > 6.  Install the dependant libraries with the command `pip install -r src\requirements.txt`
 > 7.  Check the program runs with the command: `src\main.py`
 > 8.  To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon. To create a desktop icon:
 >     1.  Open File Explorer and navigate to the GNXEdit src folder. Right-click on the file named _**GNXEdit.bat**_ and select_**  
 >         Send to > Desktop (create shortcut)**_.
->     2.  Close File Explorer then right-click on the newly created desktop icon.and select **_Properties._**  
+>     2.  Close File Explorer then right-click on the newly created desktop icon and select **_Properties._**  
 >         Click _**Change Icon...**_ followed by _**OK**_ .
 >     3.  Click the _**Browse..**_ option in the dialog that opens then navigate to the GNXEdit src folder where you will find a GNXEdit.ico file. Select this file, click _**OK**_ (then _**OK**_ again), to exit the Properties dialog. The desktop icon will now be set.
 > 9.  This completes the Windows installation. The most convenient way to update the program to new versions is through the GitHub Desktop program, or download the zip file from the repository then extract and overwrite the program files. Your library data and configuration is stored in your home folder and will be preserved.
@@ -91,17 +99,17 @@ Application Help File
 > 
 > #### Linux (Ubuntu)
 > 
-> 1.  Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g: `sudo apt install python`
+> 1.  Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g.: `sudo apt install python`
 > 2.  If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository [at https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit).  
 >     If not, download the repository from [https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip](https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip) and unzip (extract) it into a location of your choice. This folder can be located anywhere in your system.
 > 3.  Open a command terminal and cd into this folder. You should see a folder named "src".
 > 4.  Python works best when applications are run in their own dedicated environment. A Python environment is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: `python3 -m venv .venv` Select the version 13.2 (or later) Python interpreter if prompted.
-> 5.  Activate the Python environment with the following command (note the dot before venv):`source .venv/bin/activate`You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.
+> 5.  Activate the Python environment with the following command (note the dot before venv): `source .venv/bin/activate` You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.
 > 6.  Install the dependant libraries with the command `pip install -r src/requirements.txt`
 > 7.  Check the program runs with the command: `python src/main.py`
 > 8.  Deactivate the environment with the command `deactivate`
 > 9.  To run the program from the command line in its correct environment:`cd <path to your GNXEdit folder>; .venv/bin/python src/main.py`
-> 10.  It is far easier to launch the program from a desktop icon. A prototype desktop icon (for Ubuntu/Gnome Desktop systems) is available in the GNXEdit src folder called GNXEdit.desktop. Copy this file to your desktop and edit with the text editor of your choice and insert the correct paths in the lines hightlighted in the file, and save it.
+> 10.  It is far easier to launch the program from a desktop icon. A prototype desktop icon (for Ubuntu/Gnome Desktop systems) is available in the GNXEdit src folder called GNXEdit.desktop. Copy this file to your desktop and edit with the text editor of your choice and insert the correct paths in the lines highlighted in the file, and save it.
 > 11.  On the desktop, right-click on the file icon and click _**Allow Launching**_.
 > 12.  Right-click the icon again, select _**Properties**_ then click _**Executable as Program**_ on.
 > 13.  The icon should change to the GNXEdit icon. If not, check the path names are correct.
@@ -112,7 +120,7 @@ Application Help File
 
 [Back to Top](#toc)
 
-> Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this HELP page but is well covered in the User Manual. A copy of the user manual is available by [clicking here](file://C:\Users\garyb\Projects\GNXEdit\documents/digitech-gnx1-user-manual.pdf).
+> Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this HELP page but is well covered in the User Manual. A copy of the user manual is available by [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf).
 > 
 > Getting started with GNXEdit involves connecting the GNX1 device to your computer via MIDI, then setting GNXEdit to use the same MIDI ports.
 > 
@@ -136,7 +144,7 @@ Application Help File
 > 
 > ##### Connected Indicator
 > 
-> A green disc indicates that GNXEdit is connected to a GNX1 device. A red disc indicates no nonnection
+> A green disc indicates that GNXEdit is connected to a GNX1 device. A red disc indicates no connection
 > 
 > ##### MIDI Channel
 > 
@@ -144,11 +152,11 @@ Application Help File
 > 
 > ##### Watchdog
 > 
-> GNXEdit has an internal watchdog which repeatedly checks the connection status. This will be grayed out during normal operation. If the GNX1 device becomes disconnected, the watchdog will "bite", turning th WATCHDOG legend red, and GNXEdit will initiate a rerconnection protocol.
+> GNXEdit has an internal watchdog which repeatedly checks the connection status. This will be grayed out during normal operation. If the GNX1 device becomes disconnected, the watchdog will "bite", turning the WATCHDOG legend red, and GNXEdit will initiate a reconnection protocol.
 > 
 > ##### Resync
 > 
-> The status bar RESYNC indicator is normally grayed out, but will turn green when a GNXEdit is trying to synchronise withyour GNX1.
+> The status bar RESYNC indicator is normally grayed out, but will turn green when a GNXEdit is trying to synchronise with your GNX1.
 > 
 > ##### Uploading
 > 
@@ -158,38 +166,108 @@ Application Help File
 
 [Back to Top](#toc)
 
-> The GNXEdit left-hand panel is an expandable tree which displays all the patches available in the GNX1 device user and factory banks and custom patches which arer held in a database.
+> The GNXEdit left-hand panel is an expandable tree which displays all the patches available in the GNX1 device User and Factory banks, and custom patches which are held in a database.
 > 
 > Patches can be organised into separate folders and sub-folders (categories). Patches can be transferred on an individual basis between the library and your GNX1 device.
 > 
 > ##### GNX Patch Section
 > 
-> To expand the GNX section click on the adjacent arrow in the library pane. To view the factory or usr patches click their adjacent arrow. Patches are selected by simply clicking the patch name, which will automatically change the patch on your GNX1 device.
-> 
-> **CAUTION**: this will erase any edits you may have made to the previously selected patch in your GNX1, so be sure to save any edits.
+> To expand the GNX section click on the adjacent arrow in the library pane. To view the Factory or User patches click their adjacent arrow. Patches are selected by simply right-clicking the patch name, then clicking _**Select on GNX**_. This action will erase any edits you may have made to the previously selected patch in your GNX1, so be sure to save any edits first. Select _**OK**_ in warning dialog if it's OK to continue
 > 
 > ##### Creating Library Categories
 > 
-> To create your first library category right-click the LIBRARY header in the left hand pane. Select _**Add Category**_ from the menu and enter a name for the category in the dialog box. Click _**OK**_. This will add your category to the library root level. Further categories can be created at the same level, or sub-categories can be added to those you have created to create a tree structure. Category names can be any length.
+> To create your first library category right-click the LIBRARY header in the left hand pane. Select _**Add Category**_ from the menu and enter a name for the category in the dialog box. Click _**OK**_. This will add your category to the library root level. Further categories can be created at the same level, or sub-categories can be added to those you have created to create a tree structure. Category names can be any length (from 2 to 32 characters).
 > 
 > ##### Saving Patches To Library Categories
 > 
-> Once you have ceated a new patch which you would like to add to your library select _**Device>Save Patch to Library**_ from the GNXEdit main menu. In the dialog select the location from the library tree where you want to save your patch. You can enter a new name and add a description or tags. Click on _**OK**_ to save the patch. Note that names are limited to 6 characters.
+> Once you have created a new patch which you would like to add to your library select _**Device>Save Patch to Library**_ from the GNXEdit main menu. In the dialog select the location from the library tree where you want to save your patch. You can enter a new name and add a description or tags. Click on _**OK**_ to save the patch. Note that library names are not limited to 6 characters, which allows more descriptive name.
 > 
-> **CAUTION**: this will save the patch with the new name in the GNX1 location you were editing.
+> This does not automatically save the patch to the GNX1 (see below)
+> 
+> ##### Saving Amp/Cab Configurations To Library Categories
+> 
+> If you have an amplifier and cabinet combination in a patch that you particularly like you can store it in the Library and add it into other patches. Both red and green amplifier and cabinet configurations are saved, together with the amp selection and warp settings. Select _**Device>Save Amp to Library**_ from the GNXEdit main menu. In the dialog select the location from the library tree where you want to save your patch. You can enter a new name and add a description or tags. Click on _**OK**_ to save the patch. Note that library names are not limited to 6 characters, which allows more descriptive name.
+> 
+> This does not automatically save the amp configuration in the current GNX1 patch. To save the entire patch (amp and effects) to the GNX1 see below.
 > 
 > ##### Saving Patches To GNX1
 > 
-> When you are happy with your new patch you can save it into any one of the GNX1 user memory locations (1 - 48) by selecting _**Device>Save Patch**_ to User Bank from the GNXEdit main menu. Select the patch location in the dialog, and change the name if you want to. Names are limited to 6 characters. Click on _**OK**_ to confirm.
+> When you are happy with your new patch you can save it into any one of the GNX1 user memory locations (1 - 48) by selecting _**Device>Save Patch to User Bank**_ from the GNXEdit main menu. Select the patch location in the dialog, and change the name if you want to. Names are limited to 6 characters. Click on _**OK**_ to confirm.
 > 
 > **CAUTION**: this will overwrite the patch in the location you selected.
+> 
+> ##### Saving Amp/Cab Patches To GNX1
+> 
+> When you are happy with your new amp/cabinet setup you can save it into any one of 9 User amp locations in the GNX1 _**Device>Save Amp to User Amps**_ from the GNXEdit main menu. Select the patch location in the dialog, and change the name if you want to. Names are limited to 6 characters. Click on _**OK**_ to confirm.
+> 
+> After saving this way your User amp will also appear in the list of amplifier models available by right-clicking the green or red amplifier graphic in GNXEdit.
+> 
+> **CAUTION**: this will overwrite the patch in the location you selected.
+> 
+> ##### Transferring Patches To GNX1 From The Library
+> 
+> To transfer a patch from the Library right-click it in the Library and select _**Send Patch to GNX**_ or _**Send Amp/Cab to GNX**_ as applicable. A warning about overwriting the existing buffer will pop up because this action will replace the contents of the GNX1 edit buffer. To save permanently in a User Bank location in the GNX1 select _**Device>Save Patch to GNX**_ from the menu, change the patch name if required and select the target location.
+> 
+> This means that patches and amp/cab configurations can be reviewed prior to saving without losing any of the GNX1 User patches
+> 
+> ##### Changing Patch and Category Names
+> 
+> To change a patch name in the tree double-click it. Factory patch names can not be changed. User patch names can only be edited if the patch is selected on the GNX1 device.
+> 
+> When Library patches or amps are selected in the tree a pop-up window allows the description and tags to be edited. Click _**Update**_ to save the changes.
+> 
+> Alternatively, right-click on the patch or category and select _**Edit**_. This also allows patch or amp descriptions and tags to be altered where applicable.
+> 
+> ##### Library Cut, Copy, Paste and Delete
+> 
+> Categories and patches in the Library area can be cut, copied, pasted and deleted by right-clicking and selecting the required option. If a category is selected to cut, copy or delete the action will be applied to the entire contents of the category.
+> 
+> These functions can not be applied to the User and Factory patch listings.
+> 
+> Drag and drop is not currently supported.
+> 
+> ##### Search Library
+> 
+> The Library can be searched can by entering search text in the Search Bar above the Library tree, This searches for the text you enter in patch names, description and tags.
+> 
+> For example, if you are looking for a patch which has 'blues' in the name, description or tags enter blues in the Search Bar and click the Search Button (spyglass). Any matching items will be displayed in a pop-up window. To navigate to the item, click the link in the results window.
+
+### Editing Amps and Cabs
+
+[Back to Top](#toc)
+
+> The GNX1 has powerful amplifier and cabinet modelling algorithms. Each patch can have two amp/cab setups, which are labelled green and red. A third option is yellow, which is a blend of the green and red, a process known as 'warping'. The green, red or yellow amp models are selected by clicking the colourde buttons in the Warp module.
+> 
+> To select an amplifier model in GNXEdit, right-click the amplifier graphic to get a list of standard models and any User versions you may have created and stored in the GNX1. Click on your preferred model. This will also change the cabinet to a pre-determined match. You can alter the cabinet by similarly right-clicking on the graphic and selecting an alternative.
+> 
+> Amp parameters and cabinet tuning potentiometers can be altered either by clicking and dragging, by hovering the mouse pointer over the pot and using the mouse scroll wheel to scroll the value up or down, or simply left clicking at a point around the dial. Once a pot has been selected you can also use the up/down arrows on the computer keyboard to raise and lower values. Home, End, PgUp and PgDown keys are also effective.
+> 
+> All amp and cab parameters cause the GNX1 to display the parameter and value on its display as they are altered.
+
+### Warping Amp And Cabinet Models
+
+[Back to Top](#toc)
+
+> With the yellow amp selected it is possible to blend the green and red models using the Warp module. You can warp between green and red amp models by dragging (or clicking) the cross-hair target in the Warp module up (green) or down (red). Similarly, you can warp between the green and red cabinet models by dragging (or clicking) the cross-hair target left (green) and right (red).
+
+### Editing Effects
+
+[Back to Top](#toc)
+
+> The GNX1 effects are displayed as a virtual rack with modules for each function.
+> 
+> Buttons are 'pressed' by left-clicking. Potentiometers can be altered by clicking and dragging, by hovering the mouse pointer over the pot and using the mouse scroll wheel to scroll the value up or down, or simply left clicking at a point around the dial. Once a pot has been selected you can also use the up/down arrows on the computer keyboard to raise and lower values. Home, End, PgUp and PgDown keys are also effective.
+> 
+> Most parameters cause the GNX1 to display the parameter and value on its display as they are altered. Exceptions are the Expression and LFO modules.
 
 ### Resync
 
 [Back to Top](#toc)
 
 > If you find GNXEdit is out of sync with your GNX1 click _**Device>Resync**_ in the GNXEdit main menu. GNXEdit will now correctly match the contents of the GNX1 edit buffer.
+
 ### GNXEdit Rack Image
-<img src="https://github.com/gary-1959/GNXEdit/blob/main/documents/GNXEdit_Rack.png" title="GNXEdit rack" alt="GNXEdit Rack"/>
 
 [Back to Top](#toc)
+
+> ![GNXEdit Rack](https://github.com/gary-1959/GNXEdit/blob/main/documents/GNXEdit_Rack.png?raw=true "GNXEdit Rack")
