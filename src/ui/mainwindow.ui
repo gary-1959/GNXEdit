@@ -190,13 +190,24 @@ QTreeView {
    border: 1px solid lightgray;
 }
 
+QTreeView::item  {
+   padding: 0;
+   padding-top: 4px;
+   padding-bottom: 4px;
+}
+
 QTreeView::item:selected {
+   margin 0;
+   padding: 0;
    border-image: none;
    background-image: none;
    border: none;
-   border: 1px solid red;
    background-color: red;
    color: white;
+}
+
+QTreeView::branch {
+   background-color: black;
 }
 
 QTreeView::branch:has-siblings:!adjoins-item {
@@ -317,6 +328,7 @@ QPushButton#patchSearchButton:pressed {
 QLineEdit#patchSearchText: {
    margin: 0px;
 }
+
 
 </string>
   </property>

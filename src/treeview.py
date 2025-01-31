@@ -27,9 +27,9 @@ from db import gnxDB
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QStyledItemDelegate, QWidget, QSpinBox, QTreeWidget, QPlainTextEdit, QTreeView, QDialogButtonBox, \
             QAbstractItemView, QMenu, QLineEdit, QMessageBox, QStyleOptionViewItem, QLabel, QWidgetAction, QPushButton, QGroupBox, QTextEdit
-from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTimer, \
-            QPropertyAnimation, QRect, QSequentialAnimationGroup, QEvent
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QValidator, QColor
+from PySide6.QtCore import QFile, QIODevice, Qt, Signal, Slot, QObject, QModelIndex, QItemSelectionModel, QRegularExpression, QTime, \
+            QPropertyAnimation, QRect, QSequentialAnimationGroup, QEvent, QCoreApplication, QEventLoop
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QAction, QPainter, QRegularExpressionValidator, QFontMetrics
 
 class CustomDelegate(QStyledItemDelegate):
     def __init__(self, tree, treehandler):
@@ -49,17 +49,11 @@ class CustomDelegate(QStyledItemDelegate):
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
         # Custom editor widget
         self.editor = QLineEdit(parent)
+
+        self.editor.setMinimumHeight(22)
+
         # Set data from model to editor
         data = index.data(Qt.UserRole)
-
-        # only applies to items in main treeview (not in dialog)
-        if self.treehandler and self.treehandler.current_patch_number != data["patch"] or self.treehandler.current_patch_bank != 1:
-            e = GNXError(icon = QMessageBox.Critical, title = "Edit Patch Name Error", \
-                                                    text = "You are trying to edit the name of a patch which has not been selected on the GNX device.\n" \
-                                                            "Right-Click to select the patch to edit it's name.\n",
-                                                    buttons = QMessageBox.Ok)
-            e.alert()  
-            return None
 
         if data["type"] == "library":
             rx = QRegularExpression(r".{2, 32}+")
@@ -82,8 +76,10 @@ class CustomDelegate(QStyledItemDelegate):
         self.editor.setText(self.editor.text().upper())
         if self.editor.hasAcceptableInput():
             self.editor.setStyleSheet("background-color: white")
+            pass
         else:
             self.editor.setStyleSheet("background-color: pink")
+            pass
         
     def setEditorData(self, editor: QWidget, index: QModelIndex):
         
@@ -221,12 +217,14 @@ class TreeHandler(QObject):
         self.window = window
         self.gnx = gnx
         self.blockPatchChange = False
+        self.blockSelectionChange = False
 
         self.clipBoard = None
 
         self.tree = self.window.findChild(QTreeView, "treeView")
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.contextMenu)
+        self.tree.doubleClicked.connect(self.doubleClick)
         self.tree.setHeaderHidden(True)
         
         self.model = QStandardItemModel(0, 2)
@@ -311,6 +309,7 @@ class TreeHandler(QObject):
         self.patchSearchText = self.window.findChild(QLineEdit, "patchSearchText")
         self.patchSearchButton = self.window.findChild(QPushButton, "patchSearchButton")
         self.patchSearchButton.clicked.connect(self.searchButtonClicked)
+        self.patchSearchText.returnPressed.connect(self.searchButtonClicked)
 
         # add library data
         
@@ -454,6 +453,29 @@ class TreeHandler(QObject):
     @Slot()
     def noAction(self):
         pass
+
+    @Slot()
+    def doubleClick(self, item):
+        data = item.data(Qt.UserRole)
+
+        # only applies to items in main treeview (not in dialog)
+        if data["type"] != "library" and (self.current_patch_number != data["patch"] or self.current_patch_bank != 1):
+
+            result = QMessageBox.warning(common.APP_WINDOW, "Edit Patch Name Error", \
+                                                    "You are trying to edit the name of a patch which has not been selected on the GNX device.\n" \
+                                                    "Click OK to switch to this patch on the device and continue, or CANCEL to abort.\n",
+                                                    buttons = QMessageBox.Cancel | QMessageBox.Ok, defaultButton = QMessageBox.Cancel)
+
+            if result == QMessageBox.Ok:
+                self.blockPatchChange = True
+                self.blockSelectionChange = True
+                self.gnx.send_patch_change(1, data["patch"])
+                dieTime= QTime.currentTime().addMSecs(2000)
+                while QTime.currentTime() < dieTime:
+                    QCoreApplication.processEvents(QEventLoop.AllEvents, 100)
+                self.current_patch_number = data["patch"]
+                self.blockSelectionChange = False
+                self.blockPatchChange = False
 
     @Slot()
     def sendPatch(self):
@@ -1112,6 +1134,9 @@ class TreeHandler(QObject):
     @Slot()
     def selectionChangedEvent(self):
 
+        if self.blockSelectionChange:
+            return
+
         for x in self.selection.selectedIndexes():
 
             if x.data() == None:    # click on LIBRARY chucks this out
@@ -1201,7 +1226,8 @@ class TreeHandler(QObject):
 
     @Slot()
     def setCurrentPatch(self, name, bank, patch):
-        self.setPatchInTree(name, bank, patch, parent = QModelIndex())
+        if not self.blockPatchChange:
+            self.setPatchInTree(name, bank, patch, parent = QModelIndex())
 
     def setPatchInTree(self, name, bank, patch, parent):
         # do not start or exit through recursion if set

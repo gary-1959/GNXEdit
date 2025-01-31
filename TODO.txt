@@ -1,11 +1,13 @@
 GNXEdit Things to do
 ====================
 
-1. enter on search should do search
-2. padding on tree entries
+
+
+Unresolved
+==========
+
+1. QLineEdit not centred on tree entry - no solution after many tries (padding, margin, css, etc)
+
 
 Help Page Updates
 =================
-
-2. Cut, copy & paste in library
-3. Search library

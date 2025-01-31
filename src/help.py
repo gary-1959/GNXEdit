@@ -37,7 +37,6 @@ def tocfunc(match):
     g1 = match.group(1)
     g2 = match.group(2)
     if int(g1) in hinclude:
-        a = f"<a name=\"a{toc_count}\"><h{g1}>{g2}</h{g1}></a>"
         a = f"<a name=\"{g2.lower().replace(" ", "-")}\"><h{g1}>{g2}</h{g1}></a>"
         tocs[toc_count] = {"text": g2, "depth": g1, "href": f"{g2.lower().replace(" ", "-")}"}
         toc_count += 1
