@@ -48,7 +48,7 @@ Application Help File
 * [GNXEdit Rack Image](#gnxedit-rack-image "#gnxedit-rack-image")
 
 ### Information
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > Version: 1.0, 11 January, 2025
 > 
 > Copyright © 2025 Gary Barnes (gary-1959). All rights reserved.
@@ -60,7 +60,7 @@ Application Help File
 > Source Code: [https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit "https://github.com/gary-1959/GNXEdit")
 
 ### Introduction
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > GNXEdit is an editor and librarian program for use with the DigiTech GNX1 guitar effects processor.
 > 
 > The functionality of the program is similar to the DigiTech GENEdit program for Windows,
@@ -75,7 +75,7 @@ Application Help File
 > [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf "file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf").
 
 ### System Exclusive
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > There was no information available from DigiTech detailing the System Exclusive commands, so to write
 > the program the System Exclusive protocol had to be reverse engineered by snooping on communications
 > between the GENEdit program and a GNX1 device. This work has been documented separately
@@ -85,7 +85,7 @@ Application Help File
 > most gratefully received and incorporated into the document.
 
 ### Installation
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > #### Windows
 > 
 > 1. Download and install Python (minimum version 13.2) if not already installed from
@@ -173,7 +173,7 @@ Application Help File
 > 15. For Linux systems other than Ubuntu/Gnome Desktop please check the procedure for creating desktop icons.
 
 ### Getting Started
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this
 > HELP page but is well covered in the User Manual. A copy of the user manual is available by
 > [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf "file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf").
@@ -191,7 +191,7 @@ Application Help File
 > 7. Begin editing the patch by adjusting parameters on the screen.
 
 ### Status Indication
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > The status bar at the foot of the screen gives information about the current status of GNXEdit:
 > 
 > ##### Current Patch
@@ -224,7 +224,7 @@ Application Help File
 > the upload process.
 
 ### Library Functions
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > The GNXEdit left-hand panel is an expandable tree which displays all the patches available in the GNX1 device User and Factory banks, and custom patches which are held in a database.
 > 
 > Patches can be organised into separate folders and sub-folders (categories). Patches can be transferred on an individual basis between the library and your GNX1 device.
@@ -296,7 +296,7 @@ Application Help File
 > For example, if you are looking for a patch which has 'blues' in the name, description or tags enter blues in the Search Bar and click the Search Button (spyglass). Any matching items will be displayed in a pop-up window. To navigate to the item, click the link in the results window.
 
 ### Editing Amps and Cabs
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > The GNX1 has powerful amplifier and cabinet modelling algorithms. Each patch can have two amp/cab setups, which are labelled green and red. A third option is yellow, which is a blend of the green and red, a process known as 'warping'. The green, red or yellow amp models are selected by clicking the colourde buttons in the Warp module.
 > 
 > To select an amplifier model in GNXEdit, right-click the amplifier graphic to get a list of standard models and any User versions you may have created and stored in the GNX1. Click on your preferred model. This will also change the cabinet to a pre-determined match. You can alter the cabinet by similarly right-clicking on the graphic and selecting an alternative.
@@ -306,11 +306,11 @@ Application Help File
 > All amp and cab parameters cause the GNX1 to display the parameter and value on its display as they are altered.
 
 ### Warping Amp And Cabinet Models
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > With the yellow amp selected it is possible to blend the green and red models using the Warp module. You can warp between green and red amp models by dragging (or clicking) the cross-hair target in the Warp module up (green) or down (red). Similarly, you can warp between the green and red cabinet models by dragging (or clicking) the cross-hair target left (green) and right (red).
 
 ### Editing Effects
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > The GNX1 effects are displayed as a virtual rack with modules for each function.
 > 
 > Buttons are 'pressed' by left-clicking. Potentiometers can be altered by clicking and dragging, by hovering the mouse pointer over the pot and using the mouse scroll wheel to scroll the value up or down, or simply left clicking at a point around the dial. Once a pot has been selected you can also use the up/down arrows on the computer keyboard to raise and lower values. Home, End, PgUp and PgDown keys are also effective.
@@ -318,11 +318,11 @@ Application Help File
 > Most parameters cause the GNX1 to display the parameter and value on its display as they are altered. Exceptions are the Expression and LFO modules.
 
 ### Resync
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > If you find GNXEdit is out of sync with your GNX1 click ***Device>Resync*** in the GNXEdit main menu. GNXEdit will now correctly match the contents of the GNX1 edit buffer.
 
 ### GNXEdit Rack Image
-[Back to Top](#toc "#toc")
+[Back to Top](#application-help-file "#application-help-file")
 > ![GNXEdit Rack](https://github.com/gary-1959/GNXEdit/blob/main/documents/GNXEdit_Rack.png?raw=true "GNXEdit Rack")
 
 
