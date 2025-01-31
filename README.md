@@ -5,33 +5,61 @@
 GNXEdit Help File
 
 
-{APP\_TITLE}
-============
+GNXEdit
+=======
 
-{APP\_SUBTITLE}
----------------
+Editor and Librarian for Digitech GNX1
+--------------------------------------
 
 Application Help File
 ---------------------
 
 **TABLE OF CONTENTS**
 
-{TOC}
-### Information
+* [Information](#a0 "#a0")
+* [Introduction](#a1 "#a1")
+* [System Exclusive](#a2 "#a2")
+* [Installation](#a3 "#a3")
+* [Windows](#a4 "#a4")
+* [Linux (Ubuntu)](#a5 "#a5")
+* [Getting Started](#a6 "#a6")
+* [Status Indication](#a7 "#a7")
+* [Current Patch](#a8 "#a8")
+* [Connected Indicator](#a9 "#a9")
+* [MIDI Channel](#a10 "#a10")
+* [Watchdog](#a11 "#a11")
+* [Resync](#a12 "#a12")
+* [Uploading](#a13 "#a13")
+* [Library Functions](#a14 "#a14")
+* [GNX Patch Section](#a15 "#a15")
+* [Creating Library Categories](#a16 "#a16")
+* [Saving Patches To Library Categories](#a17 "#a17")
+* [Saving Amp/Cab Configurations To Library Categories](#a18 "#a18")
+* [Saving Patches To GNX1](#a19 "#a19")
+* [Saving Amp/Cab Patches To GNX1](#a20 "#a20")
+* [Transferring Patches To GNX1 From The Library](#a21 "#a21")
+* [Changing Patch and Category Names](#a22 "#a22")
+* [Library Cut, Copy, Paste and Delete](#a23 "#a23")
+* [Search Library](#a24 "#a24")
+* [Editing Amps and Cabs](#a25 "#a25")
+* [Warping Amp And Cabinet Models](#a26 "#a26")
+* [Editing Effects](#a27 "#a27")
+* [Resync](#a28 "#a28")
+* [GNXEdit Rack Image](#a29 "#a29")
 
+### Information
 [Back to Top](#toc "#toc")
-> {APP\_VERSION\_TEXT}
+> Version: 1.0, 11 January, 2025
 > 
-> {APP\_COPYRIGHT}
+> Copyright © 2025 Gary Barnes (gary-1959). All rights reserved.
 > 
-> {APP\_LICENSE}
+> This software and its source code is made freely available under the GNU General Public License version 3.
 > 
-> More details at: {APP\_LICENSE\_LINK}
+> More details at: [https://opensource.org/license/gpl-3-0'](https://opensource.org/license/gpl-3-0 "https://opensource.org/license/gpl-3-0")
 > 
-> Source Code: {APP\_GITHUB\_LINK}
+> Source Code: [https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit "https://github.com/gary-1959/GNXEdit")
 
 ### Introduction
-
 [Back to Top](#toc "#toc")
 > GNXEdit is an editor and librarian program for use with the DigiTech GNX1 guitar effects processor.
 > 
@@ -39,15 +67,14 @@ Application Help File
 > but includes enhanced library functionality and is cross-platform (Windows and Linux).
 > 
 > The program is written in Python and leverages the QT GUI framework. It is completely open source and freely
-> available at {APP\_GITHUB\_LINK}.
+> available at [https://github.com/gary-1959/GNXEdit](https://github.com/gary-1959/GNXEdit "https://github.com/gary-1959/GNXEdit").
 > 
 > A detailed description of the operation of the DigiTech GNX1 is beyond the scope of this HELP page,
 > but a good understanding of how it works is essential for gaining maximum benefit from GNXEdit.
 > A copy of the user manual is available by
-> [clicking here](file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf "file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf").
+> [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf "file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf").
 
 ### System Exclusive
-
 [Back to Top](#toc "#toc")
 > There was no information available from DigiTech detailing the System Exclusive commands, so to write
 > the program the System Exclusive protocol had to be reverse engineered by snooping on communications
@@ -58,7 +85,6 @@ Application Help File
 > most gratefully received and incorporated into the document.
 
 ### Installation
-
 [Back to Top](#toc "#toc")
 > #### Windows
 > 
@@ -147,11 +173,10 @@ Application Help File
 > 15. For Linux systems other than Ubuntu/Gnome Desktop please check the procedure for creating desktop icons.
 
 ### Getting Started
-
 [Back to Top](#toc "#toc")
 > Familiarity with the features of the GNX1 is essential to gain maximum benefit from using GNXEdit. This is beyond the scope of this
 > HELP page but is well covered in the User Manual. A copy of the user manual is available by
-> [clicking here](file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf "file://{APP_DOC_PATH}/digitech-gnx1-user-manual.pdf").
+> [clicking here](file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf "file:///home/gary/Projects/GNXEdit/documents/digitech-gnx1-user-manual.pdf").
 > 
 > Getting started with GNXEdit involves connecting the GNX1 device to your computer via MIDI, then setting GNXEdit to use the same MIDI ports.
 > 
@@ -166,7 +191,6 @@ Application Help File
 > 7. Begin editing the patch by adjusting parameters on the screen.
 
 ### Status Indication
-
 [Back to Top](#toc "#toc")
 > The status bar at the foot of the screen gives information about the current status of GNXEdit:
 > 
@@ -200,7 +224,6 @@ Application Help File
 > the upload process.
 
 ### Library Functions
-
 [Back to Top](#toc "#toc")
 > The GNXEdit left-hand panel is an expandable tree which displays all the patches available in the GNX1 device User and Factory banks, and custom patches which are held in a database.
 > 
@@ -273,7 +296,6 @@ Application Help File
 > For example, if you are looking for a patch which has 'blues' in the name, description or tags enter blues in the Search Bar and click the Search Button (spyglass). Any matching items will be displayed in a pop-up window. To navigate to the item, click the link in the results window.
 
 ### Editing Amps and Cabs
-
 [Back to Top](#toc "#toc")
 > The GNX1 has powerful amplifier and cabinet modelling algorithms. Each patch can have two amp/cab setups, which are labelled green and red. A third option is yellow, which is a blend of the green and red, a process known as 'warping'. The green, red or yellow amp models are selected by clicking the colourde buttons in the Warp module.
 > 
@@ -284,12 +306,10 @@ Application Help File
 > All amp and cab parameters cause the GNX1 to display the parameter and value on its display as they are altered.
 
 ### Warping Amp And Cabinet Models
-
 [Back to Top](#toc "#toc")
 > With the yellow amp selected it is possible to blend the green and red models using the Warp module. You can warp between green and red amp models by dragging (or clicking) the cross-hair target in the Warp module up (green) or down (red). Similarly, you can warp between the green and red cabinet models by dragging (or clicking) the cross-hair target left (green) and right (red).
 
 ### Editing Effects
-
 [Back to Top](#toc "#toc")
 > The GNX1 effects are displayed as a virtual rack with modules for each function.
 > 
@@ -298,12 +318,10 @@ Application Help File
 > Most parameters cause the GNX1 to display the parameter and value on its display as they are altered. Exceptions are the Expression and LFO modules.
 
 ### Resync
-
 [Back to Top](#toc "#toc")
 > If you find GNXEdit is out of sync with your GNX1 click ***Device>Resync*** in the GNXEdit main menu. GNXEdit will now correctly match the contents of the GNX1 edit buffer.
 
 ### GNXEdit Rack Image
-
 [Back to Top](#toc "#toc")
 > ![GNXEdit Rack](https://github.com/gary-1959/GNXEdit/blob/main/documents/GNXEdit_Rack.png?raw=true "GNXEdit Rack")
 
