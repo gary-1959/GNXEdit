@@ -256,13 +256,13 @@ class ExpFace(QWidget):
         self.expChanged.emit()     # check emitted parameter
 
     def expType0(self):
-        return self._type[0]
+        return self._types[0]
     
     def expType1(self):
-        return self._type[1]
+        return self._types[1]
 
     def expType2(self):
-        return self._type[2]
+        return self._types[2]
     
     # called when values received
 

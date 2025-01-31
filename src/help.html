@@ -12,7 +12,7 @@
 	color: black;
 	text-align: justify;
 }
-code {
+pre {
 	display: block;
 	font-family:'Courier New', Courier, monospace;
 	font-weight: bold;
@@ -123,19 +123,19 @@ h5 {
   <ol>
     <li>Download and install Python (minimum version 13.2) if not already installed from 
       <a href="https://www.python.org/downloads/windows">https://www.python.org/downloads/windows</a></a></li>
-    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
+    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository at <a href="https://github.com/gary-1959/GNXEdit">https://github.com/gary-1959/GNXEdit</a>.<br>
       If not,
       download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
       This folder can be located anywhere in your system.</li>
     <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
     <li>Python works best when applications are run in their own dedicated environment. A Python environment
       is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command:
-      <code>python -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+      <pre>python -m venv .venv</pre> Select the version 13.2 (or later) Python interpreter if prompted.</li>
     <li>Activate the Python environment with the following command (note the dot before venv):
-    <code>.venv\Scripts\activate</code>
+    <pre>.venv\Scripts\activate</pre>
     You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
-    <li>Install the dependant libraries with the command <code>pip install -r src\requirements.txt</code></li>
-    <li>Check the program runs with the command: <code>src\main.py</code></li>
+    <li>Install the dependant libraries with the command <pre>pip install -r src\requirements.txt</pre></li>
+    <li>Check the program runs with the command: <pre>src\main.py</pre></li>
     <li>To run the program in its correct environment a batch file is available in the src folder of the GNXEdit folder, which can be run from a desktop icon.
       To create a desktop icon:
       <ol>
@@ -154,22 +154,24 @@ h5 {
   
   <h4>Linux (Ubuntu)</h4>
   <ol>
-    <li>Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g.: <code>sudo apt install python</code></li>
-    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository <a href="https://github.com/gary-1959/GNXEdit">at https://github.com/gary-1959/GNXEdit</a>.<br>
+    <li>Install Python (minimum version 13.2) if not already installed using the package manager of your choice, e.g.: <pre>sudo apt install python</pre></li>
+    <li>If you are familiar with GitHub CLI or GitHub Desktop, use this to clone the repository at <a href="https://github.com/gary-1959/GNXEdit">https://github.com/gary-1959/GNXEdit</a>.<br>
       If not,
       download the repository from <a href="https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip">https://github.com/gary-1959/GNXEdit/archive/refs/heads/main.zip</a> and unzip (extract) it into a location of your choice.
       This folder can be located anywhere in your system.</li>
     <li>Open a command terminal and cd into this folder. You should see a folder named &quot;src&quot;.</li>
     <li>Python works best when applications are run in their own dedicated environment. A Python environment
-      is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: <code>python3 -m venv .venv</code> Select the version 13.2 (or later) Python interpreter if prompted.</li>
+      is simply a folder which contains the main Python program and all the dependant libraries. Create an environment with the following command: 
+      <pre>python3 -m venv .venv</pre> 
+      Select the version 13.2 (or later) Python interpreter if prompted.</li>
     <li>Activate the Python environment with the following command (note the dot before venv):
-    <code>source .venv/bin/activate</code>
+    <pre>source .venv/bin/activate</pre>
     You should now see (.venv) at the start of the command prompt, indicating that the environment has been activated.</li>
-    <li>Install the dependant libraries with the command <code>pip install -r src/requirements.txt</code></li>
-    <li>Check the program runs with the command: <code>python src/main.py</code></li>
+    <li>Install the dependant libraries with the command <pre>pip install -r src/requirements.txt</pre></li>
+    <li>Check the program runs with the command: <pre>python src/main.py</pre></li>
     <li>Deactivate the environment with the command 
-    <code>deactivate</code></li>
-    <li>To run the program from the command line in its correct environment:<code>cd &lt;path to your GNXEdit folder&gt;; .venv/bin/python src/main.py</code></li>
+    <pre>deactivate</pre></li>
+    <li>To run the program from the command line in its correct environment:<pre>cd &lt;path to your GNXEdit folder&gt;; .venv/bin/python src/main.py</pre></li>
     <li>It is far easier to launch the program from a desktop icon. A prototype desktop icon (for Ubuntu/Gnome Desktop systems) is available in the GNXEdit src folder called GNXEdit.desktop.
       Copy this file to your desktop and edit with the text editor of your choice and insert the correct paths in the lines highlighted in the file, and save it.</li>
     <li>On the desktop, right-click on the file icon and click <em><strong>Allow Launching</strong></em>.</li>

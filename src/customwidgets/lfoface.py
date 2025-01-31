@@ -264,10 +264,10 @@ class LFOFace(QWidget):
         self.lfoChanged.emit()     # check emitted parameter
 
     def lfoType0(self):
-        return self._type[0]
+        return self._types[0]
     
     def lfoType1(self):
-        return self._type[1]
+        return self._types[1]
     
     # called when values received
 
